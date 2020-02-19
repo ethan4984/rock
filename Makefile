@@ -21,5 +21,6 @@ iso: install
 	$(CC) -T link.ld -o iso/boot/crep.bin -ffreestanding -O2 -nostdlib Bin/boot.o $(srcO) -lgcc
 	grub-mkrescue -o crepOS.iso iso
 qemu: iso
+	touch serial.log
 	qemu-system-i386 -serial file:serial.log crepOS.iso &
 	tail -n0 -f serial.log
