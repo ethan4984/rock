@@ -17,6 +17,7 @@ export PATH="$PREFIX/bin:$PATH"
 
 mkdir build_binutils
 mkdir build-gcc
+mkdir ../Bin
 
 cd build_binutils
 ../binutils-2.34/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
