@@ -16,10 +16,10 @@ install:
 clean:
 	rm $(srcO)
 	rm $(srcASO)
-	rm iso/boot/shitOS.bin shitOS.iso
+	rm iso/boot/crep.bin crepOS.iso
 iso: install
 	$(CC) -T link.ld -o iso/boot/shitOS.bin -ffreestanding -O2 -nostdlib Bin/boot.o $(srcO) -lgcc
-	grub-mkrescue -o shitOS.iso iso
+	grub-mkrescue -o crepOS.iso iso
 qemu: iso
-	qemu-system-i386 -serial file:serial.log shitOS.iso &
+	qemu-system-i386 -serial file:serial.log crepOS.iso &
 	tail -n0 -f serial.log
