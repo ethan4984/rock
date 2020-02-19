@@ -18,7 +18,7 @@ clean:
 	rm $(srcASO)
 	rm iso/boot/crep.bin crepOS.iso
 iso: install
-	$(CC) -T link.ld -o iso/boot/shitOS.bin -ffreestanding -O2 -nostdlib Bin/boot.o $(srcO) -lgcc
+	$(CC) -T link.ld -o iso/boot/crep.bin -ffreestanding -O2 -nostdlib Bin/boot.o $(srcO) -lgcc
 	grub-mkrescue -o crepOS.iso iso
 qemu: iso
 	qemu-system-i386 -serial file:serial.log crepOS.iso &
