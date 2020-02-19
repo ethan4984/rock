@@ -216,3 +216,17 @@ void t_print(char str[256],...) {
     }
     serial_write('\n');
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

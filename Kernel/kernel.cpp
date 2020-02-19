@@ -7,7 +7,7 @@ extern void load_gdt(void) asm("load_gdt");
 extern "C" void kernel_main(void) {
 	load_gdt();
 	initalize();
-	k_print("Hellooooo...\nplz work\n\n");
+	k_print("Starting crepOS\n");
 	idt_init();
 	outb(0x21, 0xFD);
 
