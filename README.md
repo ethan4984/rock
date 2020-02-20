@@ -28,3 +28,15 @@ an OS made for fun and learning
   Run the Tools/cross.sh script to setup the cross compiler (recomended)
   Then run the makefile to run it in qemu
   (Btw you might be missing some dependences for this idk, some but not all dependences include, mtools, xorriso, etc)
+  
+  Remember, every terminal that you want to run this in you have to run: 
+  
+      export PREFIX="$HOME/opt/cross"
+      
+      export TARGET=i686-elf
+      
+      export PATH="$PREFIX/bin:$PATH
+      
+      
+      
+      
