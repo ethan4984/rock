@@ -1,14 +1,12 @@
 #include "interrupt.h"
 #include "port.h"
 #include "shitio.h"
-#include "keyboard.h"
 
 struct IDT_entry IDT[256];
 
 extern void load_idt(unsigned long *idt_ptr)  asm("load_idt");
 extern void keyboard_handler(void) asm("keyboard_handler");
 extern void time_handler(void) asm("time_handler");
-extern unsigned char keyboard_map[128];
 extern int irq2() asm("irq2");
 extern int irq3() asm("irq3");
 extern int irq4() asm("irq4");
@@ -35,24 +33,6 @@ extern "C" void irq_h(void) {
 
 extern "C" void PITI() {
 	outb(0x20, 0x20);
-}
-
-extern "C" void keyboard_handler_main() {
-	outb(0x20, 0x20);
-	if(inb(0x64) & 0x01) {
-		char keycode = inb(0x60);
-		if(keycode < 0)
-			return;
-		switch(keycode) {
-			case 0x1c:
-				putchar('\n');
-			case 0x0e:
-				putchar('\b');
-			default:
-				putchar(keyboard_map[(unsigned char) keycode]);
-
-		}
-	}
 }
 
 void idt_init(void) {
