@@ -42,7 +42,7 @@ unsigned char keyboard_map[128] = {
 };
 
 struct keyboard_buffer {
-	char *input;
+	char input[255];
 	bool takingInput;
 } key_entry;
 

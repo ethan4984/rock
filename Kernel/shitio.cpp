@@ -50,6 +50,14 @@ int strcmp(const char *a, const char *b) {
     return (int)(unsigned char)(*a) - (int)(unsigned char)(*b);
 }
 
+void update_cursor(size_t terminal_row, size_t terminal_column) {
+     unsigned short position = terminal_row * 80 + terminal_column;
+     outb(0x3D4, 0x0F);
+     outb(0x3D5, (unsigned char)(position & 0xFF));
+     outb(0x3D4, 0x0E);
+     outb(0x3D5, (unsigned char )((position >> 8) & 0xFF));
+}
+
 inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
     return fg | bg << 4;
 }
@@ -58,12 +66,10 @@ inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
     return (uint16_t) uc | (uint16_t) color << 8;
 }
 
-void update_cursor(size_t terminal_row, size_t terminal_column) {
-     unsigned short position = terminal_row * 80 + terminal_column;
-     outb(0x3D4, 0x0F);
-     outb(0x3D5, (unsigned char)(position & 0xFF));
-     outb(0x3D4, 0x0E);
-     outb(0x3D5, (unsigned char )((position >> 8) & 0xFF));
+bool end_of_terminal() {
+	if(x == VGA_HEIGHT - 1)
+		return true;
+	return false;
 }
 
 void initalize() {
@@ -220,6 +226,17 @@ void t_print(char str[256],...) {
         }
     }
     serial_write('\n');
+}
+
+void clear_screen() {
+	terminal_column = 0;
+	terminal_row = 0;
+	for(y = 0; y < VGA_HEIGHT; y++) {
+		for(x = 0; x < VGA_WIDTH; x++) {
+			const size_t index = y * VGA_WIDTH + x;
+			terminal_buffer[index]=vga_entry(' ', terminal_color);
+       		 }
+	}
 }
 
 

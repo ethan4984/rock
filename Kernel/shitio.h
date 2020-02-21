@@ -23,4 +23,8 @@ void putchar(char c);
 
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
 
+void clear_screen();
+
+bool end_of_terminal();
+
 extern "C" void gdt_flush(uint32_t);

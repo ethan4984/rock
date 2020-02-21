@@ -5,10 +5,14 @@ void version() {
 	k_print("\ncrepOS beta 1.1\n");
 }
 
-char *command_list[] = { "version" };
+void clr() {
+	clear_screen();
+}
+
+char *command_list[] = { "version", "clr" };
 
 typedef void (*command_functions)();
-command_functions comm_func[] = { version };
+command_functions comm_func[] = { version, clr };
 
 void command_handler(char *input) {
 
@@ -25,5 +29,7 @@ void command_handler(char *input) {
 	}
 	if(!commandFound)
 		k_print("\n%s commnad not found\n");
+	if(end_of_terminal())
+		clr();
 	k_print("> ");
 }

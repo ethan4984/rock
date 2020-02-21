@@ -9,3 +9,5 @@ struct IDT_entry {
 };
 
 void idt_init(void);
+
+
