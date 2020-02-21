@@ -9,6 +9,8 @@
 
 size_t strlen(const char *str);
 
+int strcmp(const char *a, const char *b);
+
 static uint16_t *const VGA_MEMORY = (uint16_t*)0xB8000;
 
 void initalize();
@@ -20,7 +22,5 @@ void t_print(char str[256],...);
 void putchar(char c);
 
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
-
-size_t strlen(const char *str);
 
 extern "C" void gdt_flush(uint32_t);

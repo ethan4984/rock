@@ -45,6 +45,11 @@ size_t strlen(const char *str) {
 	return len;
 }
 
+int strcmp(const char *a, const char *b) {
+    while (*a && *a == *b) { ++a; ++b; }
+    return (int)(unsigned char)(*a) - (int)(unsigned char)(*b);
+}
+
 inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
     return fg | bg << 4;
 }
