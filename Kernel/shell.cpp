@@ -30,7 +30,9 @@ void command_handler(char *input) {
 		if(commandFound)
 			break;
 	}
+
 	if(!commandFound)
 		k_print("\n%s commnad not found\n");
+
 	k_print("> ");
 }

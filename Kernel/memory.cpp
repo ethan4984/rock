@@ -13,4 +13,4 @@ void *memset(void *src, int val, size_t how_many) {
     return new_mem;
 }
 
-
+//toDo: add memcpy, malloc, free, etc

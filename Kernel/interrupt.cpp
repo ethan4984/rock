@@ -5,9 +5,11 @@
 struct IDT_entry IDT[256];
 
 extern void load_idt(unsigned long *idt_ptr)  asm("load_idt");
-extern void keyboard_handler(void) asm("keyboard_handler");
+
+extern void keyboard_handler(void) asm("keyboard_handler"); /* non-generic */
 extern void time_handler(void) asm("time_handler");
-extern int irq2() asm("irq2");
+
+extern int irq2() asm("irq2");  /* generic: ToDo: Make not generic */
 extern int irq3() asm("irq3");
 extern int irq4() asm("irq4");
 extern int irq5() asm("irq5");
@@ -37,7 +39,7 @@ extern "C" void PITI() {
 
 void idt_init(void) {
 
-	k_print("Starting idt");
+	k_print("Filling idt");
 
 	uint32_t idt_address;
 	uint32_t idt_ptr[2];
