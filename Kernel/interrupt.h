@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 struct IDT_entry {
 	unsigned short int offset_lowerbits;
 	unsigned short int selector;

@@ -1,6 +1,8 @@
 #include "shell.h"
 #include "shitio.h"
 
+char *command_list[] = { "version", "clr", "help" };
+
 void version() {
 	k_print("\ncrepOS beta 1.1\n");
 }
@@ -9,10 +11,15 @@ void clr() {
 	clear_screen();
 }
 
-char *command_list[] = { "version", "clr" };
+void help() {
+	putchar('\n');
+	for(int i = 0; i < sizeof command_list/sizeof *command_list - 1; i++)
+		k_print("%s ", command_list[i]);
+	putchar('\n');
+}
 
 typedef void (*command_functions)();
-command_functions comm_func[] = { version, clr };
+command_functions comm_func[] = { version, clr, help };
 
 void command_handler(char *input) {
 

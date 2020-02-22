@@ -76,7 +76,7 @@ bool end_of_terminal() {
 void initalize() {
 	terminal_row = 0;
 	terminal_column = 0;
-	terminal_color=vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+	terminal_color=vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLUE);
 	terminal_buffer=VGA_MEMORY;
 
 	for(y = 0; y < VGA_HEIGHT; y++) {

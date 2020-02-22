@@ -1,5 +1,6 @@
 global load_idt
 global load_gdt
+global isr_main
 
 global keyboard_handler
 global time_handler
