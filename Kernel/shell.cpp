@@ -1,7 +1,8 @@
 #include "shell.h"
 #include "shitio.h"
+#include "paging.h"
 
-char *command_list[] = { "version", "clr", "help" };
+char *command_list[] = { "version", "clr", "pagebegin", "help" };
 
 void version() {
 	k_print("\ncrepOS beta 1.1\n");
@@ -9,6 +10,10 @@ void version() {
 
 void clr() {
 	clear_screen();
+}
+
+void startpage() {
+	page_init();
 }
 
 void help() {
@@ -19,7 +24,7 @@ void help() {
 }
 
 typedef void (*command_functions)();
-command_functions comm_func[] = { version, clr, help };
+command_functions comm_func[] = { version, clr, startpage, help };
 
 void command_handler(char *input) {
 
@@ -39,7 +44,9 @@ void command_handler(char *input) {
 	}
 
 	if(!commandFound)
-		k_print("\n%s commnad not found\n");
+		k_print("\n%s commnad not found\n", get_entry());
+
+	clr_keyboard_entry();
 
 	k_print("> ");
 }

@@ -88,17 +88,3 @@ void idt_init(void) {
 
 	load_idt(idt_ptr);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

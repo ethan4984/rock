@@ -13,9 +13,17 @@ char keyboard_map[] = {
 		      };
 
 struct keyboard_buffer {
-	char input[255];
+	char *input;
 	bool takingInput;
 } key_entry;
+
+void clr_keyboard_entry() {
+	memset(key_entry.input, 0, strlen(key_entry.input));
+}
+
+char *get_entry() {
+	return key_entry.input;
+}
 
 void startInput() {
 	key_entry.takingInput = true;
@@ -44,17 +52,21 @@ extern "C" void keyboard_handler_main() {
 
 				command_handler(key_entry.input);
 
-				memset(key_entry.input, 0, strlen(key_entry.input));
 				counter = 0;
 
 				break;
 			case 0x0e:
-				if(!key_entry.takingInput) { //buffering issues - fix me
+				if(!key_entry.takingInput) { // minor buffering issues - fix me
 					putchar('\b');
 					break;
 				}
 
-				key_entry.input[strlen(key_entry.input)] = 0;
+				putchar('\b');
+
+				key_entry.input[counter] = 0;
+
+				counter -= 1;
+				break;
 			default:
 				if(!key_entry.takingInput) {
 					putchar(keyboard_map[(unsigned char) keycode]);
