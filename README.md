@@ -10,10 +10,9 @@ an OS made for fun and learning
   - IRQ1 works great so we have keyboard and a keyboard "driver"
 
 **ToDo:**
-  - full idt
-  - isr
-  - a shell
-  - malloc/free
+  - All interrupts with a handlers for each
+  - a better shell
+  - paging along with malloc/free
   - process scheduling
   - colors
   - graphics
