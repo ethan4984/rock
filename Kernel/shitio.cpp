@@ -46,7 +46,10 @@ size_t strlen(const char *str) {
 }
 
 int strcmp(const char *a, const char *b) {
-    while (*a && *a == *b) { ++a; ++b; }
+    while(*a && *a == *b) {
+	    a++;
+	    b++;
+    }
     return (int)(unsigned char)(*a) - (int)(unsigned char)(*b);
 }
 
@@ -67,9 +70,10 @@ inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
 }
 
 bool end_of_terminal() {
-	if(x == VGA_HEIGHT - 1)
+	/*if(terminal_row == 24)
 		return true;
-	return false;
+	return false;*/
+	return (terminal_row == 24) ? true : false;
 }
 
 void initalize() {
