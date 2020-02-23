@@ -6,24 +6,45 @@
 
 #include "port.h"
 
+/* colour constants */
+
+#define VGA_BLACK 0
+#define VGA_BLUE 1
+#define VGA_REEN 2
+#define VGA_CYAN 3
+#define VGA_RED 4
+#define VGA_MAGENTA 5
+#define VGA_BROWN 6
+#define VGA_LIGHT_GREY 7
+#define VGA_DARK_GREY 8
+#define VGA_LIGHT_BLUE 9
+#define VGA_LIGHT_GREEN 10
+#define VGA_LIGHT_CYAN 11
+#define VGA_LIGHT_RED 12
+#define VGA_LIGHT_MAGENTA 13
+#define VGA_LIGHT_BROWN 14
+#define VGA_WHITE 15
+
 size_t strlen(const char *str);
 
 int strcmp(const char *a, const char *b);
 
-static uint16_t *const VGA_MEMORY = (uint16_t*)0xB8000;
+char *strcpy(char *dest, const char *src);
 
-void initalize();
+namespace standardout {
+	static uint16_t *const VGA_MEMORY = (uint16_t*)0xB8000;
 
-void k_print(char str[256],...);
+	void initalize();
 
-void t_print(char str[256],...);
+	void k_print(const char str[256],...);
 
-void putchar(char c);
+	void t_print(const char str[256],...);
 
-void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
+	void putchar(char c);
 
-void clear_screen();
+	void clear_screen();
 
-bool end_of_terminal();
+	bool end_of_terminal();
 
-extern "C" void gdt_flush(uint32_t);
+	bool terminal_setcolor(uint8_t background, uint8_t text);
+}

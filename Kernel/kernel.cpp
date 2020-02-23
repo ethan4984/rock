@@ -5,6 +5,8 @@
 
 extern void load_gdt(void) asm("load_gdt");
 
+using namespace standardout;
+
 extern "C" void kernel_main(void) {
 	load_gdt();
 	initalize();

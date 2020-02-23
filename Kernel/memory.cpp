@@ -1,9 +1,7 @@
-#pragma once
-
 #include <stdint.h>
 #include <stddef.h>
 
-void *memset(void *src, int val, size_t how_many) {
+void *memset(void *src, int val, unsigned int how_many) {
     void *new_mem = src;
     asm volatile (	"rep stosb"
         		:"=D"(src),"=c"(how_many)
