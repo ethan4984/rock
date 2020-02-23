@@ -227,8 +227,7 @@ int strcmp(const char *a, const char *b) {
 	return (int)(unsigned char)(*a) - (int)(unsigned char)(*b);
 }
 
-char* strcpy(char* dest, const char* src)
-{
+char *strcpy(char *dest, const char *src) {
 	if(dest == NULL)
 		return NULL;
 
@@ -244,8 +243,6 @@ char* strcpy(char* dest, const char* src)
 
 	return new_dest;
 }
-
-
 
 void update_cursor(size_t terminal_row, size_t terminal_column) {
 	unsigned short position = terminal_row * 80 + terminal_column;
