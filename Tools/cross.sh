@@ -16,15 +16,15 @@ mkdir ../Bin
 
 cd build_binutils
 ../binutils-2.34/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
-make 
-make install 
+make
+make install
 
 cd ../build-gcc
-../gcc-9.2.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=$(lang) --without-headers
-make all-gcc 
-make all-target=libgcc -
-make install-gcc 
-make install-target-libgcc 
+../gcc-9.2.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers
+make all-gcc
+make all-target=libgcc
+make install-gcc
+make install-target-libgcc
 
 
 
