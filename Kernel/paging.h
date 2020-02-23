@@ -1,3 +1,4 @@
 #pragma once
 
-void page_init();
+void paging_init();
+

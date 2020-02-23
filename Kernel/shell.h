@@ -3,7 +3,7 @@
 #include "memory.h"
 #include "shitio.h"
 
-void command_handler(char *input);
+void command_handler(const char *input);
 
 void clr_keyboard_entry();
 

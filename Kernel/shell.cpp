@@ -37,7 +37,7 @@ const char *arg_command[] = { "print" };
 typedef void (*command_functions)();
 command_functions comm_func[] = { version, clr, startpage, shutdown, reboot, help };
 
-void command_handler(char *input) {
+void command_handler(const char *input) {
 	static bool set_up = false;
 
 	if(!set_up) {
@@ -128,7 +128,7 @@ void clr() {
 }
 
 void startpage() {
-	page_init();
+	paging_init();
 }
 
 void help() {

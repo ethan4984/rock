@@ -22,6 +22,7 @@ extern keyboard_handler_main
 extern PITI
 extern irq_l
 extern irq_h
+extern gdt_info
 
 load_idt:
 	mov edx, [esp + 4]
@@ -29,17 +30,18 @@ load_idt:
 	sti
 	ret
 
+time_handler:
+	pushad
+	call PITI
+	popad
+	iretd
+
 keyboard_handler:
 	pushad
 	call    keyboard_handler_main
 	popad
 	iretd
 
-time_handler:
-	pushad
-	call time_handler
-	popad
-	iretd
 irq2:
 	pusha
 	call irq_l
