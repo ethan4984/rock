@@ -2,19 +2,6 @@
 #include "port.h"
 #include "shitio.h"
 
-extern "C" void irq_l(void) {
-	outb(0x20, 0x20);
-}
-
-extern "C" void irq_h(void) {
-	outb(0xA0, 0x20);
-	outb(0x20, 0x20);
-}
-
-extern "C" void PITI() {
-	outb(0x20, 0x20);
-}
-
 struct IDT_entry IDT[256];
 
 void idt_gate(uint32_t referenceIRQ) {
@@ -76,5 +63,17 @@ extern "C" void gdt_info(uint32_t addr) {
 	standardout::k_print("GDT: mapped to %x\n", addr);
 }
 
+extern "C" void irq_l(void) {
+	outb(0x20, 0x20);
+}
+
+extern "C" void irq_h(void) {
+	outb(0xA0, 0x20);
+	outb(0x20, 0x20);
+}
+
+extern "C" void PITI() {
+	outb(0x20, 0x20);
+}
 
 
