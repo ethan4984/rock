@@ -22,6 +22,8 @@ void print(const char *str);
 
 void add_command(const char base_name[10], int args, int size);
 
+int command_parse(char argument[5][10], int start, const char *input);
+
 /* globals */
 
 using namespace standardout;
@@ -42,6 +44,8 @@ void command_handler(char *input) {
 		add_command("print", 1, 20);
 		set_up = true;
 	}
+
+	char arguments[5][10];
 
 	bool commandFound = false;
 
@@ -75,51 +79,23 @@ void command_handler(char *input) {
 				base[i] = input[i];
 		}
 
-		int arg_count = 0;
-		int counter = 0;
-
-		for(int i = 0; i < 2; i++) {
-			t_print("%s", arg[0].name);
-			t_print("%s", base);
-
-			int argsize = 0;
+		for(int i = 0; i < 2; i++) { //toDo: make this nicer
 
 			if(strcmp(arg[i].name, base) == 0) {
-				t_print("Wow we found something");
 
 				commandFound = true;
 
-				char arguments[arg[i].arguments_num][10];
-
-				int strle = strlen(input);
-				bool got_base;
-
-				for(int j = break_point+1; j < strle; j++) {
-					if(input[j-1] == ' ')
-						got_base = true;
-
-					if(got_base) {
-						if(input[j] == ' ') {
-							arg_count++;
-							counter = 0;
-						}
-						else if(counter < strle) {
-							arguments[arg_count][counter++] = input[j];
-							argsize++;
-						}
-						else {
-							t_print("Woah there you, you almost casued a seg fault");
-							break;
-						}
-					}
-				}
+				int argsize = command_parse(arguments, break_point, input);
 
 				char sendstr[256];
-				for(int i = 0; i < arg[i].arguments_num; i++)
+				for(int i = 0; i < arg[i].arguments_num; i++) // stripper
 					for(int j = 0; j < argsize; j++)
 						sendstr[j] = arguments[i][j];
 
+
 				print(sendstr);
+
+				memset(sendstr, 0, 256);
 
 				break;
 			}
@@ -199,4 +175,36 @@ void add_command(const char base_name[10], int args, int size) {
 	arg[counter].assumed_size = size;
 
 	counter++;
+}
+
+int command_parse(char argument[5][10], int start, const char *input) {
+
+	int arg_count = 0;
+	int counter = 0;
+
+	int argsize = 0;
+
+	int strle = strlen(input);
+	bool got_base;
+
+	for(int j = start+1; j < strle; j++) {
+		if(input[j-1] == ' ')
+			got_base = true;
+
+		if(got_base) {
+			if(input[j] == ' ') {
+				arg_count++;
+				counter = 0;
+			}
+			else if(counter < strle) {
+				argument[arg_count][counter++] = input[j];
+				argsize++;
+			}
+			else {
+				t_print("Woah there you, you almost casued a seg fault");
+				break;
+			}
+		}
+	}
+	return argsize;
 }
