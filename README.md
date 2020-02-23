@@ -8,6 +8,8 @@ an OS made for fun and learning
   - port manipulation eg..(in, out, serial)
 
   - IRQ1 works great so we have keyboard and a keyboard "driver"
+  
+  - Virtual address spaces (basic and terrible)
 
 **ToDo:**
   - All interrupts with a handlers for each
