@@ -3,7 +3,7 @@ AS=i686-elf-as
 
 srcC = Kernel/kernel.cpp Kernel/shitio.cpp Kernel/port.cpp Kernel/interrupt.cpp Kernel/keyboard.cpp Kernel/memory.cpp Kernel/shell.cpp Kernel/paging.cpp
 srcO = Bin/kernel.o Bin/port.o Bin/shitio.o Bin/interrupt.o Bin/keyboard.o Bin/memory.o Bin/shell.o Bin/paging.o
-CFLAGS = -c -std=c++11 -ffreestanding -O2 -Wall -Wextra -fno-stack-protector
+CFLAGS = -c -std=c++14 -ffreestanding -O2 -Wall -Wextra -fno-stack-protector -lstdc++
 
 install:
 	nasm -f elf32 Kernel/boot.asm -o Bin/boot.o

@@ -20,6 +20,8 @@ void shutdown();
 
 void print(const char *str);
 
+void test();
+
 void add_command(const char base_name[10], int args, int size);
 
 int command_parse(char argument[5][10], int start, const char *input);
@@ -31,11 +33,11 @@ using namespace shell;
 
 command arg[2];
 
-const char *command_list[] = { "version", "clr", "pagebegin", "shutdown", "reboot", "help" };
+const char *command_list[] = { "version", "clr", "pagebegin", "shutdown", "reboot", "test", "help" };
 const char *arg_command[] = { "print" };
 
 typedef void (*command_functions)();
-command_functions comm_func[] = { version, clr, startpage, shutdown, reboot, help };
+command_functions comm_func[] = { version, clr, startpage, shutdown, reboot, test, help };
 
 void command_handler(const char *input) {
 	static bool set_up = false;
@@ -111,6 +113,7 @@ void command_handler(const char *input) {
 
 	k_print("> ");
 }
+
 
 void print(const char *str) {
 	int length = strlen(str);
@@ -208,3 +211,16 @@ int command_parse(char argument[5][10], int start, const char *input) {
 	}
 	return argsize;
 }
+
+void test() {
+	k_print("\nOffical Bruh Momment");
+}
+
+
+
+
+
+
+
+
+

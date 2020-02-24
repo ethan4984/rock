@@ -2,28 +2,46 @@ ENTRY(_start)
 
 SECTIONS
 {
-	. = 1M;
+    . = 0x00100000;
 
-	.text BLOCK(4K) : ALIGN(4K)
-	{
-		*(.multiboot)
-		*(.text)
-	}
+    .text ALIGN(0x1000) :
+    {
+        *(.text)
+        *(.gnu.linkonce.t*)
+    }
 
-	.rodata BLOCK(4K) : ALIGN(4K)
-	{
-		*(.rodata)
-	}
+    .rodata ALIGN(0x1000) :
+    {
+        start_ctors = .;
+        *(SORT(.ctors*))  /* Note the "SORT" */
+        end_ctors = .;
 
-	.data BLOCK(4K) : ALIGN(4K)
-	{
-		*(.data)
-	}
+        start_dtors = .;
+        *(SORT(.dtors*))
+        end_dtors = .;
 
-	.bss BLOCK(4K) : ALIGN(4K)
-	{
-		*(COMMON)
-		*(.bss)
-	}
+        *(.rodata*)
+        *(.gnu.linkonce.r*)
+    }
 
+    .data ALIGN(0x1000) :
+    {
+        *(.data)
+        *(.gnu.linkonce.d*)
+    }
+
+    .bss :
+    {
+        sbss = .;
+        *(COMMON)
+        *(.bss)
+        *(.gnu.linkonce.b*)
+        ebss = .;
+    }
+
+    /DISCARD/ :
+    {
+        *(.comment)
+        *(.eh_frame)
+    }
 }

@@ -48,3 +48,112 @@ namespace standardout {
 
 	bool terminal_setcolor(uint8_t background, uint8_t text);
 }
+
+template<typename T>
+class darry {
+	public:
+		darry(const T *base, int current_size) : dynamic_array(base), arr_size(current_size) {
+			status = arr_size;
+		}
+
+		darry(int max_size) : arr_size(max_size) {
+			dynamic_array = new T[arr_size];
+			status = 0;
+		}
+
+		darry() {
+			int arr_size = 1;
+			int status = 0;
+			dynamic_array = new T[arr_size];
+		};
+
+		~darry() {
+			delete[] dynamic_array;
+		}
+
+		void add(T new_element) {
+			if(status == arr_size) {
+				T *tmp = new T[2 * arr_size];
+
+				for (int i = 0; i < arr_size; i++)
+					tmp[i] = dynamic_array[i];
+
+				delete[] dynamic_array;
+				arr_size *= 2;
+				dynamic_array = tmp;
+				delete[] tmp;
+			}
+			dynamic_array[status] = new_element;
+			status++;
+		}
+
+		void del() {
+			status--;
+		}
+
+		void in_add(T new_element, int location) {
+
+			T *tmp = new T[arr_size];
+
+			for(int i = 0; i < arr_size; i++) {
+				if(i == location - 1)
+					tmp[i] = new_element;
+					else
+					tmp[i] = dynamic_array[i];
+			}
+
+			delete[] dynamic_array;
+			dynamic_array = tmp;
+			delete[] tmp;
+		}
+
+		void in_del(int location) {
+			T *tmp = new T[arr_size - 1];
+
+			for(int i = 0; i < location - 1; i++)
+				tmp[i] = dynamic_array[i];
+
+			for(int i = location + 1; i < arr_size - 1; i++)
+				tmp[i-1] = dynamic_array[i];
+
+			delete[] dynamic_array;
+			arr_size -= 1;
+			dynamic_array = tmp;
+			delete[] tmp;
+		}
+
+		void resize(int new_size) {
+			T *tmp = new T[new_size];
+
+			for(int i = 0; i < new_size; i++)
+				tmp[i] = dynamic_array[i];
+
+			delete[] dynamic_array;
+			arr_size = new_size;
+			dynamic_array = tmp;
+			delete[] tmp;
+		}
+
+		void clear() {
+			memset(dynamic_array, 0, size);
+		}
+
+		int size() {
+			return arr_size;
+		}
+
+		T grab(int index) {
+			return dynamic_array[index];
+		}
+
+		void print() {
+			for(int i = 0; i < arr_size; i++)
+			k_print("%d", dynamic_array[i]);
+		}
+	private:
+		int arr_size;
+
+		int status;
+
+		T  *dynamic_array;
+};
