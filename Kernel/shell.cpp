@@ -54,10 +54,8 @@ void command_handler(const char *input) {
 	if(end_of_terminal())
 		clr();
 
-	t_print("Command sent: %s", input);
-
 	for(long unsigned int i = 0; i < sizeof command_list/sizeof *command_list; i++) {
-		if(!strcmp(input, command_list[i])) {
+		if(strcmp(input, command_list[i]) == 0) {
 			comm_func[i]();
 			commandFound = true;
 		}
@@ -107,9 +105,7 @@ void command_handler(const char *input) {
 	putchar('\n');
 
 	if(!commandFound && strlen(input) != 0)
-		k_print("%s commnad not found\n", get_entry());
-
-	clr_keyboard_entry();
+		k_print("%s commnad not found\n", input);
 
 	k_print("> ");
 }

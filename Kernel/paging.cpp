@@ -11,6 +11,8 @@ void new_virtual_map(uint32_t physical_addr, uint32_t virtual_addr);
 
 void new_claim(uint32_t physical_addr, uint32_t virtual_addr);
 
+void get_physical_adddress(void *virtual_addr);
+
 static uint32_t* page_dir = 0;
 static uint32_t page_loc = 0;
 static uint32_t* last_page = 0;
@@ -18,6 +20,9 @@ static uint32_t* last_page = 0;
 struct segments {
 	uint32_t virtual_space = -69;
 	uint32_t physical_space = -69;
+	segments *next;
+	bool is_full = false;
+	uint32_t block_size;
 } claims[2];
 
 void new_claim(uint32_t physical_addr, uint32_t virtual_addr) {
@@ -44,7 +49,7 @@ void new_claim(uint32_t physical_addr, uint32_t virtual_addr) {
 void paging_init() {
 	page_dir = (uint32_t*)0x400000;
 	page_loc = (uint32_t)page_dir;
-	last_page = (uint32_t *)0x404000;
+	last_page = (uint32_t*)0x404000;
 
 	for(int i = 0; i < 1024; i++)
 		page_dir[i] = 0 | 2;
@@ -73,4 +78,15 @@ void new_virtual_map(uint32_t physical_addr, uint32_t virtual_addr) {
 	page_dir[virtual_addr >> 22] = ((uint32_t)last_page) | 3;
 	last_page = (uint32_t *)(((uint32_t)last_page) + 4096);
 	k_print("VIRTUAL MAP: %x to %x\n", virtual_addr, physical_addr);
+}
+
+void *get_physical_address(void *virtual_addr) {
+	uint32_t pdindex = (uint32_t)virtual_addr >> 22;
+	uint32_t ptindex = (uint32_t)virtual_addr >> 12 & 0x03FF;
+
+	uint32_t *pd = (uint32_t*)0xFFFFF000;
+
+    	uint32_t *pt = ((uint32_t*)0xFFC00000) + (0x400 * pdindex);
+
+	return (void*)((pt[ptindex] & ~0xFFF) + ((uint32_t)virtual_addr & 0xFFF));
 }

@@ -15,17 +15,9 @@ char keyboard_map[] = {
 		      };
 
 struct keyboard_buffer {
-	char *input;
+	char *input = {0};
 	bool takingInput;
 } key_entry;
-
-void clr_keyboard_entry() {
-	memset(key_entry.input, 0, strlen(key_entry.input));
-}
-
-char *get_entry() {
-	return key_entry.input;
-}
 
 void startInput() {
 	key_entry.takingInput = true;
@@ -50,9 +42,11 @@ extern "C" void keyboard_handler_main() {
 					break;
 				}
 
-				key_entry.takingInput = true;
+				key_entry.input[counter] = 0;
 
 				command_handler(key_entry.input);
+
+				memset(key_entry.input, 0, strlen(key_entry.input));
 
 				counter = 0;
 
@@ -67,7 +61,9 @@ extern "C" void keyboard_handler_main() {
 
 				key_entry.input[counter] = 0;
 
-				counter -= 1;
+				if(counter != 0)
+					counter -= 1;
+
 				break;
 			default:
 				if(!key_entry.takingInput) {

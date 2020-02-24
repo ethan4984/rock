@@ -1,6 +1,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "shitio.h"
+
+using namespace standardout;
+
 void *memset(void *src, int val, unsigned int how_many) {
     void *new_mem = src;
     asm volatile (	"rep stosb"
@@ -11,4 +15,4 @@ void *memset(void *src, int val, unsigned int how_many) {
     return new_mem;
 }
 
-//toDo: add memcpy, malloc, free, etc
+
