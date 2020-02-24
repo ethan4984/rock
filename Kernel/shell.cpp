@@ -102,10 +102,8 @@ void command_handler(const char *input) {
 		}
 	}
 
-	putchar('\n');
-
 	if(!commandFound && strlen(input) != 0)
-		k_print("%s commnad not found\n", input);
+		k_print("\n%s commnad not found\n", input);
 
 	k_print("> ");
 }
@@ -119,7 +117,7 @@ void print(const char *str) {
 }
 
 void version() {
-	k_print("\ncrepOS beta 1.1");
+	k_print("\ncrepOS beta 1.1\n");
 }
 
 void clr() {
@@ -137,6 +135,7 @@ void help() {
 	putchar('\n');
 	for(long unsigned int i = 0; i < sizeof arg_command / sizeof *arg_command; i++)
 		k_print("%s ", arg_command[i]);
+	putchar('\n');
 }
 
 void reboot() {
@@ -209,7 +208,7 @@ int command_parse(char argument[5][10], int start, const char *input) {
 }
 
 void test() {
-	k_print("\nOffical Bruh Momment");
+	k_print("\nOffical Bruh Momment\n");
 }
 
 

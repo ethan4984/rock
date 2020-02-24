@@ -17,33 +17,31 @@ static uint32_t* page_dir = 0;
 static uint32_t page_loc = 0;
 static uint32_t* last_page = 0;
 
+struct blocks {
+	blocks *last;
+	blocks *next;
+
+	uint32_t size = 0;
+	bool is_full;
+} *block;
+
 struct segments {
 	uint32_t virtual_space = -69;
 	uint32_t physical_space = -69;
+
 	segments *next;
+
 	bool is_full = false;
-	uint32_t block_size;
-} claims[2];
+	uint32_t size = 0;
+} *root;
 
 void new_claim(uint32_t physical_addr, uint32_t virtual_addr) {
-	static int counter = 0;
+	root->virtual_space = virtual_addr;
+	root->physical_space = physical_addr;
 
-	for(int i = 0; i < 2; i++) {
-		if(physical_addr == claims[i].physical_space || virtual_addr == claims[i].virtual_space) {
-			t_print("FATEL: increase size of segments to add a new claim");
-			return;
-		}
-	}
-
-	if(counter == 2) {
-		t_print("FATAL: increase size of segments to add a new claim");
-		return;
-	}
-
-	claims[counter].virtual_space = virtual_addr;
-	claims[counter].physical_space = physical_addr;
-
-	counter++;
+	root->size += 1;
+	root->next->size = root->size;
+	root = root->next;
 }
 
 void paging_init() {

@@ -28,6 +28,8 @@ extern "C" void keyboard_handler_main() {
 
 	static int counter = 0;
 
+	static int buffer_counter = 0;
+
 	if(inb(0x64) & 0x01) {
 
 		char keycode = inb(0x60);
@@ -50,6 +52,8 @@ extern "C" void keyboard_handler_main() {
 
 				counter = 0;
 
+				buffer_counter = 0;
+
 				break;
 			case 0x0e:
 				if(!key_entry.takingInput) { // minor buffering issues - fix me
@@ -70,8 +74,13 @@ extern "C" void keyboard_handler_main() {
 					putchar(keyboard_map[(unsigned char) keycode]);
 					break;
 				}
+
+				if(++buffer_counter == 256)
+					memset(key_entry.input, 0, strlen(key_entry.input));
+
 				putchar(keyboard_map[(unsigned char) keycode]);
 				key_entry.input[counter++] = keyboard_map[(unsigned char)keycode];
+
 				break;
 		}
 	}
