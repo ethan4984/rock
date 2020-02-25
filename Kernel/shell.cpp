@@ -31,13 +31,13 @@ int command_parse(char argument[5][10], int start, const char *input);
 using namespace standardout;
 using namespace shell;
 
-command arg[2];
+command arg[1];
 
-const char *command_list[] = { "version", "clr", "pagebegin", "shutdown", "reboot", "test", "help" };
+const char *command_list[] = { "version", "clr", "shutdown", "reboot", "test", "address-spaces", "help" };
 const char *arg_command[] = { "print" };
 
 typedef void (*command_functions)();
-command_functions comm_func[] = { version, clr, startpage, shutdown, reboot, test, help };
+command_functions comm_func[] = { version, clear_screen, shutdown, reboot, test, current_address_spaces, help };
 
 void command_handler(const char *input) {
 	static bool set_up = false;
@@ -52,7 +52,7 @@ void command_handler(const char *input) {
 	bool commandFound = false;
 
 	if(end_of_terminal())
-		clr();
+		clear_screen();
 
 	for(long unsigned int i = 0; i < sizeof command_list/sizeof *command_list; i++) {
 		if(strcmp(input, command_list[i]) == 0) {
@@ -79,9 +79,9 @@ void command_handler(const char *input) {
 				base[i] = input[i];
 		}
 
-		for(int i = 0; i < 2; i++) { //toDo: make this nicer
+		for(int i = 0; i < 1; i++) { //toDo: make this nicer
 
-			if(strcmp(arg[i].name, base) == 0) {
+			if(!strcmp(arg[i].name, base)) {
 
 				commandFound = true;
 
@@ -91,7 +91,6 @@ void command_handler(const char *input) {
 				for(int i = 0; i < arg[i].arguments_num; i++) // stripper
 					for(int j = 0; j < argsize; j++)
 						sendstr[j] = arguments[i][j];
-
 
 				print(sendstr);
 
@@ -105,7 +104,7 @@ void command_handler(const char *input) {
 	if(!commandFound && strlen(input) != 0)
 		k_print("\n%s commnad not found\n", input);
 
-	k_print("> ");
+	k_print("\n> ");
 }
 
 
@@ -117,15 +116,7 @@ void print(const char *str) {
 }
 
 void version() {
-	k_print("\ncrepOS beta 1.1\n");
-}
-
-void clr() {
-	clear_screen();
-}
-
-void startpage() {
-	paging_init();
+	k_print("\ncrepOS beta 1.2");
 }
 
 void help() {
@@ -135,7 +126,6 @@ void help() {
 	putchar('\n');
 	for(long unsigned int i = 0; i < sizeof arg_command / sizeof *arg_command; i++)
 		k_print("%s ", arg_command[i]);
-	putchar('\n');
 }
 
 void reboot() {

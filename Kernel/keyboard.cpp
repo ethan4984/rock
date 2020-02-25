@@ -14,6 +14,14 @@ char keyboard_map[] = {
                    	'b', 'n', 'm', ',', '.',  '/', ' ', ' ',  ' ', ' '
 		      };
 
+char cap_map[] = {
+			' ', ' ', '!', '@', '#', '$', '%', '^',  '&', '*', '(', ')',
+                   	'_', '+', '\b', '\t', 'Q', 'W', 'E', 'R',  'T', 'Y', 'U', 'I',
+                   	'O', 'P', '{', '}', ' ',  ' ', 'A', 'S',  'D', 'F', 'G', 'H',
+                   	'J', 'K', 'L', ':', '\'', '~', ' ', '\\', 'Z', 'X', 'C', 'V',
+                   	'B', 'N', 'M', '<', '>',  '?', ' ', ' ',  ' ', ' '
+		 };
+
 struct keyboard_buffer {
 	char *input = {0};
 	bool takingInput;
@@ -26,64 +34,75 @@ void startInput() {
 extern "C" void keyboard_handler_main() {
 	outb(0x20, 0x20);
 
+	static bool up_key = false;
+
 	static int counter = 0;
 
 	static int buffer_counter = 0;
 
-	if(inb(0x64) & 0x01) {
+	unsigned char keycode = inb(0x60);
 
-		char keycode = inb(0x60);
+	t_print("%x", keycode);
 
-		if(keycode < 0)
-			return;
-
-		switch(keycode) {
-			case 0x1c:
-				if(!key_entry.takingInput) {
-					putchar('\n');
-					break;
-				}
-
-				key_entry.input[counter] = 0;
-
-				command_handler(key_entry.input);
-
-				memset(key_entry.input, 0, strlen(key_entry.input));
-
-				counter = 0;
-
-				buffer_counter = 0;
-
+	switch(keycode) {
+		case 0x1c:
+			if(!key_entry.takingInput) {
+				putchar('\n');
 				break;
-			case 0x0e:
-				if(!key_entry.takingInput) { // minor buffering issues - fix me
-					putchar('\b');
-					break;
-				}
+			}
 
+			key_entry.input[counter] = 0;
+
+			command_handler(key_entry.input);
+
+			memset(key_entry.input, 0, strlen(key_entry.input));
+
+			counter = 0;
+
+			buffer_counter = 0;
+
+			break;
+		case 0x0e:
+			if(!key_entry.takingInput) { // minor buffering issues - fix me
 				putchar('\b');
-
-				key_entry.input[counter] = 0;
-
-				if(counter != 0)
-					counter -= 1;
-
 				break;
-			default:
+			}
+
+			putchar('\b');
+
+			key_entry.input[counter] = 0;
+
+			if(counter != 0)
+				counter--;
+
+			break;
+		case 0x2a:
+			up_key = true;
+			break;
+		case 0xaa:
+			up_key = false;
+			break;
+		case 0xF:
+			putchar('\t');
+			break;
+		default:
+			if(keycode <= 128) {
 				if(!key_entry.takingInput) {
-					putchar(keyboard_map[(unsigned char) keycode]);
+					putchar(keyboard_map[(unsigned char)keycode]);
 					break;
 				}
 
 				if(++buffer_counter == 256)
 					memset(key_entry.input, 0, strlen(key_entry.input));
 
-				putchar(keyboard_map[(unsigned char) keycode]);
-				key_entry.input[counter++] = keyboard_map[(unsigned char)keycode];
+				if(up_key) {
+					putchar(cap_map[(unsigned char)keycode]);
+					key_entry.input[counter++] = cap_map[(unsigned char)keycode];
+					break;
+				}
 
-				break;
-		}
+				putchar(keyboard_map[(unsigned char)keycode]);
+				key_entry.input[counter++] = keyboard_map[(unsigned char)keycode];
+			}
 	}
-	else
-		t_print("IRQ1: bad keycodes");
 }

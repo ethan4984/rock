@@ -74,9 +74,8 @@ namespace standardout {
 				update_cursor(terminal_row, terminal_column);
 				break;
 			case '\t':
-				while(terminal_column % 4)
-				terminal_putentryat(' ', terminal_color, terminal_column++, terminal_row);
-				update_cursor(terminal_row, terminal_column);
+				for(int i = 0; i < 4; i++)
+					putchar(' ');
 				break;
 			case '\b':
 				if(terminal_column == 0) {

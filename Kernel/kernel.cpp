@@ -12,11 +12,11 @@ extern "C" void kernel_main(void) {
 	load_gdt();
 	initalize();
 	k_print("Starting crepOS\n");
-	paging_init();
+	setup();
 	idt_init();
+	k_print("-------------------------------------------\n");
 
-	k_print("\n\n");
-	outb(0x21, 0xFD);
+	outb(0x21, 0xFC);
 
 	k_print("> ");
 	startInput();
