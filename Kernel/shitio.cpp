@@ -34,7 +34,6 @@ size_t y;
 size_t x;
 
 namespace standardout {
-
 	void initalize() {
 		terminal_row = 0;
 		terminal_column = 0;
@@ -50,7 +49,7 @@ namespace standardout {
 	}
 
 	bool end_of_terminal() {
-		return (terminal_row == 24) ? true : false;
+		return (terminal_row >= 24) ? true : false;
 	}
 
 	bool terminal_setcolor(uint8_t background, uint8_t text) {

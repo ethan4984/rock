@@ -81,16 +81,18 @@ void command_handler(const char *input) {
 
 		for(int i = 0; i < 1; i++) { //toDo: make this nicer
 
-			if(!strcmp(arg[i].name, base)) {
+			if(strcmp(arg[i].name, base) == 0) {
 
 				commandFound = true;
 
 				int argsize = command_parse(arguments, break_point, input);
 
 				char sendstr[256];
-				for(int i = 0; i < arg[i].arguments_num; i++) // stripper
+				for(int i = 0; i < 1; i++)
 					for(int j = 0; j < argsize; j++)
 						sendstr[j] = arguments[i][j];
+
+				t_print("%s", sendstr);
 
 				print(sendstr);
 
@@ -110,6 +112,7 @@ void command_handler(const char *input) {
 
 void print(const char *str) {
 	int length = strlen(str);
+	t_print("we are here right?");
 	putchar('\n');
 	for(int i = 0; i < length; i++)
 		putchar(str[i]);
@@ -194,6 +197,7 @@ int command_parse(char argument[5][10], int start, const char *input) {
 			}
 		}
 	}
+
 	return argsize;
 }
 

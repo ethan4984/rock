@@ -2,6 +2,7 @@
 #include <stddef.h>
 
 #include "shitio.h"
+#include "memory.h"
 
 using namespace standardout;
 
@@ -14,5 +15,4 @@ void *memset(void *src, int val, unsigned int how_many) {
     );
     return new_mem;
 }
-
 

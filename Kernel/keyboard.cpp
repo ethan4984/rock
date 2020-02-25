@@ -42,8 +42,6 @@ extern "C" void keyboard_handler_main() {
 
 	unsigned char keycode = inb(0x60);
 
-	t_print("%x", keycode);
-
 	switch(keycode) {
 		case 0x1c:
 			if(!key_entry.takingInput) {

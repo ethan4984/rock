@@ -75,5 +75,3 @@ extern "C" void irq_h(void) {
 extern "C" void PITI() {
 	outb(0x20, 0x20);
 }
-
-
