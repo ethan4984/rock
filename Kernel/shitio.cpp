@@ -99,6 +99,8 @@ namespace standardout {
 				update_cursor(terminal_row, terminal_column);
 				break;
 		}
+		if(end_of_terminal())
+			clear_screen();
 	}
 
 	void k_print(const char str[256],...) {

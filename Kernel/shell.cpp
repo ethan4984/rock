@@ -51,9 +51,6 @@ void command_handler(const char *input) {
 
 	bool commandFound = false;
 
-	if(end_of_terminal())
-		clear_screen();
-
 	for(long unsigned int i = 0; i < sizeof command_list/sizeof *command_list; i++) {
 		if(strcmp(input, command_list[i]) == 0) {
 			comm_func[i]();
