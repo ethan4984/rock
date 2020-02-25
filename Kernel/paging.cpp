@@ -57,17 +57,6 @@ namespace MM {
 			was_done = true;
 		}
 	}
-
-	void *virtual_address_space::get_physical_address(void *virtual_addr) {
-		uint32_t pdindex = (uint32_t)virtual_addr >> 22;
-		uint32_t ptindex = (uint32_t)virtual_addr >> 12 & 0x03FF;
-
-		uint32_t *pd = (uint32_t*)0xFFFFF000;
-
-		uint32_t *pt = ((uint32_t*)0xFFC00000) + (0x400 * pdindex);
-
-		return (void*)((pt[ptindex] & ~ 0xFFF) + ((uint32_t)virtual_addr & 0xFFF));
-	}
 }
 
 MM::virtual_address_space obj;
