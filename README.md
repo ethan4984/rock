@@ -10,6 +10,8 @@ an OS made for fun and learning
   - IRQ1 works great so we have keyboard and a keyboard "driver"
   
   - Virtual address spaces (basic and terrible)
+  
+  - Small but "somewhat" working shell
 
 **ToDo:**
   - All interrupts with a handlers for each
