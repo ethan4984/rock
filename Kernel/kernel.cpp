@@ -7,6 +7,7 @@
 extern void load_gdt(void) asm("load_gdt");
 
 using namespace standardout;
+using namespace MM;
 
 extern "C" void kernel_main(void) {
 	load_gdt();
@@ -14,6 +15,7 @@ extern "C" void kernel_main(void) {
 	k_print("Starting crepOS\n");
 	setup();
 	idt_init();
+	page_frame_init(0xF42400);
 	k_print("-------------------------------------------\n");
 
 	outb(0x21, 0xFC);

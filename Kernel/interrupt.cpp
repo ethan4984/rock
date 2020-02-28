@@ -5,7 +5,6 @@
 struct IDT_entry IDT[256];
 
 void idt_gate(uint32_t referenceIRQ) {
-
 	static int counter = 32;
 
 	uint32_t irqX = referenceIRQ;

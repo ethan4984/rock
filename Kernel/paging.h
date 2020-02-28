@@ -27,16 +27,24 @@ namespace MM {
 
 			uint32_t *last_page = 0;
 	};
-	class block : protected virtual_address_space {
-		public:
-			void *malloc(size_t size);
 
-			void free(void *location);
-		private:
-			uint32_t *used;
+	void set(uint32_t location);
 
-			uint32_t *is_used; //1 if full 0 if not 1
-	};
+	void clear(uint32_t location);
+
+	uint8_t isset(uint32_t location);
+
+	void *malloc(size_t size);
+
+	void free(void *location);
+
+	void page_frame_init(uint32_t mem_range);
+
+	uint32_t allocate_block();
+
+	void free_block(uint32_t block_num);
+
+	uint32_t first_free();
 }
 
 void setup();

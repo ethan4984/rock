@@ -2,8 +2,16 @@
 
 #include "paging.h"
 #include "shitio.h"
+#include "memory.h"
 
 using namespace standardout;
+
+extern uint32_t kernel_end;
+
+uint8_t *bitmap = (uint8_t*)(&kernel_end);
+uint8_t *mem_start;
+uint32_t total_blocks;
+uint32_t size;
 
 namespace MM {
 	bool virtual_address_space::new_claim(uint32_t physical_addr, uint32_t virtual_addr) {
@@ -31,7 +39,6 @@ namespace MM {
 
 		page_dir[virtual_addr >> 22] = ((uint32_t)last_page) | 3;
 		last_page = (uint32_t*)(((uint32_t)last_page) + 4096);
-		k_print("VIRTUAL MAP: %x to %x\n", virtual_addr, physical_addr);
 	}
 
 	void virtual_address_space::enable_page() {
@@ -49,13 +56,58 @@ namespace MM {
 		for(int i = 0; i < 1024; i++)
 			page_dir[i] = 0 | 2;
 
-		static bool was_done = false;
-		if(!was_done) {
-			new_virtual_map(0, 0);
-			new_virtual_map(0x400000, 0x400000);
-			enable_page();
-			was_done = true;
-		}
+		new_virtual_map(0, 0);
+		new_virtual_map(0x400000, 0x400000);
+		enable_page();
+		k_print("PAGING: V to P maped between 0x0 and 0x400000\n");
+	}
+
+	void set(uint32_t location) {
+		bitmap[location / 8] = bitmap[location / 8] | (1 << (location % 8));
+	}
+
+	void clear(uint32_t location) {
+		bitmap[location / 8] = bitmap[location / 8] & (~(1 << (location % 8)));
+	}
+
+	uint8_t isset(uint32_t location) {
+		return (bitmap[location / 8] >> (location % 8)) & 0x1;
+	}
+
+	void page_frame_init(uint32_t mem_range) {
+	    total_blocks = mem_range / 0x1000;
+
+	    size = total_blocks / 8;
+	    if(size * 8 < total_blocks)
+		size++;
+
+	    memset(bitmap, 0, size);
+	    mem_start = (uint8_t*)((((uint32_t)(bitmap + size)) & 0xfffff000) + 0x1000);
+
+	    k_print("PMM: mem range: %d MB\n", mem_range / (1024 * 1024));
+	    k_print("PMM: blocks num: %d\n", total_blocks);
+	    k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
+	    k_print("PMM: bitmap size: %d\n", size);
+	    k_print("PMM: addr strat: %x\n", (uint32_t)mem_start);
+	}
+
+	uint32_t allocate_block() {
+	    uint32_t free_block = first_free();
+	    set(free_block);
+	    return free_block;
+	}
+
+	void free_block(uint32_t block_num) {
+	    clear(block_num);
+	}
+
+	uint32_t first_free() {
+	    for(uint32_t i = 0; i < total_blocks; i++) {
+		if(!isset(i))
+		    return i;
+	    }
+	    t_print("Bruh: we are running out a blocks, make some more bitch\n");
+	    return (uint32_t) - 1;
 	}
 }
 
@@ -73,9 +125,3 @@ void current_address_spaces() {
 			putchar('\n');
 	}
 }
-
-
-
-
-
-

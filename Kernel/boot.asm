@@ -35,9 +35,11 @@ _start:
 
     mov  ebx, start_ctors
     jmp  ctors_until_end
+
 call_constructor:
     call [ebx]
     add  ebx,4
+
 ctors_until_end:
     cmp  ebx, end_ctors
     jb   call_constructor
@@ -46,14 +48,16 @@ ctors_until_end:
 
     mov  ebx, end_dtors
     jmp  dtors_until_end
+
 call_destructor:
     sub  ebx, 4
     call [ebx]
+
 dtors_until_end:
     cmp  ebx, start_dtors
     ja   call_destructor
-
     cli
+
 hang:
     hlt
     jmp hang

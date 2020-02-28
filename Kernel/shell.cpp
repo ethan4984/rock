@@ -101,7 +101,7 @@ void command_handler(const char *input) {
 	}
 
 	if(!commandFound && strlen(input) != 0)
-		k_print("\n%s commnad not found\n", input);
+		k_print("\n%s commnad not found", input);
 
 	k_print("\n> ");
 }
@@ -199,7 +199,7 @@ int command_parse(char argument[5][10], int start, const char *input) {
 }
 
 void test() {
-	k_print("\nOffical Bruh Momment\n");
+	k_print("\nOffical Bruh Momment");
 }
 
 
