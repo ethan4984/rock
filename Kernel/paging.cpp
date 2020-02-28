@@ -75,39 +75,39 @@ namespace MM {
 	}
 
 	void page_frame_init(uint32_t mem_range) {
-	    total_blocks = mem_range / 0x1000;
+		total_blocks = mem_range / 0x1000;
 
-	    size = total_blocks / 8;
-	    if(size * 8 < total_blocks)
-		size++;
+		size = total_blocks / 8;
+		if(size * 8 < total_blocks)
+			size++;
 
-	    memset(bitmap, 0, size);
-	    mem_start = (uint8_t*)((((uint32_t)(bitmap + size)) & 0xfffff000) + 0x1000);
+	    	memset(bitmap, 0, size);
+	    	mem_start = (uint8_t*)((((uint32_t)(bitmap + size)) & 0xfffff000) + 0x1000);
 
-	    k_print("PMM: mem range: %d MB\n", mem_range / (1024 * 1024));
-	    k_print("PMM: blocks num: %d\n", total_blocks);
-	    k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
-	    k_print("PMM: bitmap size: %d\n", size);
-	    k_print("PMM: addr strat: %x\n", (uint32_t)mem_start);
+		k_print("PMM: mem range: %d MB\n", mem_range / (1024 * 1024));
+		k_print("PMM: blocks num: %d\n", total_blocks);
+		k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
+		k_print("PMM: bitmap size: %d\n", size);
+		k_print("PMM: addr strat: %x\n", (uint32_t)mem_start);
 	}
 
 	uint32_t allocate_block() {
-	    uint32_t free_block = first_free();
-	    set(free_block);
-	    return free_block;
+		uint32_t free_block = first_free();
+		set(free_block);
+		return free_block;
 	}
 
 	void free_block(uint32_t block_num) {
-	    clear(block_num);
+		clear(block_num);
 	}
 
 	uint32_t first_free() {
-	    for(uint32_t i = 0; i < total_blocks; i++) {
-		if(!isset(i))
-		    return i;
-	    }
-	    t_print("Bruh: we are running out a blocks, make some more bitch\n");
-	    return (uint32_t) - 1;
+		for(uint32_t i = 0; i < total_blocks; i++) {
+			if(!isset(i))
+				return i;
+		}
+	    	t_print("Bruh: we are running out a blocks, make some more bitch\n");
+	    	return (uint32_t) - 1;
 	}
 }
 
@@ -125,3 +125,17 @@ void current_address_spaces() {
 			putchar('\n');
 	}
 }
+
+void block_show() {
+	k_print("\nPMM: blocks num: %d\n", total_blocks);
+	k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
+	k_print("PMM: bitmap size: %d\n", size);
+	k_print("PMM: addr strat: %x", (uint32_t)mem_start);
+}
+
+
+
+
+
+
+

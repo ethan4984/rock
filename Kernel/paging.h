@@ -51,4 +51,4 @@ void setup();
 
 void current_address_spaces();
 
-void block_map();
+void block_show();

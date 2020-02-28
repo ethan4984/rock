@@ -33,11 +33,11 @@ using namespace shell;
 
 command arg[1];
 
-const char *command_list[] = { "version", "clr", "shutdown", "reboot", "test", "address-spaces", "help" };
+const char *command_list[] = { "version", "clr", "shutdown", "reboot", "test", "address-spaces", "block-show", "help" };
 const char *arg_command[] = { "print" };
 
 typedef void (*command_functions)();
-command_functions comm_func[] = { version, clear_screen, shutdown, reboot, test, current_address_spaces, help };
+command_functions comm_func[] = { version, clear_screen, shutdown, reboot, test, current_address_spaces, block_show, help };
 
 void command_handler(const char *input) {
 	static bool set_up = false;
