@@ -75,7 +75,7 @@ namespace MM {
 	}
 
 	void page_frame_init(uint32_t mem_range) {
-		total_blocks = mem_range / 0x1000;
+		total_blocks = mem_range / 0x1000; //4Kb blocks
 
 		size = total_blocks / 8;
 		if(size * 8 < total_blocks)

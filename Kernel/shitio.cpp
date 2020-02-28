@@ -34,10 +34,11 @@ size_t y;
 size_t x;
 
 namespace standardout {
-	void initalize() {
+	void initalize(uint8_t bg, uint8_t fg) {
+		clear_screen();
 		terminal_row = 0;
 		terminal_column = 0;
-		terminal_color = vga_entry_color(VGA_LIGHT_GREY, VGA_BLUE);
+		terminal_color = vga_entry_color(fg, bg);
 		terminal_buffer = VGA_MEMORY;
 
 		for(y = 0; y < VGA_HEIGHT; y++) {

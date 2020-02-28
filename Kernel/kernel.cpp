@@ -11,11 +11,11 @@ using namespace MM;
 
 extern "C" void kernel_main(void) {
 	load_gdt();
-	initalize();
+	initalize(VGA_BLUE, VGA_LIGHT_GREY);
 	k_print("Starting crepOS\n");
 	setup();
 	idt_init();
-	page_frame_init(0xF42400);
+	page_frame_init(0xF42400); //Reserves ~ 16mb
 	k_print("-------------------------------------------\n");
 
 	outb(0x21, 0xFC);

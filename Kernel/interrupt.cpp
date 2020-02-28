@@ -74,3 +74,29 @@ extern "C" void irq_h(void) {
 extern "C" void PITI() {
 	outb(0x20, 0x20);
 }
+
+void panic(const char *message, const char *proccess) {
+	asm volatile("cli"); //disable all interrupts
+	standardout::initalize(VGA_BLACK, VGA_LIGHT_GREY);
+	standardout::k_print("PANIC : fatal error : %s : in %s\n", message, proccess);
+	for(;;);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

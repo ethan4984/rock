@@ -34,7 +34,7 @@ char *strcpy(char *dest, const char *src);
 namespace standardout {
 	static uint16_t *const VGA_MEMORY = (uint16_t*)0xB8000;
 
-	void initalize();
+	void initalize(uint8_t bg, uint8_t fg);
 
 	void k_print(const char str[256],...);
 

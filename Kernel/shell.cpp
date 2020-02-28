@@ -3,6 +3,7 @@
 #include "paging.h"
 #include "port.h"
 #include "memory.h"
+#include "interrupt.h"
 
 /* prototypes */
 
@@ -199,7 +200,7 @@ int command_parse(char argument[5][10], int start, const char *input) {
 }
 
 void test() {
-	k_print("\nOffical Bruh Momment");
+	panic("Test", "Test");
 }
 
 
