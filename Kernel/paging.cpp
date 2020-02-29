@@ -3,6 +3,7 @@
 #include "paging.h"
 #include "shitio.h"
 #include "memory.h"
+#include "interrupt.h"
 
 using namespace standardout;
 
@@ -107,7 +108,40 @@ namespace MM {
 				return i;
 		}
 	    	t_print("Bruh: we are running out a blocks, make some more bitch\n");
-	    	return (uint32_t) - 1;
+	    	return -69;
+	}
+
+	void *malloc(size_t size) {
+		if(!size) {
+			t_print("BRUH: wtf are you doing trying to allocate a blocks of zero size");
+			return 0;
+		}
+
+		uint32_t reqiured_blocks = size / 0x1000;
+
+		void *start = 0;
+		bool once = false;
+
+		for(uint32_t i = 0; i < reqiured_blocks; i++) {
+			if(!once) {
+				start = (void*)allocate_block();
+				once = true;
+			}
+			if(allocate_block() == static_cast<unsigned int>(-69)) {
+				t_print("BRUH: we ran out of blocks bruh");
+				panic("We ran out of blocks", "malloc");
+			}
+		}
+		return start;
+	}
+
+	void free(void *location) {
+		if(location == NULL) {
+			t_print("BRUH: wtf are you doing trying to free NULL memory");
+			return;
+		}
+		free_block((uint32_t)location);
+		t_print("FREE: this block was just freed %x", location);
 	}
 }
 
@@ -132,10 +166,3 @@ void block_show() {
 	k_print("PMM: bitmap size: %d\n", size);
 	k_print("PMM: addr strat: %x", (uint32_t)mem_start);
 }
-
-
-
-
-
-
-

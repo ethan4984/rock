@@ -18,7 +18,9 @@ extern "C" void kernel_main(void) {
 	page_frame_init(0xF42400); //Reserves ~ 16mb
 	k_print("-------------------------------------------\n");
 
-	outb(0x21, 0xFC);
+	asm volatile("sti");
+
+	malloc(sizeof(uint32_t));
 
 	k_print("> ");
 	startInput();
