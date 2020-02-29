@@ -53,10 +53,11 @@ namespace standardout {
 		return (terminal_row >= 24) ? true : false;
 	}
 
-	bool terminal_setcolor(uint8_t background, uint8_t text) {
-		if(background <= 15 && background > 0) {
-			if(text <= 15 && text > 0) {
-				terminal_color = vga_entry_color(text, background);
+	bool terminal_setcolor(uint8_t bg, uint8_t fg) {
+		if(bg <= 15 && bg > 0) {
+			if(fg <= 15 && fg > 0) {
+				terminal_buffer = VGA_MEMORY;
+				terminal_color = vga_entry_color(fg, bg);
 				return true;
 			}
 		}

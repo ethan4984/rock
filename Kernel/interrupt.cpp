@@ -2,6 +2,8 @@
 #include "port.h"
 #include "shitio.h"
 
+using namespace standardout;
+
 struct IDT_entry IDT[256];
 
 void idt_gate(uint32_t referenceIRQ) {
@@ -53,13 +55,13 @@ void idt_init(void) {
 	idt_ptr[0] = (sizeof (struct IDT_entry) * 256) + ((idt_address & 0xffff) << 16);
 	idt_ptr[1] = idt_address >> 16 ;
 
-	standardout::k_print("IDT: initalized at %x\n", idt_address);
+	k_print("IDT: initalized at %x\n", idt_address);
 
 	load_idt(idt_ptr);
 }
 
 extern "C" void gdt_info(uint32_t addr) {
-	standardout::k_print("GDT: mapped to %x\n", addr);
+	k_print("GDT: mapped to %x\n", addr);
 }
 
 extern "C" void irq_l(void) {
@@ -77,26 +79,36 @@ extern "C" void PITI() {
 
 void panic(const char *message, const char *proccess) {
 	asm volatile("cli"); //disable all interrupts
-	standardout::initalize(VGA_BLACK, VGA_LIGHT_GREY);
+	standardout::initalize(VGA_BLACK, VGA_RED);
 	standardout::k_print("PANIC : fatal error : %s : in %s\n", message, proccess);
 	for(;;);
 }
 
+extern void save_regs(void) asm("save_regs");
 
+struct gen_regs {
+	uint32_t eax;
+	uint32_t ebx;
+	uint32_t ecx;
+	uint32_t edx;
 
+	uint32_t edi;
+	uint32_t esi;
+	uint32_t ebp;
+	uint32_t esp;
+	uint32_t eip;
+} gen_reg;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void reg_flow() {
+	save_regs();
+	k_print("\nREGISTER DUMP\n");
+	k_print("Dump: EAX %x\n", gen_reg.eax);
+	k_print("Dump: EBX %x\n", gen_reg.ebx);
+	k_print("Dump: ECX %x\n", gen_reg.ecx);
+	k_print("Dump: EDX %x\n", gen_reg.edx);
+	k_print("Dump: ESP %x\n", gen_reg.esp);
+	k_print("Dump: EBP %x\n", gen_reg.ebp);
+	k_print("Dump: EDI %x\n", gen_reg.edi);
+	k_print("Dump: ESI %x\n", gen_reg.esi);
+	k_print("Dump: EIP %x", gen_reg.eip);
+}

@@ -32,4 +32,4 @@ extern int irq14() asm("irq14");
 extern int irq15() asm("irq15");
 
 void panic(const char *message, const char *proccess);
-
+void reg_flow();

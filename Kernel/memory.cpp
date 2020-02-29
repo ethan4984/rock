@@ -1,6 +1,3 @@
-#include <stdint.h>
-#include <stddef.h>
-
 #include "shitio.h"
 #include "memory.h"
 
@@ -16,3 +13,10 @@ void *memset(void *src, int val, unsigned int how_many) {
     return new_mem;
 }
 
+void memcpy(void *src, void *tar, int how_many) {
+	char *Rsrc = (char*)src;
+	char *Rtar = (char*)tar;
+
+	for(int i = 0; i < how_many; i++)
+		Rsrc[i] = Rtar[i];
+}

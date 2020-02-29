@@ -3,6 +3,8 @@ global load_gdt
 
 global keyboard_handler
 global time_handler
+global save_regs
+global save_regs16
 global irq2
 global irq3
 global irq4
@@ -23,6 +25,8 @@ extern PITI
 extern irq_l
 extern irq_h
 extern gdt_info
+extern gen_reg
+extern gen_reg16
 
 load_idt:
 	mov edx, [esp + 4]
@@ -170,3 +174,18 @@ load_gdt:
     	mov gs, eax
     	mov ss, eax
     	ret
+
+save_regs:
+	pushad
+	mov [gen_reg + 4], eax
+	mov [gen_reg + 8], ebx
+	mov [gen_reg + 12], ecx
+	mov [gen_reg + 16], edx
+
+	mov [gen_reg + 20], esi
+	mov [gen_reg + 24], edi
+
+	mov [gen_reg + 28], esp
+	mov [gen_reg + 32], ebp
+	popad
+	ret
