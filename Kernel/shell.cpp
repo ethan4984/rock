@@ -31,12 +31,13 @@ int command_parse(char argument[5][10], int start, const char *input);
 
 using namespace standardout;
 using namespace shell;
+using namespace MM;
 
 command arg[1];
 
 const char *command_list[] = {	"version", "clr", "shutdown", "reboot",
-				"test", "page-stat", "block-show", "reg-dump",
-				"reg-dump16", "seg-dump", "help" };
+								"testMM", "page-stat", "block-show", "reg-dump",
+								"reg-dump16", "seg-dump", "help" };
 const char *arg_command[] = { "print" };
 
 typedef void (*command_functions)();
@@ -203,5 +204,19 @@ int command_parse(char argument[5][10], int start, const char *input) {
 }
 
 void test() {
-	panic("Test", "Test");
+
+	/* tests malloc and free */
+	k_print("\nTesting Malloc & Free:\n");
+	uint32_t *ptr = (uint32_t*)malloc(sizeof(uint32_t));
+    uint16_t *ptr1 = (uint16_t*)malloc(sizeof(uint16_t));
+    uint16_t *ptr2 = (uint16_t*)malloc(sizeof(uint16_t));
+	k_print("Space allocated for ptr: %x\n", ptr);
+	k_print("Space allocated for ptr1: %x\n", ptr1);
+	k_print("Space allocated for ptr2: %x\n", ptr2);
+	k_print("Freeing ptr2\n");
+	free(ptr2);
+	uint16_t *ptr3 = (uint16_t*)malloc(sizeof(uint16_t));
+	k_print("Space allocated for ptr3: %x\n", ptr3);
+	uint16_t *ptr4 = (uint16_t*)malloc(sizeof(uint16_t));
+	k_print("Space allocated for ptr4: %x", ptr4);
 }

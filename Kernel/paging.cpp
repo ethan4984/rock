@@ -10,8 +10,8 @@ using namespace standardout;
 extern uint32_t kernel_end;
 
 uint8_t *bitmap = (uint8_t*)(&kernel_end);
-uint8_t *mem_start;
-uint8_t *mem_reference;
+uint8_t *block_start;
+uint8_t *block_reference;
 uint32_t total_blocks;
 uint32_t size;
 
@@ -84,13 +84,13 @@ namespace MM {
 			size++;
 
 		memset(bitmap, 0, size);
-		mem_start = (uint8_t*)((((uint32_t)(bitmap + size)) & 0xfffff000) + 0x1000);
+		block_start = (uint8_t*)((((uint32_t)(bitmap + size)) & 0xfffff000) + 0x1000);
 
 		k_print("PMM: mem range: %d MB\n", mem_range / (1024 * 1024));
 		k_print("PMM: blocks num: %d\n", total_blocks);
 		k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
 		k_print("PMM: bitmap size: %d\n", size);
-		k_print("PMM: addr strat: %x\n", (uint32_t)mem_start);
+		k_print("PMM: addr strat: %x\n", (uint32_t)block_start);
     }
 
     uint32_t allocate_block() {
@@ -136,7 +136,7 @@ namespace MM {
 			t_print("blocks bruhed: %d", reqiured_blocks);
 			t_print("first free %d", first_free());
 
-			return mem_start + first_free()*0x1000;
+			return block_start + first_free()*0x1000;
 		}
 
 		/* when we need more then 4kb  */
@@ -151,7 +151,7 @@ namespace MM {
 			}
 		}
 		t_print("I: %d", i);
-		return mem_start + i*0x1000; //fix me
+		return block_start + i*0x1000; //fix me
     }
 
     void free(void *location) {
@@ -183,5 +183,5 @@ void block_show() {
     k_print("\nPMM: blocks num: %d\n", total_blocks);
     k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
     k_print("PMM: bitmap size: %d\n", size);
-    k_print("PMM: addr strat: %x", (uint32_t)mem_start);
+    k_print("PMM: addr strat: %x", (uint32_t)block_start);
 }
