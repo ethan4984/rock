@@ -139,7 +139,7 @@ void reboot() {
 	uint8_t check = 0x02;
 	while (check & 0x02)
 		check = inb(0x64);
-    	outb(0x64, 0xFE);
+   	outb(0x64, 0xFE);
 	asm volatile("hlt");
 }
 
@@ -149,12 +149,11 @@ void shutdown(void) {
 	asm volatile ("cli");
 	while(1) {
 		outw (0xB004, 0x2000);
+      	for (const char *s = "Shutdown"; *s; ++s)
+        	outb (0x8900, *s);
 
-      		for (const char *s = "Shutdown"; *s; ++s)
-        		outb (0x8900, *s);
-
-      		asm volatile ("cli; hlt");
-    	}
+      	asm volatile ("cli; hlt");
+    }
 }
 
 void add_command(const char base_name[10], int args, int size) {
@@ -173,7 +172,6 @@ void add_command(const char base_name[10], int args, int size) {
 }
 
 int command_parse(char argument[5][10], int start, const char *input) {
-
 	int arg_count = 0;
 	int counter = 0;
 
@@ -201,7 +199,6 @@ int command_parse(char argument[5][10], int start, const char *input) {
 			}
 		}
 	}
-
 	return argsize;
 }
 
