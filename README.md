@@ -51,3 +51,6 @@ This is a simple operating system made for fun and learning
       export PATH="$PREFIX/bin:$PATH
       
  Then After everything is setup just simply run `make qemu` to build and run the OS
+ 
+ (If you have already sorted out a compiler and dont need to run the `Tools/cross.sh` script then create the Bin directory
+ If its not already created)
