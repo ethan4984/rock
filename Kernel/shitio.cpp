@@ -53,6 +53,10 @@ namespace standardout {
 		return (terminal_row >= 24) ? true : false;
 	}
 
+	bool end_of_screen(size_t offset) {
+		return (terminal_column + offset >= 66) ? true : false;
+	}
+
 	bool terminal_setcolor(uint8_t bg, uint8_t fg) {
 		if(bg <= 15 && bg > 0) {
 			if(fg <= 15 && fg > 0) {

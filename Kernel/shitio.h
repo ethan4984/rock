@@ -46,6 +46,8 @@ namespace standardout {
 
 	bool end_of_terminal();
 
+	bool end_of_screen(size_t offset);
+
 	bool terminal_setcolor(uint8_t background, uint8_t text);
 }
 

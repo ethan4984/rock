@@ -21,7 +21,7 @@ CHECKSUM    equ -(MAGIC + FLAGS)
 
 section .text
 
-align 4
+align 4 ; real mode
     dd MAGIC
     dd FLAGS
     dd CHECKSUM
@@ -41,8 +41,11 @@ call_constructor:
     add  ebx,4
 
 ctors_until_end:
+
     cmp  ebx, end_ctors
     jb   call_constructor
+
+    sti
 
     call kernel_main
 

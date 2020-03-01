@@ -14,9 +14,9 @@ void *memset(void *src, int val, unsigned int how_many) {
 }
 
 void memcpy(void *src, void *tar, int how_many) {
-	char *Rsrc = (char*)src;
-	char *Rtar = (char*)tar;
+    char *Rsrc = (char*)src;
+    char *Rtar = (char*)tar;
 
-	for(int i = 0; i < how_many; i++)
-		Rsrc[i] = Rtar[i];
+    for(int i = 0; i < how_many; i++)
+	Rsrc[i] = Rtar[i];
 }

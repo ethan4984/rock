@@ -34,11 +34,15 @@ using namespace shell;
 
 command arg[1];
 
-const char *command_list[] = { "version", "clr", "shutdown", "reboot", "test", "page-stat", "block-show", "reg-dump", "help" };
+const char *command_list[] = {	"version", "clr", "shutdown", "reboot",
+				"test", "page-stat", "block-show", "reg-dump",
+				"reg-dump16", "seg-dump", "help" };
 const char *arg_command[] = { "print" };
 
 typedef void (*command_functions)();
-command_functions comm_func[] = { version, clear_screen, shutdown, reboot, test, current_address_spaces, block_show, reg_flow, help };
+command_functions comm_func[] = {  version, clear_screen, shutdown, reboot,
+			           test, current_address_spaces, block_show,
+				   reg_flow, reg_flow16, seg_flow, help };
 
 void command_handler(const char *input) {
 	static bool set_up = false;
@@ -122,9 +126,11 @@ void version() {
 
 void help() {
 	putchar('\n');
-	for(long unsigned int i = 0; i < sizeof command_list / sizeof *command_list - 1; i++)
+	for(long unsigned int i = 0; i < sizeof command_list / sizeof *command_list - 1; i++) {
+		if(end_of_screen(strlen(command_list[i])))
+			putchar('\n');
 		k_print("%s ", command_list[i]);
-	putchar('\n');
+	}
 	for(long unsigned int i = 0; i < sizeof arg_command / sizeof *arg_command; i++)
 		k_print("%s ", arg_command[i]);
 }

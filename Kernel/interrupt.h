@@ -3,11 +3,11 @@
 #include <stdint.h>
 
 struct IDT_entry {
-	uint16_t offset_low;
-	uint16_t selector;
-	uint8_t zero;
-	uint8_t type_attr;
-	uint16_t offset_high;
+    uint16_t offset_low;
+    uint16_t selector;
+    uint8_t zero;
+    uint8_t type_attr;
+    uint16_t offset_high;
 };
 
 void idt_init(void);
@@ -33,3 +33,5 @@ extern int irq15() asm("irq15");
 
 void panic(const char *message, const char *proccess);
 void reg_flow();
+void reg_flow16();
+void seg_flow();

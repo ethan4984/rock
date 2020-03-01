@@ -10,20 +10,18 @@ using namespace standardout;
 using namespace MM;
 
 extern "C" void kernel_main(void) {
-	load_gdt();
-	initalize(VGA_BLUE, VGA_LIGHT_GREY);
-	k_print("Starting crepOS\n");
-	setup();
-	idt_init();
-	page_frame_init(0xF42400); //Reserves ~ 16mb
-	k_print("-------------------------------------------\n");
+    load_gdt();
+    initalize(VGA_BLUE, VGA_LIGHT_GREY);
+    k_print("Starting crepOS\n");
+    setup();
+    idt_init();
+    page_frame_init(0xF42400); //Reserves ~ 16mb
+    k_print("-------------------------------------------\n");
 
-	asm volatile("sti"); //enables all interrupts
+    malloc(sizeof(uint32_t));
 
-	malloc(sizeof(uint32_t));
+    k_print("> ");
+    startInput();
 
-	k_print("> ");
-	startInput();
-
-	for(;;);
+    for(;;);
 }
