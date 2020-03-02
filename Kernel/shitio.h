@@ -58,32 +58,31 @@ class darry
 {
 	public:
 		darry(const T *base, int current_size) : dynamic_array(base), arr_size(current_size)
-        {
+        	{
 			status = arr_size;
 		}
 
 		darry(int max_size) : arr_size(max_size)
-        {
+        	{
 			dynamic_array = new T[arr_size];
 			status = 0;
 		}
 
 		darry()
-        {
+        	{
 			arr_size = 1;
 			status = 0;
 			dynamic_array = new T[arr_size];
 		};
 
 		~darry()
-        {
+        	{
 			delete[] dynamic_array;
 		}
 
 		void add(T new_element)
-        {
-			if(status == arr_size)
-            {
+        	{
+			if(status == arr_size) {
 				T *tmp = new T[2 * arr_size];
 
 				for (int i = 0; i < arr_size; i++)
@@ -99,12 +98,12 @@ class darry
 		}
 
 		void del()
-        {
+        	{
 			status--;
 		}
 
 		void in_add(T new_element, int location)
-        {
+		{
 			T *tmp = new T[arr_size];
 
 			for(int i = 0; i < arr_size; i++) {
@@ -120,7 +119,7 @@ class darry
 		}
 
 		void in_del(int location)
-        {
+        	{
 			T *tmp = new T[arr_size - 1];
 
 			for(int i = 0; i < location - 1; i++)
@@ -136,7 +135,7 @@ class darry
 		}
 
 		void resize(int new_size)
-        {
+        	{
 			T *tmp = new T[new_size];
 
 			for(int i = 0; i < new_size; i++)
@@ -149,43 +148,43 @@ class darry
 		}
 
 		void clear()
-        {
+        	{
 			memset(dynamic_array, 0, size);
 		}
 
 		int size()
-        {
+        	{
 			return arr_size;
 		}
 
 		T grab(int index)
-        {
+        	{
 			return dynamic_array[index];
 		}
 
 		void print()
-        {
+        	{
 			for(int i = 0; i < arr_size; i++)
 			k_print("%d", dynamic_array[i]);
 		}
 
 		void *operator new(size_t size)
-        {
+        	{
       			return MM::malloc(size);
 		}
 
 		void operator delete(void *location)
-        {
+        	{
 			MM::free(location);
 		}
 
 		void *operator new[](unsigned long size)
-        {
+        	{
        	    return MM::malloc(size);
-    	}
+    		}
 
 		void operator delete[](void *location)
-        {
+        	{
 			MM::free(location);
 		}
 
