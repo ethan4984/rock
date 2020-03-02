@@ -2,7 +2,7 @@
 
 This is a simple operating system made for fun and learning
 
-![Basic demo](Demo/osdem.mp4)
+![Basic demo](Demo/osDeme.gif)
 
 ## About
 
