@@ -36,7 +36,7 @@ size_t x;
 namespace standardout
 {
 	void initalize(uint8_t bg, uint8_t fg)
-    {
+	{
 		clear_screen();
 		terminal_row = 0;
 		terminal_column = 0;
@@ -52,17 +52,17 @@ namespace standardout
 	}
 
 	bool end_of_terminal()
-    {
+    	{
 		return (terminal_row >= 24) ? true : false;
 	}
 
 	bool end_of_screen(size_t offset)
-    {
+    	{
 		return (terminal_column + offset >= 66) ? true : false;
 	}
 
 	bool terminal_setcolor(uint8_t bg, uint8_t fg)
-    {
+	{
 		if(bg <= 15 && bg > 0) {
 			if(fg <= 15 && fg > 0) {
 				terminal_buffer = VGA_MEMORY;
@@ -76,7 +76,7 @@ namespace standardout
 	uint32_t *reference_column;
 
 	void putchar(char c)
-    {
+    	{
 		switch(c) {
 			case '\n':
 				reference_column[terminal_row] = terminal_column;
@@ -116,7 +116,7 @@ namespace standardout
 	}
 
 	void k_print(const char str[256],...)
-    {
+    	{
 		unsigned int hold = 0;
 		char *string;
 
@@ -157,7 +157,7 @@ namespace standardout
 	}
 
 	void t_print(const char str[256],...)
-    {
+    	{
 		unsigned int hold = 0;
 		char *string;
 
@@ -199,7 +199,7 @@ namespace standardout
 	}
 
 	void clear_screen()
-    {
+    	{
 		terminal_column = 0;
 		terminal_row = 0;
 		for(y = 0; y < VGA_HEIGHT; y++) {
@@ -266,10 +266,10 @@ char *strcpy(char *dest, const char *src)
 void update_cursor(size_t terminal_row, size_t terminal_column)
 {
 	unsigned short position = terminal_row * 80 + terminal_column;
-    outb(0x3D4, 0x0F);
-    outb(0x3D5, (unsigned char)(position & 0xFF));
-    outb(0x3D4, 0x0E);
-    outb(0x3D5, (unsigned char )((position >> 8) & 0xFF));
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (unsigned char)(position & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (unsigned char )((position >> 8) & 0xFF));
 }
 
 inline uint8_t vga_entry_color(uint8_t foreground, uint8_t background)
