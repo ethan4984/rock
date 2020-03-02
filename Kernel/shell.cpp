@@ -37,15 +37,20 @@ command arg[1];
 
 const char *command_list[] = {	"version", "clr", "shutdown", "reboot",
 								"testMM", "page-stat", "block-show", "reg-dump",
-								"reg-dump16", "seg-dump", "help" };
+								"reg-dump16", "seg-dump", "help"
+                             };
+
 const char *arg_command[] = { "print" };
 
 typedef void (*command_functions)();
-command_functions comm_func[] = {  version, clear_screen, shutdown, reboot,
-			           test, current_address_spaces, block_show,
-				   reg_flow, reg_flow16, seg_flow, help };
 
-void command_handler(const char *input) {
+command_functions comm_func[] = {   version, clear_screen, shutdown, reboot,
+			                        test, current_address_spaces, block_show,
+				                    reg_flow, reg_flow16, seg_flow, help
+                                };
+
+void command_handler(const char *input)
+{
 	static bool set_up = false;
 
 	if(!set_up) {
@@ -113,7 +118,8 @@ void command_handler(const char *input) {
 }
 
 
-void print(const char *str) {
+void print(const char *str)
+{
 	int length = strlen(str);
 	t_print("we are here right?");
 	putchar('\n');
@@ -121,11 +127,13 @@ void print(const char *str) {
 		putchar(str[i]);
 }
 
-void version() {
+void version()
+{
 	k_print("\ncrepOS beta 1.2");
 }
 
-void help() {
+void help()
+{
 	putchar('\n');
 	for(long unsigned int i = 0; i < sizeof command_list / sizeof *command_list - 1; i++) {
 		if(end_of_screen(strlen(command_list[i])))
@@ -136,28 +144,32 @@ void help() {
 		k_print("%s ", arg_command[i]);
 }
 
-void reboot() {
+void reboot()
+{
 	uint8_t check = 0x02;
+
 	while (check & 0x02)
 		check = inb(0x64);
+
    	outb(0x64, 0xFE);
 	asm volatile("hlt");
 }
 
 /* not APIC, just qemu bochs and virtual machine */
 
-void shutdown(void) {
+void shutdown(void)
+{
 	asm volatile ("cli");
 	while(1) {
 		outw (0xB004, 0x2000);
       	for (const char *s = "Shutdown"; *s; ++s)
         	outb (0x8900, *s);
-
       	asm volatile ("cli; hlt");
     }
 }
 
-void add_command(const char base_name[10], int args, int size) {
+void add_command(const char base_name[10], int args, int size)
+{
 	static int counter = 0;
 
 	if(counter == 2) {
@@ -172,7 +184,8 @@ void add_command(const char base_name[10], int args, int size) {
 	counter++;
 }
 
-int command_parse(char argument[5][10], int start, const char *input) {
+int command_parse(char argument[5][10], int start, const char *input)
+{
 	int arg_count = 0;
 	int counter = 0;
 
@@ -203,9 +216,10 @@ int command_parse(char argument[5][10], int start, const char *input) {
 	return argsize;
 }
 
-void test() {
+/* tests malloc and free */
 
-	/* tests malloc and free */
+void test()
+{
 	k_print("\nTesting Malloc & Free:\n");
 	uint32_t *ptr = (uint32_t*)malloc(sizeof(uint32_t));
     uint16_t *ptr1 = (uint16_t*)malloc(sizeof(uint16_t));

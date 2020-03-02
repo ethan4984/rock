@@ -6,7 +6,8 @@ using namespace standardout;
 
 struct IDT_entry IDT[256];
 
-void idt_gate(uint32_t referenceIRQ) {
+void idt_gate(uint32_t referenceIRQ)
+{
     static int counter = 32;
 
     uint32_t irqX = referenceIRQ;
@@ -19,7 +20,8 @@ void idt_gate(uint32_t referenceIRQ) {
     counter++;
 }
 
-void idt_init(void) {
+void idt_init(void)
+{
     uint32_t idt_address;
     uint32_t idt_ptr[2];
 
@@ -60,26 +62,31 @@ void idt_init(void) {
     load_idt(idt_ptr);
 }
 
-extern "C" void gdt_info(uint32_t addr) {
+extern "C" void gdt_info(uint32_t addr)
+{
     k_print("GDT: mapped to %x\n", addr);
 }
 
-extern "C" void irq_l(void) {
+extern "C" void irq_l(void)
+{
     outb(0x20, 0x20);
 }
 
-extern "C" void irq_h(void) {
+extern "C" void irq_h(void)
+{
     outb(0xA0, 0x20);
     outb(0x20, 0x20);
 }
 
-extern "C" void PITI() {
+extern "C" void PITI()
+{
     outb(0x20, 0x20);
 }
 
-void panic(const char *message, const char *proccess) {
+void panic(const char *message, const char *proccess)
+{
     asm volatile("cli"); //disable all interrupts
-    standardout::initalize(VGA_BLACK, VGA_RED);
+    standardout::initalize(VGA_LIGHT_GREY, VGA_RED);
     standardout::k_print("PANIC : fatal error : %s : in %s\n", message, proccess);
     for(;;);
 }
@@ -88,7 +95,8 @@ extern void save_regs(void) asm("save_regs");
 extern void save_regs16(void) asm("save_regs16");
 extern void save_segment(void) asm("save_segment");
 
-struct genregs {
+struct genregs
+{
     uint32_t eax;
     uint32_t ebx;
     uint32_t ecx;
@@ -100,7 +108,8 @@ struct genregs {
     uint32_t esp;
 } gen_reg;
 
-struct genregs16 {
+struct genregs16
+{
     uint16_t ax;
     uint16_t bx;
     uint16_t cx;
@@ -112,7 +121,8 @@ struct genregs16 {
     uint16_t bp;
 } gen_reg16;
 
-struct segments {
+struct segments
+{
     uint16_t ss;
     uint16_t cs;
     uint16_t ds;
@@ -121,7 +131,8 @@ struct segments {
     uint16_t gs;
 } segment;
 
-void reg_flow() {
+void reg_flow()
+{
     save_regs();
     k_print("\nREGISTER DUMP\n");
     k_print("Dump: EAX %x\n", gen_reg.eax);
@@ -134,7 +145,8 @@ void reg_flow() {
     k_print("Dump: ESI %x", gen_reg.esi);
 }
 
-void reg_flow16() {
+void reg_flow16()
+{
     save_regs16();
     k_print("\nREGISTER DUMP\n");
     k_print("Dump: AX %x\n", gen_reg16.ax);
@@ -147,7 +159,8 @@ void reg_flow16() {
     k_print("Dump: SI %x", gen_reg16.si);
 }
 
-void seg_flow() {
+void seg_flow()
+{
     save_segment();
     k_print("\nSEGMENT DUMP\n");
     k_print("Dump SS %x\n", segment.ss);
@@ -157,9 +170,3 @@ void seg_flow() {
     k_print("Dump FS %x\n", segment.fs);
     k_print("Dump GS %x", segment.gs);
 }
-
-
-
-
-
-

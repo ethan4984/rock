@@ -33,8 +33,10 @@ size_t y;
 
 size_t x;
 
-namespace standardout {
-	void initalize(uint8_t bg, uint8_t fg) {
+namespace standardout
+{
+	void initalize(uint8_t bg, uint8_t fg)
+    {
 		clear_screen();
 		terminal_row = 0;
 		terminal_column = 0;
@@ -49,15 +51,18 @@ namespace standardout {
 		}
 	}
 
-	bool end_of_terminal() {
+	bool end_of_terminal()
+    {
 		return (terminal_row >= 24) ? true : false;
 	}
 
-	bool end_of_screen(size_t offset) {
+	bool end_of_screen(size_t offset)
+    {
 		return (terminal_column + offset >= 66) ? true : false;
 	}
 
-	bool terminal_setcolor(uint8_t bg, uint8_t fg) {
+	bool terminal_setcolor(uint8_t bg, uint8_t fg)
+    {
 		if(bg <= 15 && bg > 0) {
 			if(fg <= 15 && fg > 0) {
 				terminal_buffer = VGA_MEMORY;
@@ -70,7 +75,8 @@ namespace standardout {
 
 	uint32_t *reference_column;
 
-	void putchar(char c) {
+	void putchar(char c)
+    {
 		switch(c) {
 			case '\n':
 				reference_column[terminal_row] = terminal_column;
@@ -109,7 +115,8 @@ namespace standardout {
 			clear_screen();
 	}
 
-	void k_print(const char str[256],...) {
+	void k_print(const char str[256],...)
+    {
 		unsigned int hold = 0;
 		char *string;
 
@@ -149,7 +156,8 @@ namespace standardout {
 		}
 	}
 
-	void t_print(const char str[256],...) {
+	void t_print(const char str[256],...)
+    {
 		unsigned int hold = 0;
 		char *string;
 
@@ -190,19 +198,21 @@ namespace standardout {
 		serial_write('\n');
 	}
 
-	void clear_screen() {
+	void clear_screen()
+    {
 		terminal_column = 0;
 		terminal_row = 0;
 		for(y = 0; y < VGA_HEIGHT; y++) {
 			for(x = 0; x < VGA_WIDTH; x++) {
 				const size_t index = y * VGA_WIDTH + x;
 				terminal_buffer[index]=vga_entry(' ', terminal_color);
-			 }
+			}
 		}
 	}
 }
 
-char *convert(unsigned int num, int base) {
+char *convert(unsigned int num, int base)
+{
 	static char hold[]= "0123456789ABCDEF";
 	static char buffer[50];
 	char *str;
@@ -218,14 +228,16 @@ char *convert(unsigned int num, int base) {
 	return str;
 }
 
-size_t strlen(const char *str) {
+size_t strlen(const char *str)
+{
 	size_t len = 0;
 	while (str[len])
 		len++;
 	return len;
 }
 
-int strcmp(const char *a, const char *b) {
+int strcmp(const char *a, const char *b)
+{
 	while(*a && *a == *b) {
 		a++;
 		b++;
@@ -233,7 +245,8 @@ int strcmp(const char *a, const char *b) {
 	return (int)(unsigned char)(*a) - (int)(unsigned char)(*b);
 }
 
-char *strcpy(char *dest, const char *src) {
+char *strcpy(char *dest, const char *src)
+{
 	if(dest == NULL)
 		return NULL;
 
@@ -250,23 +263,27 @@ char *strcpy(char *dest, const char *src) {
 	return new_dest;
 }
 
-void update_cursor(size_t terminal_row, size_t terminal_column) {
+void update_cursor(size_t terminal_row, size_t terminal_column)
+{
 	unsigned short position = terminal_row * 80 + terminal_column;
-     	outb(0x3D4, 0x0F);
-     	outb(0x3D5, (unsigned char)(position & 0xFF));
-     	outb(0x3D4, 0x0E);
-     	outb(0x3D5, (unsigned char )((position >> 8) & 0xFF));
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (unsigned char)(position & 0xFF));
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (unsigned char )((position >> 8) & 0xFF));
 }
 
-inline uint8_t vga_entry_color(uint8_t foreground, uint8_t background) {
+inline uint8_t vga_entry_color(uint8_t foreground, uint8_t background)
+{
 	return foreground | background << 4;
 }
 
-inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
+inline uint16_t vga_entry(unsigned char uc, uint8_t color)
+{
 	return (uint16_t) uc | (uint16_t) color << 8;
 }
 
-void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) {
+void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
+{
 	const size_t index = y * VGA_WIDTH + x;
 	terminal_buffer[index] = vga_entry(c, color);
 }

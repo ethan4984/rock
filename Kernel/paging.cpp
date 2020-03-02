@@ -15,8 +15,10 @@ uint8_t *block_reference;
 uint32_t total_blocks;
 uint32_t size;
 
-namespace MM {
-    bool virtual_address_space::new_claim(uint32_t physical_addr, uint32_t virtual_addr) {
+namespace MM
+{
+    bool virtual_address_space::new_claim(uint32_t physical_addr, uint32_t virtual_addr)
+    {
 		for(uint32_t i = 0; i < size; i++) {
 			if(physical_log[i] == physical_addr || virtual_log[i] == virtual_addr) {
 				t_print("BRUH: stop it, get help (your trying to duplicate an already exist address space");
@@ -30,7 +32,8 @@ namespace MM {
 		return true;
 	}
 
-	void virtual_address_space::new_virtual_map(uint32_t physical_addr, uint32_t virtual_addr) {
+	void virtual_address_space::new_virtual_map(uint32_t physical_addr, uint32_t virtual_addr)
+	{
 		if(!new_claim(physical_addr, virtual_addr))
 			return;
 
@@ -43,14 +46,16 @@ namespace MM {
 		last_page = (uint32_t*)(((uint32_t)last_page) + 0x1000);
 	}
 
-	void virtual_address_space::enable_page() {
+	void virtual_address_space::enable_page()
+	{
 		asm volatile("mov %%eax, %%cr3": : "a"(page_loc));
 		asm volatile("mov %cr0, %eax");
 		asm volatile("orl $0x80000000, %eax");
-        	asm volatile("mov %eax, %cr0");
+       	asm volatile("mov %eax, %cr0");
 	}
 
-    void virtual_address_space::paging_init() {
+    void virtual_address_space::paging_init()
+    {
 		page_dir = (uint32_t*)0x400000;
 		page_loc = (uint32_t)page_dir;
 		last_page = (uint32_t*)0x404000;
@@ -64,19 +69,23 @@ namespace MM {
 		k_print("PAGING: V to P maped between 0x0 and 0x400000\n");
     }
 
-    void set(uint32_t location) {
+    void set(uint32_t location)
+    {
 		bitmap[location / 8] = bitmap[location / 8] | (1 << (location % 8));
     }
 
-    void clear(uint32_t location) {
+    void clear(uint32_t location)
+    {
 		bitmap[location / 8] = bitmap[location / 8] & (~(1 << (location % 8)));
     }
 
-    uint8_t isset(uint32_t location) {
+    uint8_t isset(uint32_t location)
+    {
 		return (bitmap[location / 8] >> (location % 8)) & 0x1;
     }
 
-    void page_frame_init(uint32_t mem_range) {
+    void page_frame_init(uint32_t mem_range)
+    {
 		total_blocks = mem_range / 0x1000; //4Kb blocks
 
 		size = total_blocks / 8;
@@ -93,17 +102,20 @@ namespace MM {
 		k_print("PMM: addr strat: %x\n", (uint32_t)block_start);
     }
 
-    uint32_t allocate_block() {
+    uint32_t allocate_block()
+    {
 		uint32_t new_block = first_free();
 		set(new_block);
 		return new_block;
     }
 
-    void free_block(uint32_t block_num) {
+    void free_block(uint32_t block_num)
+    {
     	clear(block_num - 1);
     }
 
-    uint32_t first_free() {
+    uint32_t first_free()
+    {
 		for(uint32_t i = 0; i < total_blocks; i++) {
 			if(!isset(i))
 				return i;
@@ -112,7 +124,8 @@ namespace MM {
 		return -69;
 	}
 
-	void *malloc(size_t size) {
+	void *malloc(size_t size)
+	{
 		if(!size) {
 			t_print("BRUH: wtf are you doing trying to allocate a blocks of zero size");
 			return 0;
@@ -154,13 +167,15 @@ namespace MM {
 		return block_start + i*0x1000; //fix me
     }
 
-    void free(void *location) {
-	if(location == NULL) {
-		t_print("BRUH: wtf are you doing trying to free NULL memory");
-		return;
-	}
-	free_block(((uint32_t)location - 0x108000) / 0x1000);
-	t_print("this block was just freed %d", ((uint32_t)location - 0x108000) / 0x1000);
+    void free(void *location)
+    {
+        if(location == NULL) {
+            t_print("BRUH: wtf are you doing trying to free NULL memory");
+            return;
+	    }
+
+	    free_block(((uint32_t)location - 0x108000) / 0x1000);
+	    t_print("this block was just freed %d", ((uint32_t)location - 0x108000) / 0x1000);
     }
 }
 

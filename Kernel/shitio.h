@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include <port.h>
+#include <paging.h>
 
 /* colour constants */
 
@@ -31,7 +32,8 @@ int strcmp(const char *a, const char *b);
 
 char *strcpy(char *dest, const char *src);
 
-namespace standardout {
+namespace standardout
+{
 	static uint16_t *const VGA_MEMORY = (uint16_t*)0xB8000;
 
 	void initalize(uint8_t bg, uint8_t fg);
@@ -52,29 +54,36 @@ namespace standardout {
 }
 
 template<typename T>
-class darry {
+class darry
+{
 	public:
-		darry(const T *base, int current_size) : dynamic_array(base), arr_size(current_size) {
+		darry(const T *base, int current_size) : dynamic_array(base), arr_size(current_size)
+        {
 			status = arr_size;
 		}
 
-		darry(int max_size) : arr_size(max_size) {
+		darry(int max_size) : arr_size(max_size)
+        {
 			dynamic_array = new T[arr_size];
 			status = 0;
 		}
 
-		darry() {
-			int arr_size = 1;
-			int status = 0;
+		darry()
+        {
+			arr_size = 1;
+			status = 0;
 			dynamic_array = new T[arr_size];
 		};
 
-		~darry() {
+		~darry()
+        {
 			delete[] dynamic_array;
 		}
 
-		void add(T new_element) {
-			if(status == arr_size) {
+		void add(T new_element)
+        {
+			if(status == arr_size)
+            {
 				T *tmp = new T[2 * arr_size];
 
 				for (int i = 0; i < arr_size; i++)
@@ -89,12 +98,13 @@ class darry {
 			status++;
 		}
 
-		void del() {
+		void del()
+        {
 			status--;
 		}
 
-		void in_add(T new_element, int location) {
-
+		void in_add(T new_element, int location)
+        {
 			T *tmp = new T[arr_size];
 
 			for(int i = 0; i < arr_size; i++) {
@@ -109,7 +119,8 @@ class darry {
 			delete[] tmp;
 		}
 
-		void in_del(int location) {
+		void in_del(int location)
+        {
 			T *tmp = new T[arr_size - 1];
 
 			for(int i = 0; i < location - 1; i++)
@@ -124,7 +135,8 @@ class darry {
 			delete[] tmp;
 		}
 
-		void resize(int new_size) {
+		void resize(int new_size)
+        {
 			T *tmp = new T[new_size];
 
 			for(int i = 0; i < new_size; i++)
@@ -136,22 +148,47 @@ class darry {
 			delete[] tmp;
 		}
 
-		void clear() {
+		void clear()
+        {
 			memset(dynamic_array, 0, size);
 		}
 
-		int size() {
+		int size()
+        {
 			return arr_size;
 		}
 
-		T grab(int index) {
+		T grab(int index)
+        {
 			return dynamic_array[index];
 		}
 
-		void print() {
+		void print()
+        {
 			for(int i = 0; i < arr_size; i++)
 			k_print("%d", dynamic_array[i]);
 		}
+
+		void *operator new(size_t size)
+        {
+      			return MM::malloc(size);
+		}
+
+		void operator delete(void *location)
+        {
+			MM::free(location);
+		}
+
+		void *operator new[](unsigned long size)
+        {
+       	    return MM::malloc(size);
+    	}
+
+		void operator delete[](void *location)
+        {
+			MM::free(location);
+		}
+
 	private:
 		int arr_size;
 

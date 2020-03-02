@@ -9,7 +9,8 @@ extern void load_gdt(void) asm("load_gdt");
 using namespace standardout;
 using namespace MM;
 
-extern "C" void kernel_main(void) {
+extern "C" void kernel_main(void)
+{
     load_gdt();
     initalize(VGA_BLUE, VGA_LIGHT_GREY);
     k_print("Starting crepOS\n");
