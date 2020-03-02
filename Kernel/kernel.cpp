@@ -1,8 +1,8 @@
-#include "port.h"
-#include "shitio.h"
-#include "interrupt.h"
-#include "keyboard.h"
-#include "paging.h"
+#include <port.h>
+#include <shitio.h>
+#include <interrupt.h>
+#include <keyboard.h>
+#include <paging.h>
 
 extern void load_gdt(void) asm("load_gdt");
 

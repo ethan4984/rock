@@ -13,6 +13,8 @@ namespace MM {
 
 	    void paging_init();
 
+	    void *new_procces(); /* returns address a dynamic address space */
+
 	    uint32_t *physical_log;
 
 	    uint32_t *virtual_log;

@@ -1,9 +1,9 @@
 #include <stdint.h>
 
-#include "paging.h"
-#include "shitio.h"
-#include "memory.h"
-#include "interrupt.h"
+#include <paging.h>
+#include <shitio.h>
+#include <memory.h>
+#include <interrupt.h>
 
 using namespace standardout;
 
@@ -46,9 +46,9 @@ namespace MM {
 	void virtual_address_space::enable_page() {
 		asm volatile("mov %%eax, %%cr3": : "a"(page_loc));
 		asm volatile("mov %cr0, %eax");
-        asm volatile("orl $0x80000000, %eax");
-        asm volatile("mov %eax, %cr0");
-    }
+		asm volatile("orl $0x80000000, %eax");
+        	asm volatile("mov %eax, %cr0");
+	}
 
     void virtual_address_space::paging_init() {
 		page_dir = (uint32_t*)0x400000;
@@ -94,9 +94,9 @@ namespace MM {
     }
 
     uint32_t allocate_block() {
-		uint32_t free_block = first_free();
-		set(free_block);
-		return free_block;
+		uint32_t new_block = first_free();
+		set(new_block);
+		return new_block;
     }
 
     void free_block(uint32_t block_num) {
@@ -155,12 +155,12 @@ namespace MM {
     }
 
     void free(void *location) {
-		if(location == NULL) {
-			t_print("BRUH: wtf are you doing trying to free NULL memory");
-			return;
-		}
-		free_block(((uint32_t)location - 0x108000) / 0x1000);
-		t_print("this block was just freed %d", ((uint32_t)location - 0x108000) / 0x1000);
+	if(location == NULL) {
+		t_print("BRUH: wtf are you doing trying to free NULL memory");
+		return;
+	}
+	free_block(((uint32_t)location - 0x108000) / 0x1000);
+	t_print("this block was just freed %d", ((uint32_t)location - 0x108000) / 0x1000);
     }
 }
 

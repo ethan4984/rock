@@ -1,5 +1,5 @@
-#include "shitio.h"
-#include "memory.h"
+#include <shitio.h>
+#include <memory.h>
 
 using namespace standardout;
 

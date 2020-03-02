@@ -1,7 +1,7 @@
 #pragma once
 
-#include "memory.h"
-#include "shitio.h"
+#include <memory.h>
+#include <shitio.h>
 
 void command_handler(const char *input);
 

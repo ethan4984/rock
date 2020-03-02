@@ -1,9 +1,9 @@
-#include "shell.h"
-#include "shitio.h"
-#include "paging.h"
-#include "port.h"
-#include "memory.h"
-#include "interrupt.h"
+#include <shell.h>
+#include <shitio.h>
+#include <paging.h>
+#include <port.h>
+#include <memory.h>
+#include <interrupt.h>
 
 /* prototypes */
 
