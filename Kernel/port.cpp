@@ -2,15 +2,15 @@
 
 #include <port.h>
 
-void outb(uint16_t port, uint8_t data) 
+void outb(uint16_t port, uint8_t data)
 {
     asm volatile(   "outb %0,%1"
                     :: "a"(data),
                     "Nd"(port)
-		);
+                );
 }
 
-void outw(uint16_t port, uint16_t data) 
+void outw(uint16_t port, uint16_t data)
 {
     asm volatile(   "outw %0,%1"
                     ::"a"(data),
@@ -18,7 +18,7 @@ void outw(uint16_t port, uint16_t data)
                 );
 }
 
-void outl(uint16_t port, uint32_t data) 
+void outl(uint16_t port, uint32_t data)
 {
     asm volatile(   "outl %0, %1"
                     ::"a"(data),
@@ -26,7 +26,7 @@ void outl(uint16_t port, uint32_t data)
                 );
 }
 
-uint8_t inb(uint16_t port) 
+uint8_t inb(uint16_t port)
 {
     uint8_t data;
     asm volatile(   "inb %1, %0"
@@ -52,11 +52,11 @@ uint32_t inl(uint16_t port)
     asm volatile(   "inl %1, %0"
                     :"=a"(data)
                     :"Nd"(port)
-		);
+                );
     return data;
 }
 
-void serial_init() 
+void serial_init()
 {
     outb(COM1 + 1, 0x00);
     outb(COM1 + 3, 0x80);
@@ -73,18 +73,18 @@ inline uint8_t serial_read()
     return inb(COM1);
 }
 
-void serial_write(uint8_t data) 
+void serial_write(uint8_t data)
 {
     while((inb(COM1 + 5) & 0x20) == 0);
     outb(COM1, data);
 }
 
-inline void io_wait(void) 
+inline void io_wait(void)
 {
     asm volatile(   "jmp 1f\n\t"
                     "1:jmp 2f\n\t"
                     "2:"
-		);
+                );
 }
 
 inline bool are_interrupts_enabled()
@@ -93,7 +93,7 @@ inline bool are_interrupts_enabled()
     asm volatile(   "pushf\n\t"
                     "pop %0"
                     :"=g"(flags)
-		);
+                );
     return flags & (1 << 9);
 }
 

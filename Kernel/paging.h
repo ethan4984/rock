@@ -2,8 +2,10 @@
 
 #include <stddef.h>
 
-namespace MM {
-    class virtual_address_space {
+namespace MM
+{
+    class virtual_address_space
+    {
         public:
             void new_virtual_map(uint32_t physical_addr, uint32_t virtual_addr);
 
