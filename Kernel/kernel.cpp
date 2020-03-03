@@ -22,8 +22,6 @@ extern "C" void kernel_main(void)
 
     start_counter(1, 0, 0x6);
 
-    sleep(1);
-
     k_print("-------------------------------------------\n");
 
     k_print("> ");

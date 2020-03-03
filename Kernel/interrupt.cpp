@@ -81,13 +81,12 @@ extern "C" void irq_h(void)
 volatile int timer_ticks = 0;
 volatile int seconds = 0;
 
-extern "C" void PITI() {
+extern "C" void PITI()
+{
     outb(0x20, 0x20);
     timer_ticks++;
-    if(timer_ticks % 18 == 0) {
-        t_print("%d", ++seconds);
-        t_print("%d", timer_ticks);
-    }
+    if(timer_ticks % 94 == 0)
+        ++seconds;
 }
 
 void panic(const char *message, const char *proccess)

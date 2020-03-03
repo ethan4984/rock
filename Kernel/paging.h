@@ -49,6 +49,8 @@ namespace MM
     void free_block(uint32_t block_num);
 
     uint32_t first_free();
+
+	void check_blocks(uint32_t range);
 }
 
 void setup();

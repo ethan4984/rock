@@ -105,6 +105,7 @@ namespace MM
     uint32_t allocate_block()
     {
         uint32_t new_block = first_free();
+		t_print("Allocated block: %d", new_block);
         set(new_block);
         return new_block;
     }
@@ -141,15 +142,16 @@ namespace MM
         }
 
         if(is_one) {
-            if(allocate_block() == static_cast<unsigned int>(-69)) {
+            if(first_free() == static_cast<unsigned int>(-69)) {
                 t_print("BRUH: we ran out of blocks bruh");
                 panic("We ran out of blocks", "malloc");
             }
 
-            t_print("blocks bruhed: %d", reqiured_blocks);
-            t_print("first free %d", first_free());
+			uint32_t freed = first_free();
 
-            return block_start + first_free()*0x1000;
+			allocate_block();
+
+            return block_start + freed*0x1000;
         }
 
         /* when we need more then 4kb  */
@@ -174,9 +176,20 @@ namespace MM
             return;
         }
 
-        free_block(((uint32_t)location - 0x108000) / 0x1000);
-        t_print("this block was just freed %d", ((uint32_t)location - 0x108000) / 0x1000);
+        free_block((((uint32_t)location - 0x108000) / 0x1000));
+        t_print("this block was just freed %d", (((uint32_t)location - 0x108000) / 0x1000));
     }
+
+	void check_blocks(uint32_t range)
+	{
+        for(uint32_t i = 0; i < range; i++) {
+            if(!isset(i))
+                t_print("This block is not allocated: %d", i);
+			else
+				t_print("This block is allocated: %d", i);
+        }
+		t_print("First free: %d", first_free());
+	}
 }
 
 MM::virtual_address_space obj;
@@ -201,5 +214,13 @@ void block_show()
     k_print("\nPMM: blocks num: %d\n", total_blocks);
     k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
     k_print("PMM: bitmap size: %d\n", size);
-    k_print("PMM: addr strat: %x", (uint32_t)block_start);
+    k_print("PMM: addr strat: %x\n", (uint32_t)block_start);
+    for(uint32_t i = 0; i < 5; i++) {
+		if(!MM::isset(i))
+			k_print("This block is not allocated: %d", i);
+		else
+			k_print("This block is allocated: %d", i);
+		if(i != 4)
+			putchar('\n');
+	}
 }
