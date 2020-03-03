@@ -17,6 +17,13 @@ extern "C" void kernel_main(void)
     setup();
     idt_init();
     page_frame_init(0xF42400); //Reserves ~ 16mb
+
+    asm volatile("sti");
+
+    start_counter(1, 0, 0x6);
+
+    sleep(1);
+
     k_print("-------------------------------------------\n");
 
     k_print("> ");

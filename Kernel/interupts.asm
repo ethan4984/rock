@@ -39,9 +39,9 @@ load_idt:
     ret
 
 time_handler:
-    pushad
+    pusha
     call PITI
-    popad
+    popa
     iretd
 
 keyboard_handler:

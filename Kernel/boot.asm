@@ -45,8 +45,6 @@ ctors_until_end:
     cmp  ebx, end_ctors
     jb   call_constructor
 
-    sti
-
     call kernel_main
 
     mov  ebx, end_dtors

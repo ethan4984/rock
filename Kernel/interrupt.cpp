@@ -78,16 +78,23 @@ extern "C" void irq_h(void)
     outb(0x20, 0x20);
 }
 
-extern "C" void PITI()
-{
+volatile int timer_ticks = 0;
+volatile int seconds = 0;
+
+extern "C" void PITI() {
     outb(0x20, 0x20);
+    timer_ticks++;
+    if(timer_ticks % 18 == 0) {
+        t_print("%d", ++seconds);
+        t_print("%d", timer_ticks);
+    }
 }
 
 void panic(const char *message, const char *proccess)
 {
     asm volatile("cli"); //disable all interrupts
-    standardout::initalize(VGA_LIGHT_GREY, VGA_RED);
-    standardout::k_print("PANIC : fatal error : %s : in %s\n", message, proccess);
+    initalize(VGA_LIGHT_GREY, VGA_RED);
+    k_print("PANIC : fatal error : %s : in %s\n", message, proccess);
     for(;;);
 }
 
@@ -170,3 +177,46 @@ void seg_flow()
     k_print("Dump FS %x\n", segment.fs);
     k_print("Dump GS %x", segment.gs);
 }
+
+static inline void pit_send_data(uint16_t data, uint8_t counter)
+{
+    uint8_t port;
+    uint8_t reference_port;
+
+    if(!counter)
+        port = 0x40;
+    else
+        port = reference_port;
+
+    if(counter == 0x40)
+        reference_port = 0x40;
+    else
+        reference_port = 0x42;
+
+    outb (port, (uint8_t)data);
+}
+
+void start_counter(int frequency, uint8_t counter, uint8_t mode)
+{
+    if(!frequency)
+        return;
+
+    uint16_t divisor = 1193181/frequency;
+
+    uint8_t ossal = 0;
+    ossal = (ossal & ~0xe) | mode;
+    ossal = (ossal & ~0x30) | 0xe;
+    ossal = (ossal & ~0xc0) | counter;
+    outb(0x43, ossal);
+
+    pit_send_data(divisor & 0xff, 0);
+    pit_send_data((divisor >> 8) & 0xff, 0);
+}
+
+void sleep(int ticks)
+{
+    seconds = 0;
+    while(seconds < ticks)
+        asm volatile("nop");
+}
+

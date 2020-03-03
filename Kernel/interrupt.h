@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 struct IDT_entry
 {
@@ -36,3 +37,7 @@ void panic(const char *message, const char *proccess);
 void reg_flow();
 void reg_flow16();
 void seg_flow();
+
+void start_counter(int freq, uint8_t counter, uint8_t mode);
+
+void sleep(int ticks);
