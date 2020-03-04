@@ -54,7 +54,7 @@ namespace MM
         asm volatile("mov %eax, %cr0");
     }
 
-    void virtual_address_space::paging_init()
+    void virtual_address_space::identity_map_init()
     {
         page_dir = (uint32_t*)0x400000;
         page_loc = (uint32_t)page_dir;
@@ -66,7 +66,7 @@ namespace MM
         new_virtual_map(0, 0);
         new_virtual_map(0x400000, 0x400000);
         enable_page();
-        k_print("PAGING: V to P maped between 0x0 and 0x400000\n");
+        k_print("MM: kernel identity mapped : 0x0 and %x\n", last_page);
     }
 
     void set(uint32_t location)
@@ -194,9 +194,9 @@ namespace MM
 
 MM::virtual_address_space obj;
 
-void setup()
+void page_setup()
 {
-    obj.paging_init();
+    obj.identity_map_init();
 }
 
 void current_address_spaces()

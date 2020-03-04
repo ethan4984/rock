@@ -178,15 +178,6 @@ class darry
             MM::free(location);
         }
 
-        void *operator new[](unsigned long size)
-        {
-            return MM::malloc(size);
-        }
-
-        void operator delete[](void *location)
-        {
-            MM::free(location);
-        }
     private:
         int arr_size;
 

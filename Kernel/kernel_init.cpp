@@ -14,7 +14,7 @@ extern "C" void kernel_main(void)
     load_gdt();
     initalize(VGA_BLUE, VGA_LIGHT_GREY);
     k_print("Starting crepOS\n");
-    setup();
+    page_setup();
     idt_init();
     page_frame_init(0xF42400); //Reserves ~ 16mb
 
