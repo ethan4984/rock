@@ -92,8 +92,11 @@ extern "C" void PITI()
 void panic(const char *message, const char *proccess)
 {
     asm volatile("cli"); //disable all interrupts
-    initalize(VGA_LIGHT_GREY, VGA_RED);
+    initalize(VGA_BLUE, VGA_RED);
     k_print("PANIC : fatal error : %s : in %s\n", message, proccess);
+    reg_flow();
+    putchar('\n');
+    seg_flow();
     for(;;);
 }
 

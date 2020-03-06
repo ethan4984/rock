@@ -23,6 +23,8 @@ void print(const char *str);
 
 void test();
 
+void test_panic();
+
 void add_command(const char base_name[10], int args, int size);
 
 int command_parse(char argument[5][10], int start, const char *input);
@@ -37,7 +39,7 @@ command arg[1];
 
 const char *command_list[] = {  "version", "clr", "shutdown", "reboot",
                                 "testMM", "page-stat", "block-show", "reg-dump",
-                                "reg-dump16", "seg-dump", "help"
+                                "reg-dump16", "seg-dump", "panic", "help"
                              };
 
 const char *arg_command[] = { "print" };
@@ -46,7 +48,7 @@ typedef void (*command_functions)();
 
 command_functions comm_func[] = {   version, clear_screen, shutdown, reboot,
                                     test, current_address_spaces, block_show,
-                                    reg_flow, reg_flow16, seg_flow, help
+                                    reg_flow, reg_flow16, seg_flow, test_panic, help
                                 };
 
 void command_handler(const char *input)
@@ -232,4 +234,8 @@ void test()
     uint16_t *ptr3 = (uint16_t*)malloc(sizeof(uint16_t));
 	k_print("Space allocated for ptr3: %x", ptr3);
 	check_blocks(5);
+}
+
+void test_panic() {
+    panic("test", "test");
 }
