@@ -1,8 +1,8 @@
 CC=~/opt/cross/bin/i686-elf-g++
 AS=i686-elf-as
 
-srcC = Kernel/kernel_init.cpp Kernel/shitio.cpp Kernel/port.cpp Kernel/interrupt.cpp Kernel/keyboard.cpp Kernel/memory.cpp Kernel/shell.cpp Kernel/paging.cpp
-srcO = Bin/kernel_init.o Bin/port.o Bin/shitio.o Bin/interrupt.o Bin/keyboard.o Bin/memory.o Bin/shell.o Bin/paging.o
+srcC = Kernel/kernel_init.cpp Kernel/shitio.cpp Kernel/port.cpp Kernel/interrupt.cpp Kernel/keyboard.cpp Kernel/memory.cpp Kernel/shell.cpp Kernel/paging.cpp Kernel/process.cpp
+srcO = Bin/kernel_init.o Bin/port.o Bin/shitio.o Bin/interrupt.o Bin/keyboard.o Bin/memory.o Bin/shell.o Bin/paging.o Bin/process.o
 CFLAGS = -c -std=c++17 -ffreestanding -O2 -Wall -Wextra -fno-stack-protector -lstdc++ -fno-exceptions -IKernel -m32
 
 install:
@@ -17,6 +17,7 @@ install:
 	mv memory.o Bin
 	mv shell.o Bin
 	mv paging.o Bin
+	mv process.o Bin
 clean:
 	rm $(srcO)
 	rm $(srcASO)

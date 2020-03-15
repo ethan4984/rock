@@ -12,7 +12,7 @@ namespace MM
 
     void *malloc(size_t size);
 
-    void free(void *location);
+    void free(void *location, size_t size = sizeof(uint32_t));
 
     void page_frame_init(uint32_t mem_range);
 

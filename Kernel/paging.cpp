@@ -141,22 +141,20 @@ namespace MM
             is_one = false;
         }
 
+		uint32_t freed = first_free();
+
         if(is_one) {
             if(first_free() == static_cast<unsigned int>(-69)) {
                 t_print("BRUH: we ran out of blocks bruh");
                 panic("We ran out of blocks", "malloc");
             }
 
-			uint32_t freed = first_free();
-
 			allocate_block();
 
             return block_start + freed*0x1000;
         }
 
-        /* when we need more then 4kb  */
-
-        t_print("Blocks bruhed: %d", reqiured_blocks);
+        t_print("Blocks reqiured: %d", reqiured_blocks);
 
         uint32_t i;
         for(i = 0; i < reqiured_blocks; i++) {
@@ -166,18 +164,29 @@ namespace MM
             }
         }
         t_print("I: %d", i);
-        return block_start + i*0x1000; //fix me
+        return block_start + (freed*i)*0x1000; //fix me
     }
 
-    void free(void *location)
+    void free(void *location, size_t size)
     {
         if(location == NULL) {
             t_print("BRUH: wtf are you doing trying to free NULL memory");
             return;
         }
 
+        int reqiured_blocks = 0;
+        while(++reqiured_blocks*0x1000 < size);
+
+        if(reqiured_blocks == 1) {
+            free_block((((uint32_t)location - 0x108000) / 0x1000));
+            t_print("this block was just freed %d", (((uint32_t)location - 0x108000) / 0x1000) - 1);
+            return;
+        }
+
         free_block((((uint32_t)location - 0x108000) / 0x1000));
-        t_print("this block was just freed %d", (((uint32_t)location - 0x108000) / 0x1000));
+        for(int i = 0; i < reqiured_blocks; i++) {
+            t_print("this block was just freed %d", (((((uint32_t)location + i*0x1000) - 0x108000) / 0x1000) - 1));
+        }
     }
 
 	void check_blocks(uint32_t range)

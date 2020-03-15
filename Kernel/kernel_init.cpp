@@ -3,6 +3,8 @@
 #include <interrupt.h>
 #include <keyboard.h>
 #include <paging.h>
+#include <process.h>
+#include <stdint.h>
 
 extern void load_gdt(void) asm("load_gdt");
 
@@ -19,6 +21,15 @@ extern "C" void kernel_main(void)
     page_frame_init(0xF42400); //Reserves ~ 16mb
 
     asm volatile("sti");
+
+    /* multi-block allocation test */
+
+    uint32_t *root_ptr = (uint32_t*)malloc(0x2001);
+    t_print("%x", root_ptr);
+    free(root_ptr, 0x2001);
+
+    uint32_t *ptr_bruh = (uint32_t*)malloc(sizeof(uint32_t));
+    free(ptr_bruh);
 
     start_counter(1, 0, 0x6);
 
