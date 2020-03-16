@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 
+extern uint8_t *block_start;
+
 namespace MM
 {
     void set(uint32_t location);
@@ -27,6 +29,8 @@ namespace MM
     void *new_address_space();
 
     void free_address_space(void *location);
+
+    uint8_t *grab_start();
 
     class virtual_address_space
     {

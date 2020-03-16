@@ -23,10 +23,11 @@ extern "C" void kernel_main(void)
 
     asm volatile("sti");
 
-    /* multi-block allocation test */
-
-    uint32_t *root_ptr = (uint32_t*)malloc(0x2001);
-    free(root_ptr, 0x2001);
+    process proc(0x2001);
+    proc.pmalloc(0x4);
+    uint16_t *ptrbruh = (uint16_t*)proc.pmalloc(0x8);
+    proc.pfree(ptrbruh);
+    proc.pmalloc(0x8);
 
     start_counter(1, 0, 0x6);
 

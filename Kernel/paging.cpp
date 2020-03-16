@@ -12,7 +12,7 @@ extern uint32_t kernel_end;
 uint8_t *bitmap = (uint8_t*)(&kernel_end);
 uint8_t *block_start;
 uint8_t *block_reference;
-uint32_t total_blocks;
+uint8_t total_blocks;
 uint32_t size;
 
 namespace MM
