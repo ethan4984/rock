@@ -105,7 +105,7 @@ namespace MM
     uint32_t allocate_block()
     {
         uint32_t new_block = first_free();
-		t_print("Allocated block: %d", new_block);
+		t_print("\tAllocated block: %d", new_block);
         set(new_block);
         return new_block;
     }
@@ -127,6 +127,8 @@ namespace MM
 
     void *malloc(size_t size)
     {
+        t_print("\nBlock Allocation in process\n");
+
         if(!size) {
             t_print("BRUH: wtf are you doing trying to allocate a blocks of zero size");
             return 0;
@@ -149,12 +151,16 @@ namespace MM
                 panic("We ran out of blocks", "malloc");
             }
 
+            t_print("\tStatus: Single Block\n");
+
 			allocate_block();
+
+            t_print("\nBlock allocation finished\n");
 
             return block_start + freed*0x1000;
         }
 
-        t_print("Blocks reqiured: %d", reqiured_blocks);
+        t_print("\tStatus: Multi-block\n\tBlocks reqiured: %d\n", reqiured_blocks);
 
         uint32_t i;
         for(i = 0; i < reqiured_blocks; i++) {
@@ -163,7 +169,7 @@ namespace MM
                 panic("We ran out of blocks", "malloc");
             }
         }
-        t_print("I: %d", i);
+        t_print("\nBlock allocation finished\n");
         return block_start + (freed*i)*0x1000; //fix me
     }
 
@@ -174,19 +180,18 @@ namespace MM
             return;
         }
 
-        int reqiured_blocks = 0;
+        unsigned long int reqiured_blocks = 0;
         while(++reqiured_blocks*0x1000 < size);
 
         if(reqiured_blocks == 1) {
             free_block((((uint32_t)location - 0x108000) / 0x1000));
-            t_print("this block was just freed %d", (((uint32_t)location - 0x108000) / 0x1000) - 1);
+            t_print("this block was just freed %x", (((uint32_t)location - 0x108000)));
             return;
         }
 
         free_block((((uint32_t)location - 0x108000) / 0x1000));
-        for(int i = 0; i < reqiured_blocks; i++) {
-            t_print("this block was just freed %d", (((((uint32_t)location + i*0x1000) - 0x108000) / 0x1000) - 1));
-        }
+        for(unsigned long int i = 0; i < reqiured_blocks; i++)
+            t_print("this block was just freed %x", (((uint32_t)location + i*0x1000) - 0x108000));
     }
 
 	void check_blocks(uint32_t range)

@@ -233,7 +233,6 @@ void test()
     free(ptr);
     uint16_t *ptr3 = (uint16_t*)malloc(sizeof(uint16_t));
 	k_print("Space allocated for ptr3: %x", ptr3);
-	check_blocks(5);
 }
 
 void test_panic() {
