@@ -23,6 +23,8 @@ class process
         uint32_t first_freep();
 
         void free_pblock(size_t index);
+
+        void show_blocks(int range);
     private:
         struct memory_table
         {

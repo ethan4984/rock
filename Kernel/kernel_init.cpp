@@ -23,11 +23,13 @@ extern "C" void kernel_main(void)
 
     asm volatile("sti");
 
+    /* tests processes allocation */
+
     process proc(0x2001);
     proc.pmalloc(0x4);
     uint16_t *ptrbruh = (uint16_t*)proc.pmalloc(0x8);
     proc.pfree(ptrbruh);
-    proc.pmalloc(0x8);
+    uint16_t *ptruh = (uint16_t*)proc.pmalloc(0x4);
 
     start_counter(1, 0, 0x6);
 

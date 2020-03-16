@@ -76,9 +76,8 @@ void *process::pmalloc(size_t size)
 
     uint32_t freed = first_freep();
 
-    t_print("%x", freed);
-
     if(is_one) {
+        t_print("\n\tstatus: single block\n\treqiured blocks: %d\n", reqiured_blocks);
         if(first_freep() == static_cast<unsigned int>(-69)) {
             t_print("BRUH: we ran out of blocks bruh");
             return 0;
@@ -87,11 +86,11 @@ void *process::pmalloc(size_t size)
         allocate_pblock();
 
         t_print("\nProcess block allocation finished : returning %x\n", block_start + freed*0x80);
-
         return block_start + freed*0x80;
     }
 
     uint32_t i;
+    t_print("\n\tstatus: multi block\n\treqiured blocks: %d\n", reqiured_blocks);
 
     for(i = 0; i < reqiured_blocks; i++) {
         if(allocate_pblock() == static_cast<unsigned int>(-69))
@@ -117,18 +116,20 @@ void process::pfree(void *location, size_t size)
     while(++reqiured_blocks*0x80 < size);
 
     if(reqiured_blocks == 1) {
-        free_pblock((uint32_t)location - (uint32_t)process_begin / 0x80);
-        t_print("This process blokc was just freed %x", (uint32_t)location - (uint32_t)process_begin);
+        free_pblock(((uint32_t)location - (uint32_t)process_begin) / 0x80);
+        t_print("This process blokc was just freed %d\n", ((uint32_t)location - (uint32_t)process_begin) / 0x80);
         return;
     }
 
     free_pblock((uint32_t)location - (uint32_t)process_begin / 0x80);
     for(unsigned long int i = 0; i < reqiured_blocks; i++)
         t_print("This process block was just freed %x", (uint32_t)location - (uint32_t )process_begin);
+    t_print("\n");
 }
 
-
-
-
-
-
+void process::show_blocks(int range)
+{
+    for(int i = 0; i < range; i++) {
+        t_print("%d\n", pmem_map.available_blocks[i]);
+    }
+}
