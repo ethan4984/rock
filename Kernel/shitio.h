@@ -44,6 +44,10 @@ namespace standardout
 
     void putchar(char c);
 
+    void special_char(char c, size_t x, size_t y, uint8_t fg, uint8_t bg = 17);
+
+    void special_num(int num, int size, size_t x, size_t y, uint8_t fg, uint8_t bg = 17);
+
     void clear_screen();
 
     bool end_of_terminal();
@@ -51,7 +55,15 @@ namespace standardout
     bool end_of_screen(size_t offset);
 
     bool terminal_setcolor(uint8_t background, uint8_t text);
+
+    void disable_cursor();
+
+    void enable_cursor();
+
+    int count_digits(int num);
 }
+
+char *convert(unsigned int num, int base);
 
 template<typename T>
 class darry

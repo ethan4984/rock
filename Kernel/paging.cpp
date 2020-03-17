@@ -66,7 +66,6 @@ namespace MM
         new_virtual_map(0, 0);
         new_virtual_map(0x400000, 0x400000);
         enable_page();
-        k_print("MM: kernel identity mapped : 0x0 and %x\n", last_page);
     }
 
     void set(uint32_t location)
@@ -94,12 +93,6 @@ namespace MM
 
         memset(bitmap, 0, size);
         block_start = (uint8_t*)((((uint32_t)(bitmap + size)) & 0xfffff000) + 0x1000);
-
-        k_print("PMM: mem range: %d MB\n", mem_range / (1024 * 1024));
-        k_print("PMM: blocks num: %d\n", total_blocks);
-        k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
-        k_print("PMM: bitmap size: %d\n", size);
-        k_print("PMM: addr strat: %x\n", (uint32_t)block_start);
     }
 
     uint32_t allocate_block()
@@ -112,7 +105,7 @@ namespace MM
 
     void free_block(uint32_t block_num)
     {
-        clear(block_num - 1);
+        clear(block_num - 2);
     }
 
     uint32_t first_free()
@@ -194,47 +187,39 @@ namespace MM
             t_print("this block was just freed %x", (((uint32_t)location + i*0x1000) - 0x108000));
     }
 
-	void check_blocks(uint32_t range)
-	{
+    void check_blocks(uint32_t range)
+    {
         for(uint32_t i = 0; i < range; i++) {
             if(!isset(i))
                 t_print("This block is not allocated: %d", i);
-			else
-				t_print("This block is allocated: %d", i);
+            else
+                t_print("This block is allocated: %d", i);
         }
-		t_print("First free: %d", first_free());
-	}
+        t_print("First free: %d", first_free());
+    }
 }
 
 MM::virtual_address_space obj;
 
 void page_setup()
 {
-    obj.identity_map_init();
+obj.identity_map_init();
 }
 
 void current_address_spaces()
 {
-    k_print("\nVirtual\tPhysical\n");
-    for(uint32_t i = 0; i < obj.size; i++) {
-        k_print("%x %x", obj.physical_log[i], obj.virtual_log[i]);
-        if(i != obj.size - 1)
-            putchar('\n');
-    }
+k_print("\nVirtual\tPhysical\n");
+for(uint32_t i = 0; i < obj.size; i++) {
+k_print("%x %x", obj.physical_log[i], obj.virtual_log[i]);
+if(i != obj.size - 1)
+putchar('\n');
+}
 }
 
 void block_show()
 {
-    k_print("\nPMM: blocks num: %d\n", total_blocks);
-    k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
-    k_print("PMM: bitmap size: %d\n", size);
-    k_print("PMM: addr strat: %x\n", (uint32_t)block_start);
-    for(uint32_t i = 0; i < 5; i++) {
-		if(!MM::isset(i))
-			k_print("This block is not allocated: %d", i);
-		else
-			k_print("This block is allocated: %d", i);
-		if(i != 4)
-			putchar('\n');
-	}
+k_print("\nPMM: blocks num: %d\n", total_blocks);
+k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
+k_print("PMM: bitmap size: %d\n", size);
+k_print("PMM: addr strat: %x\n", (uint32_t)block_start);
 }

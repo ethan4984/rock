@@ -57,8 +57,6 @@ void idt_init(void)
     idt_ptr[0] = (sizeof (struct IDT_entry) * 256) + ((idt_address & 0xffff) << 16);
     idt_ptr[1] = idt_address >> 16 ;
 
-    k_print("IDT: initalized at %x\n", idt_address);
-
     load_idt(idt_ptr);
 }
 

@@ -5,8 +5,6 @@
 
 /* prototypes */
 
-char *convert(unsigned int num, int base);
-
 void update_cursor(size_t terminal_row, size_t terminal_column);
 
 inline uint8_t vga_entry_color(uint8_t fg, uint8_t bg);
@@ -20,6 +18,8 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
 const size_t VGA_WIDTH = 80;
 
 static const size_t VGA_HEIGHT = 25;
+
+uint8_t current_color = 0;
 
 size_t terminal_row;
 
@@ -42,6 +42,8 @@ namespace standardout
         terminal_column = 0;
         terminal_color = vga_entry_color(fg, bg);
         terminal_buffer = VGA_MEMORY;
+
+        current_color = bg;
 
         for(y = 0; y < VGA_HEIGHT; y++) {
             for(x = 0; x < VGA_WIDTH; x++) {
@@ -71,6 +73,20 @@ namespace standardout
             }
         }
         return false;
+    }
+
+    void disable_cursor()
+    {
+        outb(0x3d4, 0x0a);
+        outb(0x3d5, 0x20);
+    }
+
+    void enable_cursor()
+    {
+        outb(0x3d4, 0x0a);
+        outb(0x3d5, (inb(0x3d5) & 0xc0) | terminal_row);
+        outb(0xd4, 0x0b);
+        outb(0x3d5, (inb(0x3d5) & 0xe0) | terminal_column);
     }
 
     uint32_t *reference_column;
@@ -208,6 +224,54 @@ namespace standardout
                 terminal_buffer[index]=vga_entry(' ', terminal_color);
             }
         }
+    }
+
+    int count_digits(int num) {
+        int count =0;
+        while(num > 0) {
+            count++;
+            num /= 10;
+        }
+        return count;
+    }
+
+    void special_char(char c, size_t x, size_t y, uint8_t fg, uint8_t bg)
+    {
+        const size_t index = y * VGA_WIDTH + x;
+        if(bg == 17)
+            terminal_buffer[index] = vga_entry(c, vga_entry_color(fg, current_color));
+        else
+            terminal_buffer[index] = vga_entry(c, vga_entry_color(fg, bg));
+    }
+
+    void special_num(int num, int size, size_t x, size_t y, uint8_t fg, uint8_t bg)
+    {
+        static int last_size = 0;
+
+        for(int i = 0; i < last_size; i++)
+            special_char(' ', i, y, current_color);
+
+        char *cnum;
+
+        int tmp_size = size;
+
+        while(num > 0) {
+            cnum[tmp_size - 1] = (num % 10) + '0';
+            num /= 10;
+            tmp_size--;
+        }
+
+        if(bg == 17) {
+            for(int i = 0; i < size; i++)
+                special_char(cnum[i], x++, y, fg, current_color);
+            last_size = x;
+            return;
+        }
+
+        for(int i = 0; i < size; i++)
+            special_char(cnum[i], x++, y, fg, bg);
+
+        last_size = x;
     }
 }
 

@@ -2,6 +2,7 @@ bits 32
 
 global load_idt
 global load_gdt
+global draw
 
 global keyboard_handler
 global time_handler
@@ -31,6 +32,12 @@ extern gdt_info
 extern gen_reg
 extern gen_reg16
 extern segment
+
+draw:
+    mov edi, 0x0A0000
+    mov al, 0x0f
+    mov [edi], al
+    ret
 
 load_idt:
     mov edx, [esp + 4]
