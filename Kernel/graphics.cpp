@@ -168,6 +168,8 @@ void sprit_draw_main()
 {
 	disable_cursor();
 
+    mask_irq(1);
+
     draw_pixels(bruh, 402, 10, 2);
 
     start_counter(1, 0, 0x6);
@@ -181,6 +183,9 @@ void sprit_draw_main()
         special_num(i, count_digits(i), 1, 1, VGA_MAGENTA);
         sleep(1);
     }
+
+    clear_irq(1);
+
     enable_cursor();
 }
 

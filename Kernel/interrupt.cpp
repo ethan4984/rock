@@ -60,6 +60,36 @@ void idt_init(void)
     load_idt(idt_ptr);
 }
 
+void mask_irq(unsigned char channel)
+{
+    uint16_t data;
+
+    if(channel < 8) {
+        data = inb(0x20 + 1) | (1 << channel);
+        outb(0x20 + 1, data);
+    }
+    else {
+        channel -= 8;
+        data = inb(0xa0 + 1) | (1 << channel);
+        outb(0xa0 + 1, data);
+    }
+}
+
+void clear_irq(unsigned char channel)
+{
+    uint16_t data;
+
+    if(channel < 8) {
+        data = inb(0x20 + 1) & ~(1 << channel);
+        outb(0x20 + 1, data);
+    }
+    else {
+        channel -= 8;
+        data = inb(0xa0 + 1) & ~(1 << channel);
+        outb(0xa0 + 1, data);
+    }
+}
+
 extern "C" void gdt_info(uint32_t addr)
 {
     k_print("GDT: mapped to %x\n", addr);

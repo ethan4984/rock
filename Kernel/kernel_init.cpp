@@ -35,6 +35,10 @@ extern "C" void kernel_main(void)
     proc.pfree(ptrbruh);
     uint16_t *ptruh = (uint16_t*)proc.pmalloc(0x4);
 
+    block_show();
+    draw_hline(VGA_MAGENTA, 6, 0, 66);
+    k_print("\n\n\n");
+
     k_print("> ");
     startInput();
 

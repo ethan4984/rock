@@ -13,6 +13,8 @@ struct IDT_entry
 };
 
 void idt_init(void);
+void mask_irq(unsigned char channel);
+void clear_irq(unsigned char channel);
 
 extern void load_idt(unsigned long *idt_ptr) asm("load_idt"); /* non generic */
 extern void keyboard_handler(void) asm("keyboard_handler");
@@ -39,5 +41,4 @@ void reg_flow16();
 void seg_flow();
 
 void start_counter(int freq, uint8_t counter, uint8_t mode);
-
 void sleep(int ticks);
