@@ -2,21 +2,25 @@
 
 This is a simple operating system made for fun and learning
 
-![Basic demo](Demo/osDeme.gif)
+![Basic demo](Demo/osdemo3.gif)
 
 ## About
 
-  This project takes pride in pure simplicity. This project exists as a means for fun, directly poking around hardware with     software is the definition of joy. This OS is amateur, however, here are some of the features we do include:
+  This project strives for simplicity. This project exists as a means for fun, "software from scracth" is really fun. This OS is amateur, however, here are some of the features we do include:
 
-  - Interrupts so we got that keyboard
+  - interrupts including irqs and exceptions 
 
   - Basic mm with identity paging and a pmm
 
   - A basic shell with simple commands
 
   - Malloc & Free and panic
+  
+  - Text based graphics
+  
+  - Process allocation
 
-  This OS is only around 2 weeks old and all of the features that we currently support will be 100% improved upon and more
+  This OS is only around a month old and all of the features that we currently support will be 100% improved upon and more
 
   Here are some project aspirations:
 
@@ -43,14 +47,7 @@ This is a simple operating system made for fun and learning
   During the build, if you find yourself getting a `Command not found` error, just put the error into google, and install
   the dependency. Its fairly easy to find missing dependencies.
 
-  Remember, every terminal that you want to compile the operating system in, you have to first set a few basic prefixes
-  first:
-
-      export PREFIX="$HOME/opt/cross"
-      export TARGET=i686-elf
-      export PATH="$PREFIX/bin:$PATH
-
- Then After everything is setup just simply run `make qemu` to build and run the OS
+  Then After everything is setup just simply run `make qemu` to build and run the OS
 
  (If you have already sorted out a compiler and dont need to run the `Tools/cross.sh` script then create the Bin directory
  If its not already created)
