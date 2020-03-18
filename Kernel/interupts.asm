@@ -24,6 +24,8 @@ global irq13
 global irq14
 global irq15
 
+global test_div
+
 extern keyboard_handler_main
 extern PITI
 extern irq_l
@@ -32,11 +34,13 @@ extern gdt_info
 extern gen_reg
 extern gen_reg16
 extern segment
+extern divide
 
-draw:
-    mov edi, 0x0A0000
-    mov al, 0x0f
-    mov [edi], al
+test_div:
+    mov edx, 0
+    mov eax, 250
+    mov ecx, 0
+    div ecx
     ret
 
 load_idt:

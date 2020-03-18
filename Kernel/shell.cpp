@@ -236,5 +236,5 @@ void test()
 }
 
 void test_panic() {
-    panic("test", "test");
+    panic("test");
 }

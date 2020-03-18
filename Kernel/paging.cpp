@@ -141,7 +141,7 @@ namespace MM
         if(is_one) {
             if(first_free() == static_cast<unsigned int>(-69)) {
                 t_print("BRUH: we ran out of blocks bruh");
-                panic("We ran out of blocks", "malloc");
+                panic("We ran out of blocks");
             }
 
             t_print("\tStatus: Single Block\n");
@@ -159,7 +159,7 @@ namespace MM
         for(i = 0; i < reqiured_blocks; i++) {
             if(allocate_block() == static_cast<unsigned int>(-69)) {
                 t_print("BRUH: we ran out of blocks bruh");
-                panic("We ran out of blocks", "malloc");
+                panic("We ran out of blocks");
             }
         }
         t_print("\nBlock allocation finished\n");

@@ -20,6 +20,23 @@ void idt_gate(uint32_t referenceIRQ)
     counter++;
 }
 
+void idt_expection(uint32_t call_back, uint32_t over_ride = 0)
+{
+    static int counter = 0;
+
+    if(over_ride)
+        counter = over_ride;
+
+    uint32_t irqX = call_back;
+    IDT[counter].offset_low = irqX & 0xffff;
+    IDT[counter].selector = 0x08;
+    IDT[counter].zero = 0;
+    IDT[counter].type_attr = 0x8e;
+    IDT[counter].offset_high = (irqX & 0xffff0000) >> 16;
+
+    counter++;
+}
+
 void idt_init(void)
 {
     uint32_t idt_address;
@@ -35,6 +52,29 @@ void idt_init(void)
     outb(0xA1, 0x01);
     outb(0x21, 0x0);
     outb(0xA1, 0x0);
+
+    idt_expection((uint32_t)divide_zero);
+    idt_expection((uint32_t)debug);
+    idt_expection((uint32_t)non_maskable_irq);
+    idt_expection((uint32_t)breakpoint);
+    idt_expection((uint32_t)overflow);
+    idt_expection((uint32_t)bound_range);
+    idt_expection((uint32_t)invaild_opcode);
+    idt_expection((uint32_t)device_not_available);
+    idt_expection((uint32_t)double_fault);
+    idt_expection((uint32_t)coprocessor_seg_overrun);
+    idt_expection((uint32_t)invaild_tss);
+    idt_expection((uint32_t)segment_not_found);
+    idt_expection((uint32_t)stack_seg_fault);
+    idt_expection((uint32_t)gen_fault);
+    idt_expection((uint32_t)page_fault);
+    idt_expection((uint32_t)floating_point_fault, 16);
+    idt_expection((uint32_t)alignment_check);
+    idt_expection((uint32_t)machine_check);
+    idt_expection((uint32_t)simd_floating_point);
+    idt_expection((uint32_t)vm_expection);
+    idt_expection((uint32_t)security_expection);
+
 
     idt_gate((uint32_t)time_handler);
     idt_gate((uint32_t)keyboard_handler);
@@ -117,11 +157,10 @@ extern "C" void PITI()
         ++seconds;
 }
 
-void panic(const char *message, const char *proccess)
+extern "C" void panic(const char *message)
 {
-    asm volatile("cli"); //disable all interrupts
     initalize(VGA_BLUE, VGA_RED);
-    k_print("PANIC : fatal error : %s : in %s\n", message, proccess);
+    k_print("PANIC : fatal error : %s\n", message);
     reg_flow();
     putchar('\n');
     seg_flow();

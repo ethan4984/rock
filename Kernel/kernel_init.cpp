@@ -8,7 +8,7 @@
 #include <graphics.h>
 
 extern void load_gdt(void) asm("load_gdt");
-extern void draw(void) asm("draw");
+extern void div_test(void) asm("test_div");
 
 using namespace standardout;
 using namespace MM;
