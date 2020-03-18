@@ -145,13 +145,13 @@ uint32_t bruh[] =   {
 
 void draw_hline(uint8_t color, size_t y, size_t start, size_t size)
 {
-    for(int i = start; i < size; i++)
+    for(size_t i = start; i < size; i++)
         special_char(' ', i, y, color, color);
 }
 
 void draw_vline(uint8_t color, size_t x, size_t start, size_t size)
 {
-    for(int i = start; i < size; i++)
+    for(size_t i = start; i < size; i++)
         special_char(' ', x, i, color, color);
 }
 
@@ -168,9 +168,13 @@ void sprit_draw_main()
 {
 	disable_cursor();
 
-    mask_irq(1);
+    mask_irq(1); /* disables irq1/keyboard */
 
-    draw_pixels(bruh, 402, 10, 2);
+    draw_vline(VGA_MAGENTA, 3, 0, 25);
+    draw_hline(VGA_MAGENTA, 3, 0, 80);
+    s_print(VGA_LIGHT_BLUE, 10, 1, "Welcome to crepOS");
+
+    draw_pixels(bruh, 402, 10, 5);
 
     start_counter(1, 0, 0x6);
 

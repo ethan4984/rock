@@ -46,7 +46,7 @@ const char *arg_command[] = { "print" };
 
 typedef void (*command_functions)();
 
-command_functions comm_func[] = {   version, clear_screen, shutdown, reboot,
+command_functions comm_func[] = {   version, clear_promnt, shutdown, reboot,
                                     test, current_address_spaces, block_show,
                                     reg_flow, reg_flow16, seg_flow, test_panic, help
                                 };
@@ -229,8 +229,8 @@ void test()
     k_print("Space allocated for ptr: %x\n", ptr);
     k_print("Space allocated for ptr1: %x\n", ptr1);
     k_print("Space allocated for ptr2: %x\n", ptr2);
-    k_print("Freeing ptr2\n");
-    free(ptr2);
+    k_print("Freeing ptr\n");
+    free(ptr);
     uint16_t *ptr3 = (uint16_t*)malloc(sizeof(uint16_t));
 	k_print("Space allocated for ptr3: %x", ptr3);
 }

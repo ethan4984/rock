@@ -105,7 +105,7 @@ namespace MM
 
     void free_block(uint32_t block_num)
     {
-        clear(block_num - 2);
+        clear(block_num - 1);
     }
 
     uint32_t first_free()
@@ -177,14 +177,14 @@ namespace MM
         while(++reqiured_blocks*0x1000 < size);
 
         if(reqiured_blocks == 1) {
-            free_block((((uint32_t)location - 0x108000) / 0x1000));
-            t_print("this block was just freed %x", (((uint32_t)location - 0x108000)));
+            free_block((((uint32_t)location - 0x109000) / 0x1000) - 1);
+            t_print("this block was just freed %x", (((uint32_t)location - 0x109000)));
             return;
         }
 
-        free_block((((uint32_t)location - 0x108000) / 0x1000));
+        free_block((((uint32_t)location - 0x109000) / 0x1000) - 1);
         for(unsigned long int i = 0; i < reqiured_blocks; i++)
-            t_print("this block was just freed %x", (((uint32_t)location + i*0x1000) - 0x108000));
+            t_print("this block was just freed %x", (((uint32_t)location + i*0x1000) - 0x109000));
     }
 
     void check_blocks(uint32_t range)
@@ -203,23 +203,23 @@ MM::virtual_address_space obj;
 
 void page_setup()
 {
-obj.identity_map_init();
+    obj.identity_map_init();
 }
 
 void current_address_spaces()
 {
-k_print("\nVirtual\tPhysical\n");
-for(uint32_t i = 0; i < obj.size; i++) {
-k_print("%x %x", obj.physical_log[i], obj.virtual_log[i]);
-if(i != obj.size - 1)
-putchar('\n');
-}
+    k_print("\nVirtual\tPhysical\n");
+    for(uint32_t i = 0; i < obj.size; i++) {
+        k_print("%x %x", obj.physical_log[i], obj.virtual_log[i]);
+        if(i != obj.size - 1)
+            putchar('\n');
+    }
 }
 
 void block_show()
 {
-k_print("\nPMM: blocks num: %d\n", total_blocks);
-k_print("PMM: bitmap addr: %x\n", (uint32_t)bitmap);
-k_print("PMM: bitmap size: %d\n", size);
-k_print("PMM: addr strat: %x\n", (uint32_t)block_start);
+    s_print(VGA_LIGHT_BLUE, 50, 3, "PMM: blocks num: %d", total_blocks);
+    s_print(VGA_LIGHT_BLUE, 50, 4, "PMM: bitmap addr: %x", (uint32_t)bitmap);
+    s_print(VGA_LIGHT_BLUE, 50, 5, "PMM: bitmap size: %d", size);
+    s_print(VGA_LIGHT_BLUE, 50, 6, "PMM: addr strat: %x", (uint32_t)block_start);
 }

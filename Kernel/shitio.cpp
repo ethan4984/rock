@@ -33,6 +33,8 @@ size_t y;
 
 size_t x;
 
+int current_y = 0;
+
 namespace standardout
 {
     void initalize(uint8_t bg, uint8_t fg)
@@ -60,7 +62,7 @@ namespace standardout
 
     bool end_of_screen(size_t offset)
     {
-        return (terminal_column + offset >= 66) ? true : false;
+        return (terminal_column + offset >= 45) ? true : false;
     }
 
     bool terminal_setcolor(uint8_t bg, uint8_t fg)
@@ -128,7 +130,7 @@ namespace standardout
                 break;
         }
         if(end_of_terminal())
-            clear_screen();
+            clear_promnt();
     }
 
     void k_print(const char str[256],...)
@@ -170,6 +172,48 @@ namespace standardout
                 va_end(arg);
             }
         }
+    }
+
+    void s_print(uint8_t color, size_t x, size_t y, const char str[256],...)
+    {
+        unsigned int hold = 0;
+        char *string;
+
+        va_list arg;
+        va_start(arg, str);
+
+        int length = strlen(str);
+
+        for(int i = 0; i < length; i++) {
+            if(str[i] != '%')
+                special_char(str[i], x++, y, color);
+            else {
+                i++;
+                switch(str[i]) {
+                    case 'd':
+                        hold = va_arg(arg, int);
+                        string = convert(hold, 10);
+                        for(size_t i = 0; i < strlen(string); i++)
+                            special_char(string[i], x++, y, color);
+                        break;
+                    case 's':
+                        string = va_arg(arg, char *);
+                        for(size_t i = 0; i < strlen(string); i++)
+                            special_char(string[i], x++, y, color);
+                        break;
+                    case 'x':
+                        hold = va_arg(arg, unsigned int);
+                        string = convert(hold, 16);
+                        special_char('0', x++, y, color);
+                        special_char('x', x++, y, color);
+                        for(size_t i = 0; i < strlen(string); i++)
+                            special_char(string[i], x++, y, color);
+                        break;
+                }
+                va_end(arg);
+            }
+        }
+        current_y = y;
     }
 
     void t_print(const char str[256],...)
@@ -226,6 +270,18 @@ namespace standardout
         }
     }
 
+    void clear_promnt()
+    {
+        terminal_column = 0;
+        terminal_row = 0;
+        for(y = 0; y < 25; y++) {
+            for(x = 0; x < 48; x++) {
+                const size_t index = y * 80 + x;
+                terminal_buffer[index] = vga_entry(' ', terminal_color);
+            }
+        }
+    }
+
     int count_digits(int num) {
         int count =0;
         while(num > 0) {
@@ -251,7 +307,7 @@ namespace standardout
         for(int i = 0; i < last_size; i++)
             special_char(' ', i, y, current_color);
 
-        char *cnum;
+        char *cnum = 0;
 
         int tmp_size = size;
 
@@ -272,6 +328,11 @@ namespace standardout
             special_char(cnum[i], x++, y, fg, bg);
 
         last_size = x;
+    }
+
+    int grab_current_y()
+    {
+        return current_y++;
     }
 }
 

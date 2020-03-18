@@ -12,7 +12,12 @@ using namespace MM;
 process::process(size_t range) : num_of_blocks(range)
 {
     process_begin = (uint32_t*)malloc(range);
+
+    size_t blocks = 0;
+    while(++blocks*0x1000 < range);
+
     t_print("New process allocated at %x\n", (uint32_t)process_begin);
+    s_print(VGA_GREEN, 50, grab_current_y() + 1, "New process requesting %d kb", blocks);
 
     for(uint32_t i = 0; i < range/0x80; i++) /* process allocator uses blocks of 128 bytes */
         pmem_map.available_blocks[i] = 1;

@@ -32,86 +32,87 @@ extern panic
 
 divide_by_zero:
     expection_handler div0_m
-    ret
+    iret
 
 debug:
     expection_handler debug_m
-    ret
+    iret
 
 non_maskable_irq:
     expection_handler nmi_m
-    ret
+    iret
 
 breakpoint:
     expection_handler breakpoint_m
-    ret
+    iret
 
 overflow:
     expection_handler overflow_m
-    ret
+    iret
 
 bound_range:
     expection_handler bound_m
-    ret
+    iret
 
 invaild_opcode:
     expection_handler opcode_m
-    ret
+    iiret
 
 device_not_available:
     expection_handler device_m
-    ret
+    iret
 
 double_fault:
     expection_handler double_fault_m
-    ret
+    iret
 
 coprocessor_seg_overrun:
     expection_handler process_m
-    ret
+    iret
+
 invaild_tss:
     expection_handler tss_m
-    ret
+    iret
 
 segment_not_found:
     expection_handler seg_not_found_m
-    ret
+    iret
 
 stack_seg_fault:
     expection_handler ssf_m
-    ret
+    iret
 
 gen_fault:
     expection_handler gen_m
-    ret
+    iret
 
 page_fault:
     expection_handler page_m
-    ret
+    iret
 
 floating_point_fault:
     expection_handler floating_m
-    ret
+    iret
 
 alignment_check:
     expection_handler align_m
-    ret
+    iret
 
 machine_check:
     expection_handler machine_m
-    ret
+    iret
 
 simd_floating_point:
     expection_handler simd_m
-    ret
+    iret
 
 vm_expection:
     expection_handler machine_m
-    ret
+    iret
 
 security_expection:
     expection_handler sec_m
-    ret
+    iret
 
 section .data
     div0_m: db 'divide by zero retard', 0
@@ -123,13 +124,13 @@ section .data
     opcode_m db 'invaild opcode bro!', 0
     device_m db 'device not available!', 0
     double_fault_m db 'bruh you got a double fault!', 0
-    process_m db 'coprocessor segment overrun!', 0
+    process_m db 'coprocessor seg overrun!', 0
     tss_m db 'invaild tss!', 0
     seg_not_found_m db 'segment not found bruh!', 0
     ssf_m db 'stack segment fault!', 0
     gen_m db 'general protection fault!', 0
-    page_m db 'good for you, you have a page fault!', 0
-    floating_m db 'floating point expection fault!', 0
+    page_m db 'you have a page fault bitch!', 0
+    floating_m db 'floating pnt expection fault!', 0
     align_m db 'alignment check fault!', 0
     machine_m db 'stop creating a vm!', 0
     simd_m db 'simp!', 0

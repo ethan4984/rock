@@ -29,15 +29,17 @@ extern "C" void kernel_main(void)
 
     /* tests processes allocation */
 
+    s_print(VGA_LIGHT_BLUE, 50, 1, "crepOS Dynamic Debugger");
+
+    block_show();
+    grab_current_y();
+    draw_vline(VGA_MAGENTA, 48, 0, 25);
+
     process proc(0x2001);
     proc.pmalloc(0x4);
     uint16_t *ptrbruh = (uint16_t*)proc.pmalloc(0x8);
     proc.pfree(ptrbruh);
     uint16_t *ptruh = (uint16_t*)proc.pmalloc(0x4);
-
-    block_show();
-    draw_hline(VGA_MAGENTA, 6, 0, 66);
-    k_print("\n\n\n");
 
     k_print("> ");
     startInput();

@@ -11,7 +11,7 @@
 
 #define VGA_BLACK 0
 #define VGA_BLUE 1
-#define VGA_REEN 2
+#define VGA_GREEN 2
 #define VGA_CYAN 3
 #define VGA_RED 4
 #define VGA_MAGENTA 5
@@ -42,6 +42,8 @@ namespace standardout
 
     void t_print(const char str[256],...);
 
+    void s_print(uint8_t color, size_t x, size_t y, const char str[256],...);
+
     void putchar(char c);
 
     void special_char(char c, size_t x, size_t y, uint8_t fg, uint8_t bg = 17);
@@ -49,6 +51,8 @@ namespace standardout
     void special_num(int num, int size, size_t x, size_t y, uint8_t fg, uint8_t bg = 17);
 
     void clear_screen();
+
+    void clear_promnt();
 
     bool end_of_terminal();
 
@@ -61,6 +65,8 @@ namespace standardout
     void enable_cursor();
 
     int count_digits(int num);
+
+    int grab_current_y();
 }
 
 char *convert(unsigned int num, int base);
