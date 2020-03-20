@@ -101,7 +101,6 @@ extern "C" void keyboard_handler_main()
                     key_entry.input[counter++] = cap_map[(unsigned char)keycode];
                     break;
                 }
-
                 putchar(keyboard_map[(unsigned char)keycode]);
                 key_entry.input[counter++] = keyboard_map[(unsigned char)keycode];
             }

@@ -1,11 +1,8 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
 #include <port.h>
-#include <paging.h>
+#include <stdint.h>
+#include <stddef.h>
 
 /* colour constants */
 
@@ -31,6 +28,8 @@ size_t strlen(const char *str);
 int strcmp(const char *a, const char *b);
 
 char *strcpy(char *dest, const char *src);
+
+size_t utoa(uint64_t n, char *s, int base);
 
 namespace standardout
 {
@@ -69,137 +68,4 @@ namespace standardout
     int grab_current_y();
 }
 
-char *convert(unsigned int num, int base);
-
-template<typename T>
-class darry
-{
-    public:
-        darry(const T *base, int current_size) : dynamic_array(base), arr_size(current_size)
-        {
-            status = arr_size;
-        }
-
-        darry(int max_size) : arr_size(max_size)
-        {
-            dynamic_array = new T[arr_size];
-            status = 0;
-        }
-
-        darry()
-        {
-            arr_size = 1;
-            status = 0;
-            dynamic_array = new T[arr_size];
-        };
-
-        ~darry()
-        {
-            delete[] dynamic_array;
-        }
-
-        void add(T new_element)
-        {
-            if(status == arr_size) {
-                T *tmp = new T[2 * arr_size];
-
-                for (int i = 0; i < arr_size; i++)
-                    tmp[i] = dynamic_array[i];
-
-                delete[] dynamic_array;
-                arr_size *= 2;
-                dynamic_array = tmp;
-                delete[] tmp;
-            }
-            dynamic_array[status] = new_element;
-            status++;
-        }
-
-        void del()
-        {
-            status--;
-        }
-
-        void in_add(T new_element, int location)
-        {
-            T *tmp = new T[arr_size];
-
-            for(int i = 0; i < arr_size; i++) {
-                if(i == location - 1)
-                    tmp[i] = new_element;
-                else
-                    tmp[i] = dynamic_array[i];
-            }
-
-            delete[] dynamic_array;
-            dynamic_array = tmp;
-            delete[] tmp;
-        }
-
-        void in_del(int location)
-        {
-            T *tmp = new T[arr_size - 1];
-
-            for(int i = 0; i < location - 1; i++)
-                tmp[i] = dynamic_array[i];
-
-            for(int i = location + 1; i < arr_size - 1; i++)
-                tmp[i-1] = dynamic_array[i];
-
-            delete[] dynamic_array;
-            arr_size -= 1;
-            dynamic_array = tmp;
-            delete[] tmp;
-        }
-
-        void resize(int new_size)
-        {
-            T *tmp = new T[new_size];
-
-            for(int i = 0; i < new_size; i++)
-                tmp[i] = dynamic_array[i];
-
-            delete[] dynamic_array;
-            arr_size = new_size;
-            dynamic_array = tmp;
-            delete[] tmp;
-        }
-
-        void clear()
-        {
-            memset(dynamic_array, 0, size);
-        }
-
-        int size()
-        {
-            return arr_size;
-        }
-
-        T grab(int index)
-        {
-            return dynamic_array[index];
-        }
-
-        void print()
-        {
-            for(int i = 0; i < arr_size; i++)
-                k_print("%d", dynamic_array[i]);
-        }
-
-        void *operator new(size_t size)
-        {
-            return MM::malloc(size);
-        }
-
-        void operator delete(void *location)
-        {
-            MM::free(location);
-        }
-
-    private:
-        int arr_size;
-
-        int status;
-
-        T  *dynamic_array;
-};
+char *convert(uint64_t num, int base);

@@ -6,25 +6,25 @@ extern uint8_t *block_start;
 
 namespace MM
 {
-    void set(uint32_t location);
+    void set(uint64_t location);
 
-    void clear(uint32_t location);
+    void clear(uint64_t location);
 
-    uint8_t isset(uint32_t location);
+    uint8_t isset(uint64_t location);
 
     void *malloc(size_t size);
 
-    void free(void *location, size_t size = sizeof(uint32_t));
+    void free(void *location, size_t size = sizeof(uint64_t));
 
-    void page_frame_init(uint32_t mem_range);
+    void page_frame_init(uint64_t mem_range);
 
-    uint32_t allocate_block();
+    uint64_t allocate_block();
 
-    void free_block(uint32_t block_num);
+    void free_block(uint64_t block_num);
 
-    uint32_t first_free();
+    uint64_t first_free();
 
-	void check_blocks(uint32_t range);
+	void check_blocks(uint64_t range);
 
     void *new_address_space();
 
@@ -35,29 +35,13 @@ namespace MM
     class virtual_address_space
     {
         public:
-            void new_virtual_map(uint32_t physical_addr, uint32_t virtual_addr);
-
-            bool new_claim(uint32_t physical_addr, uint32_t virtual_addr);
-
-            void *get_physical_address(void *virtual_addr);
-
-            void identity_map_init();
-
-            void *new_procces(); /* returns address a dynamic address space */
-
-            uint32_t *physical_log;
-
-            uint32_t *virtual_log;
-
-            uint32_t size;
+            void setup();
         protected:
-            void enable_page();
+            uint64_t page_dir[512] __attribute__((aligned(0x1000)));
 
-            uint32_t *page_dir = 0;
+            uint64_t page_tab[512] __attribute__((aligned(0x1000)));
 
-            uint32_t page_loc = 0;
-
-            uint32_t *last_page = 0;
+            uint64_t page_dir_ptr_tab[4] __attribute__((aligned(0x20)));
     };
 }
 

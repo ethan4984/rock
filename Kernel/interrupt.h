@@ -5,12 +5,14 @@
 
 struct IDT_entry
 {
-    uint16_t offset_low;
+    uint16_t low_offset;
     uint16_t selector;
-    uint8_t zero;
-    uint8_t type_attr;
-    uint16_t offset_high;
-};
+    uint8_t zero8;
+    uint8_t type_addr;
+    uint16_t middle_offset;
+    uint32_t high_offset;
+    uint32_t zero32;
+} __attribute__((packed));
 
 void idt_init(void);
 void mask_irq(unsigned char channel);
@@ -20,20 +22,20 @@ extern void load_idt(unsigned long *idt_ptr) asm("load_idt"); /* non generic */
 extern void keyboard_handler(void) asm("keyboard_handler");
 extern void time_handler(void) asm("time_handler");
 
-extern int irq2() asm("irq2");  /* generic: ToDo: Make not generic */
-extern int irq3() asm("irq3");
-extern int irq4() asm("irq4");
-extern int irq5() asm("irq5");
-extern int irq6() asm("irq6");
-extern int irq7() asm("irq7");
-extern int irq8() asm("irq8");
-extern int irq9() asm("irq9");
-extern int irq10() asm("irq10");
-extern int irq11() asm("irq11");
-extern int irq12() asm("irq12");
-extern int irq13() asm("irq13");
-extern int irq14() asm("irq14");
-extern int irq15() asm("irq15");
+extern uint64_t irq2() asm("irq2");  /* generic: ToDo: Make not generic */
+extern uint64_t irq3() asm("irq3");
+extern uint64_t irq4() asm("irq4");
+extern uint64_t irq5() asm("irq5");
+extern uint64_t irq6() asm("irq6");
+extern uint64_t irq7() asm("irq7");
+extern uint64_t irq8() asm("irq8");
+extern uint64_t irq9() asm("irq9");
+extern uint64_t irq10() asm("irq10");
+extern uint64_t irq11() asm("irq11");
+extern uint64_t mouse() asm("mouse_handler");
+extern uint64_t irq13() asm("irq13");
+extern uint64_t irq14() asm("irq14");
+extern uint64_t irq15() asm("irq15");
 
 extern void divide_zero(void) asm("divide_by_zero");
 extern void debug(void) asm("debug");
@@ -58,6 +60,7 @@ extern void vm_expection(void) asm("vm_expection");
 extern void security_expection(void) asm("security_expection");
 
 extern "C" void panic(const char *message);
+
 void reg_flow();
 void reg_flow16();
 void seg_flow();

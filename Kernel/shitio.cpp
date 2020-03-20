@@ -1,5 +1,6 @@
 #include <port.h>
 #include <shitio.h>
+#include <memory.h>
 
 #include <stdarg.h>
 
@@ -135,7 +136,7 @@ namespace standardout
 
     void k_print(const char str[256],...)
     {
-        unsigned int hold = 0;
+        uint64_t hold = 0;
         char *string;
 
         va_list arg;
@@ -150,7 +151,7 @@ namespace standardout
                 i++;
                 switch(str[i]) {
                     case 'd':
-                        hold = va_arg(arg, int);
+                        hold = va_arg(arg, long);
                         string = convert(hold, 10);
                         for(size_t i = 0; i < strlen(string); i++)
                             putchar(string[i]);
@@ -161,10 +162,21 @@ namespace standardout
                             putchar(string[i]);
                         break;
                     case 'x':
-                        hold = va_arg(arg, unsigned int);
+                        hold = va_arg(arg, uint64_t);
                         string = convert(hold, 16);
                         putchar('0');
                         putchar('x');
+                        for(size_t i = 0; i < utoa(hold, string, 16); i++)
+                            putchar(string[i]);
+                        break;
+                    case 'a':
+                        hold = va_arg(arg, uint64_t);
+                        string = convert(hold, 16);
+                        putchar('0');
+                        putchar('x');
+                        int offset_zeros = 16 - strlen(string);
+                        for(size_t i = 0; i < offset_zeros; i++)
+                            putchar('0');
                         for(size_t i = 0; i < strlen(string); i++)
                             putchar(string[i]);
                         break;
@@ -209,6 +221,17 @@ namespace standardout
                         for(size_t i = 0; i < strlen(string); i++)
                             special_char(string[i], x++, y, color);
                         break;
+                    case 'a':
+                        hold = va_arg(arg, uint64_t);
+                        string = convert(hold, 16);
+                        special_char('0', x++, y, color);
+                        special_char('x', x++, y, color);
+                        int offset_zeros = 16 - strlen(string);
+                        for(size_t i = 0; i < offset_zeros; i++)
+                            special_char('0', x++, y, color);
+                        for(size_t i = 0; i < strlen(string); i++)
+                            special_char(string[i], x++, y, color);
+                        break;
                 }
                 va_end(arg);
             }
@@ -218,7 +241,7 @@ namespace standardout
 
     void t_print(const char str[256],...)
     {
-        unsigned int hold = 0;
+        uint64_t hold = 0;
         char *string;
 
         va_list arg;
@@ -233,7 +256,7 @@ namespace standardout
                 i++;
                 switch(str[i]) {
                     case 'd':
-                        hold = va_arg(arg, int);
+                        hold = va_arg(arg, long);
                         string = convert(hold, 10);
                         for(size_t i = 0; i < strlen(string); i++)
                             serial_write(string[i]);
@@ -244,10 +267,21 @@ namespace standardout
                             serial_write(string[i]);
                         break;
                     case 'x':
-                        hold = va_arg(arg, unsigned int);
+                        hold = va_arg(arg, uint64_t);
                         string = convert(hold, 16);
                         serial_write('0');
                         serial_write('x');
+                        for(size_t i = 0; i < strlen(string); i++)
+                            serial_write(string[i]);
+                        break;
+                    case 'a':
+                        hold = va_arg(arg, uint64_t);
+                        string = convert(hold, 16);
+                        putchar('0');
+                        putchar('x');
+                        int offset_zeros = 16 - strlen(string);
+                        for(size_t i = 0; i < offset_zeros; i++)
+                            serial_write('0');
                         for(size_t i = 0; i < strlen(string); i++)
                             serial_write(string[i]);
                         break;
@@ -336,7 +370,7 @@ namespace standardout
     }
 }
 
-char *convert(unsigned int num, int base)
+char *convert(uint64_t num, int base)
 {
     static char hold[]= "0123456789ABCDEF";
     static char buffer[50];
@@ -411,4 +445,29 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
 {
     const size_t index = y * VGA_WIDTH + x;
     terminal_buffer[index] = vga_entry(c, color);
+}
+
+size_t utoa(unsigned long n, char *s, int base)
+{
+    char tmp[64];// be careful with the length of the buffer
+    char *tp = tmp;
+    unsigned long i;
+    unsigned long v;
+
+    v = (unsigned long)n;
+
+    while (v || tp == tmp) {
+        i = v % base;
+        v /= base; // v/=radix uses less CPU clocks than v=v/radix does
+        if (i < 10)
+          *tp++ = i+'0';
+        else
+          *tp++ = i + 'a' - 10;
+    }
+
+    int len = tp - tmp;
+    while (tp > tmp)
+        *s++ = *--tp;
+
+    return len;
 }

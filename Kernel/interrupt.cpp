@@ -6,41 +6,71 @@ using namespace standardout;
 
 struct IDT_entry IDT[256];
 
-void idt_gate(uint32_t referenceIRQ)
+typedef struct {
+    uint16_t limit;
+    uint64_t base;
+} __attribute__((packed)) idt_register_t;
+
+idt_register_t idt_reg;
+
+void idt_gate(uint64_t IRQ)
 {
-    static int counter = 32;
+    static uint64_t cnt = 32;
 
-    uint32_t irqX = referenceIRQ;
-    IDT[counter].offset_low = irqX & 0xffff;
-    IDT[counter].selector = 0x08;
-    IDT[counter].zero = 0;
-    IDT[counter].type_attr = 0x8e;
-    IDT[counter].offset_high = (irqX & 0xffff0000) >> 16;
+    IDT[cnt].selector = 0x8;
+    IDT[cnt].zero32 = 0;
+    IDT[cnt].zero8 = 0;
+    IDT[cnt].type_addr = 0x8e;
+    IDT[cnt].low_offset = (uint16_t)(IRQ >> 0);
+    IDT[cnt].middle_offset = (uint16_t)(IRQ >> 16);
+    IDT[cnt].high_offset = (uint32_t)(IRQ >> 32);
 
-    counter++;
+    cnt++;
 }
 
-void idt_expection(uint32_t call_back, uint32_t over_ride = 0)
+void idt_expection(uint64_t IRQ, uint64_t over_ride = 0)
 {
-    static int counter = 0;
+    static uint64_t cnt = 0;
 
     if(over_ride)
-        counter = over_ride;
+        cnt = over_ride;
 
-    uint32_t irqX = call_back;
-    IDT[counter].offset_low = irqX & 0xffff;
-    IDT[counter].selector = 0x08;
-    IDT[counter].zero = 0;
-    IDT[counter].type_attr = 0x8e;
-    IDT[counter].offset_high = (irqX & 0xffff0000) >> 16;
+    IDT[cnt].selector = 0x8;
+    IDT[cnt].zero32 = 0;
+    IDT[cnt].zero8 = 0;
+    IDT[cnt].type_addr = 0x8f;
+    IDT[cnt].low_offset = (uint16_t)(IRQ >> 0);
+    IDT[cnt].middle_offset = (uint16_t)(IRQ >> 16);
+    IDT[cnt].high_offset = (uint32_t)(IRQ >> 32);
 
-    counter++;
+    cnt++;
 }
 
 void idt_init(void)
 {
-    uint32_t idt_address;
-    uint32_t idt_ptr[2];
+    /* cpu excpetions */
+
+    idt_expection((uint64_t)divide_zero);
+    idt_expection((uint64_t)debug);
+    idt_expection((uint64_t)non_maskable_irq);
+    idt_expection((uint64_t)breakpoint);
+    idt_expection((uint64_t)overflow);
+    idt_expection((uint64_t)bound_range);
+    idt_expection((uint64_t)invaild_opcode);
+    idt_expection((uint64_t)device_not_available);
+    idt_expection((uint64_t)double_fault);
+    idt_expection((uint64_t)coprocessor_seg_overrun);
+    idt_expection((uint64_t)invaild_tss);
+    idt_expection((uint64_t)segment_not_found);
+    idt_expection((uint64_t)stack_seg_fault);
+    idt_expection((uint64_t)gen_fault);
+    idt_expection((uint64_t)page_fault);
+    idt_expection((uint64_t)floating_point_fault, 16);
+    idt_expection((uint64_t)alignment_check);
+    idt_expection((uint64_t)machine_check);
+    idt_expection((uint64_t)simd_floating_point);
+    idt_expection((uint64_t)vm_expection);
+    idt_expection((uint64_t)security_expection);
 
     outb(0x20, 0x11);
     outb(0xA0, 0x11);
@@ -53,51 +83,28 @@ void idt_init(void)
     outb(0x21, 0x0);
     outb(0xA1, 0x0);
 
-    idt_expection((uint32_t)divide_zero);
-    idt_expection((uint32_t)debug);
-    idt_expection((uint32_t)non_maskable_irq);
-    idt_expection((uint32_t)breakpoint);
-    idt_expection((uint32_t)overflow);
-    idt_expection((uint32_t)bound_range);
-    idt_expection((uint32_t)invaild_opcode);
-    idt_expection((uint32_t)device_not_available);
-    idt_expection((uint32_t)double_fault);
-    idt_expection((uint32_t)coprocessor_seg_overrun);
-    idt_expection((uint32_t)invaild_tss);
-    idt_expection((uint32_t)segment_not_found);
-    idt_expection((uint32_t)stack_seg_fault);
-    idt_expection((uint32_t)gen_fault);
-    idt_expection((uint32_t)page_fault);
-    idt_expection((uint32_t)floating_point_fault, 16);
-    idt_expection((uint32_t)alignment_check);
-    idt_expection((uint32_t)machine_check);
-    idt_expection((uint32_t)simd_floating_point);
-    idt_expection((uint32_t)vm_expection);
-    idt_expection((uint32_t)security_expection);
+    /* irqs */
 
+    idt_gate((uint64_t)time_handler);
+    idt_gate((uint64_t)keyboard_handler);
+    idt_gate((uint64_t)irq2);
+    idt_gate((uint64_t)irq3);
+    idt_gate((uint64_t)irq4);
+    idt_gate((uint64_t)irq5);
+    idt_gate((uint64_t)irq6);
+    idt_gate((uint64_t)irq7);
+    idt_gate((uint64_t)irq8);
+    idt_gate((uint64_t)irq9);
+    idt_gate((uint64_t)irq10);
+    idt_gate((uint64_t)irq11);
+    idt_gate((uint64_t)mouse);
+    idt_gate((uint64_t)irq13);
+    idt_gate((uint64_t)irq14);
+    idt_gate((uint64_t)irq15);
 
-    idt_gate((uint32_t)time_handler);
-    idt_gate((uint32_t)keyboard_handler);
-    idt_gate((uint32_t)irq2);
-    idt_gate((uint32_t)irq3);
-    idt_gate((uint32_t)irq4);
-    idt_gate((uint32_t)irq5);
-    idt_gate((uint32_t)irq6);
-    idt_gate((uint32_t)irq7);
-    idt_gate((uint32_t)irq8);
-    idt_gate((uint32_t)irq9);
-    idt_gate((uint32_t)irq10);
-    idt_gate((uint32_t)irq11);
-    idt_gate((uint32_t)irq12);
-    idt_gate((uint32_t)irq13);
-    idt_gate((uint32_t)irq14);
-    idt_gate((uint32_t)irq15);
-
-    idt_address = (uint32_t)IDT ;
-    idt_ptr[0] = (sizeof (struct IDT_entry) * 256) + ((idt_address & 0xffff) << 16);
-    idt_ptr[1] = idt_address >> 16 ;
-
-    load_idt(idt_ptr);
+    idt_reg.base = (uint64_t)&IDT;
+    idt_reg.limit = 256 * sizeof(IDT_entry) - 1;
+    asm volatile("lidtq %0" ::"m"(idt_reg));
 }
 
 void mask_irq(unsigned char channel)
@@ -130,7 +137,7 @@ void clear_irq(unsigned char channel)
     }
 }
 
-extern "C" void gdt_info(uint32_t addr)
+extern "C" void gdt_info(uint64_t addr)
 {
     k_print("GDT: mapped to %x\n", addr);
 }
@@ -161,13 +168,13 @@ extern "C" void panic(const char *message)
 {
     initalize(VGA_BLUE, VGA_RED);
     k_print("PANIC : fatal error : %s\n", message);
-    reg_flow();
+    //reg_flow();
     putchar('\n');
-    seg_flow();
+    //seg_flow();
     for(;;);
 }
 
-extern void save_regs(void) asm("save_regs");
+/*extern void save_regs(void) asm("save_regs");
 extern void save_regs16(void) asm("save_regs16");
 extern void save_segment(void) asm("save_segment");
 
@@ -245,7 +252,7 @@ void seg_flow()
     k_print("Dump ES %x\n", segment.es);
     k_print("Dump FS %x\n", segment.fs);
     k_print("Dump GS %x", segment.gs);
-}
+}*/
 
 static inline void pit_send_data(uint16_t data, uint8_t counter)
 {
@@ -288,4 +295,3 @@ void sleep(int ticks)
     while(seconds < ticks)
         asm volatile("nop");
 }
-

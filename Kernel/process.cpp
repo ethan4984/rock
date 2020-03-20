@@ -11,12 +11,12 @@ using namespace MM;
 
 process::process(size_t range) : num_of_blocks(range)
 {
-    process_begin = (uint32_t*)malloc(range);
+    process_begin = (uint64_t*)malloc(range);
 
-    size_t blocks = 0;
+    uint64_t blocks = 0;
     while(++blocks*0x1000 < range);
 
-    t_print("New process allocated at %x\n", (uint32_t)process_begin);
+    t_print("New process allocated at %x\n", (uint64_t)process_begin);
     s_print(VGA_GREEN, 50, grab_current_y() + 1, "New process requesting %d kb", blocks);
 
     for(uint32_t i = 0; i < range/0x80; i++) /* process allocator uses blocks of 128 bytes */
@@ -35,7 +35,7 @@ void free_process(process &ref)
         return;
     }
 
-    t_print("Process %x freed\n", (uint32_t)ref.process_begin);
+    t_print("Process %x freed\n", (uint64_t)ref.process_begin);
     free(ref.process_begin, ref.num_of_blocks);
     ref.process_begin = NULL;
 }
@@ -58,7 +58,7 @@ uint32_t process::allocate_pblock()
     return new_pblock;
 }
 
-void process::free_pblock(size_t index)
+void process::free_pblock(uint64_t index)
 {
     pmem_map.available_blocks[index] = 1;
 }
@@ -117,24 +117,44 @@ void process::pfree(void *location, size_t size)
         return;
     }
 
-    unsigned long int reqiured_blocks = 0;
+    uint64_t reqiured_blocks = 0;
     while(++reqiured_blocks*0x80 < size);
 
     if(reqiured_blocks == 1) {
-        free_pblock(((uint32_t)location - (uint32_t)process_begin) / 0x80);
-        t_print("This process blokc was just freed %d\n", ((uint32_t)location - (uint32_t)process_begin) / 0x80);
+        free_pblock(((uint64_t)location - (uint64_t)process_begin) / 0x80);
+        t_print("This process blokc was just freed %d\n", ((uint64_t)location - (uint64_t)process_begin) / 0x80);
         return;
     }
 
-    free_pblock((uint32_t)location - (uint32_t)process_begin / 0x80);
-    for(unsigned long int i = 0; i < reqiured_blocks; i++)
-        t_print("This process block was just freed %x", (uint32_t)location - (uint32_t )process_begin);
+    free_pblock((uint64_t)location - (uint64_t)process_begin / 0x80);
+    for(uint64_t i = 0; i < reqiured_blocks; i++)
+        t_print("This process block was just freed %x", (uint64_t)location - (uint64_t )process_begin);
     t_print("\n");
 }
 
-void process::show_blocks(int range)
+void process::show_blocks(uint64_t range)
 {
-    for(int i = 0; i < range; i++) {
+    for(uint64_t i = 0; i < range; i++) {
         t_print("%d\n", pmem_map.available_blocks[i]);
     }
 }
+
+stack_switcher *root;
+
+void new_stack(uint64_t address)
+{
+    asm volatile ("movq %%rsp, %0" : "=r"(root->esp0));
+    //asm volatile ("movq %%rip, %0" : "=r"(root->eip0));
+    t_print("%x and %x", root->esp0, root->eip0);
+}
+
+
+
+
+
+
+
+
+
+
+

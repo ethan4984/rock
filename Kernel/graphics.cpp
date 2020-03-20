@@ -1,9 +1,7 @@
 #include <shitio.h>
 #include <memory.h>
-#include <paging.h>
 #include <interrupt.h>
 
-using namespace MM;
 using namespace standardout;
 
 uint32_t bruh[] =   {
@@ -175,8 +173,6 @@ void sprit_draw_main()
     s_print(VGA_LIGHT_BLUE, 10, 1, "Welcome to crepOS");
 
     draw_pixels(bruh, 402, 10, 5);
-
-    start_counter(1, 0, 0x6);
 
     for(int i = 4; i > 0; i--) {
         if(i == 0) {

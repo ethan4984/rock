@@ -1,9 +1,9 @@
 #include <shell.h>
 #include <shitio.h>
-#include <paging.h>
 #include <port.h>
 #include <memory.h>
 #include <interrupt.h>
+#include <paging.h>
 
 /* prototypes */
 
@@ -38,8 +38,7 @@ using namespace MM;
 command arg[1];
 
 const char *command_list[] = {  "version", "clr", "shutdown", "reboot",
-                                "testMM", "page-stat", "block-show", "reg-dump",
-                                "reg-dump16", "seg-dump", "panic", "help"
+                                "testMM", "panic", "help"
                              };
 
 const char *arg_command[] = { "print" };
@@ -47,8 +46,7 @@ const char *arg_command[] = { "print" };
 typedef void (*command_functions)();
 
 command_functions comm_func[] = {   version, clear_promnt, shutdown, reboot,
-                                    test, current_address_spaces, block_show,
-                                    reg_flow, reg_flow16, seg_flow, test_panic, help
+                                    test, test_panic, help
                                 };
 
 void command_handler(const char *input)
@@ -222,17 +220,18 @@ int command_parse(char argument[5][10], int start, const char *input)
 
 void test()
 {
+    t_print("testing");
     k_print("\nTesting Malloc & Free:\n");
     uint32_t *ptr = (uint32_t*)malloc(sizeof(uint32_t));
     uint16_t *ptr1 = (uint16_t*)malloc(sizeof(uint16_t));
     uint16_t *ptr2 = (uint16_t*)malloc(sizeof(uint16_t));
-    k_print("Space allocated for ptr: %x\n", ptr);
-    k_print("Space allocated for ptr1: %x\n", ptr1);
-    k_print("Space allocated for ptr2: %x\n", ptr2);
-    k_print("Freeing ptr\n");
-    free(ptr);
+    k_print("Space allocated for ptr: %a\n", ptr);
+    k_print("Space allocated for ptr1: %a\n", ptr1);
+    k_print("Space allocated for ptr2: %a\n", ptr2);
+    k_print("Freeing ptr2\n");
+    free(ptr2);
     uint16_t *ptr3 = (uint16_t*)malloc(sizeof(uint16_t));
-	k_print("Space allocated for ptr3: %x", ptr3);
+	k_print("Space allocated for ptr3: %a", ptr3);
 }
 
 void test_panic() {
