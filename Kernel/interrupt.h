@@ -62,7 +62,6 @@ extern void security_expection(void) asm("security_expection");
 extern "C" void panic(const char *message);
 
 void reg_flow();
-void reg_flow16();
 void seg_flow();
 
 void start_counter(int freq, uint8_t counter, uint8_t mode);

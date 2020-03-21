@@ -42,7 +42,7 @@ void free_process(process &ref)
 
 uint32_t process::first_freep()
 {
-    for(int i = 0; i < num_of_blocks; i++) {
+    for(uint64_t i = 0; i < num_of_blocks; i++) {
         if(pmem_map.available_blocks[i] == 1)
             return i;
     }

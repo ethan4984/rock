@@ -38,7 +38,7 @@ using namespace MM;
 command arg[1];
 
 const char *command_list[] = {  "version", "clr", "shutdown", "reboot",
-                                "testMM", "panic", "help"
+                                "testMM", "reg-dump", "seg-dump", "help"
                              };
 
 const char *arg_command[] = { "print" };
@@ -46,7 +46,7 @@ const char *arg_command[] = { "print" };
 typedef void (*command_functions)();
 
 command_functions comm_func[] = {   version, clear_promnt, shutdown, reboot,
-                                    test, test_panic, help
+                                    test, reg_flow, seg_flow, help
                                 };
 
 void command_handler(const char *input)

@@ -10,7 +10,7 @@
 using namespace standardout;
 using namespace MM;
 
-extern "C" void kernel_main(multiboot_info_t* info) {
+extern "C" void kernel_main() {
     initalize(VGA_WHITE, VGA_BLUE);
     idt_init();
 
@@ -18,10 +18,10 @@ extern "C" void kernel_main(multiboot_info_t* info) {
 
     start_counter(1, 0, 6);
 
-    //sprit_draw_main();
+    sprit_draw_main();
     clear_screen();
 
-    s_print(VGA_LIGHT_BLUE, 50, 1, "crepOS Dynamic Debugger");
+    s_print(VGA_LIGHT_BLUE, 50, 1, "crepOS 64 bit Dynamic Debugger");
 
     grab_current_y();
     draw_vline(VGA_MAGENTA, 48, 0, 25);

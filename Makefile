@@ -30,7 +30,6 @@ qemu: kernel
 	tail -n0 -f serial.log
 
 qemuinfo: kernel
-	qemu-system-x86_64 -smp cpus=4 -cdrom crepOS.iso -m 4G -no-reboot -monitor stdio -d int -no-shutdown -vga vmware
-
+	qemu-system-x86_64 -smp cpus=4 -cdrom crepOS.iso -m 4G -no-reboot -monitor stdio -d int -D qemu.log -no-shutdown -vga vmware
 qemudebug: kernel
 	qemu-system-x86_64 -smp cpus=4 -cdrom crepOS.iso -m 4G -no-reboot -monitor stdio -d int -no-shutdown -vga vmware

@@ -45,7 +45,7 @@ namespace MM
             size++;
 
         memset(bitmap, 0, size);
-        block_start = (uint8_t*)((((uint64_t)(bitmap + size)) & 0xfffff000) + 0x1000); //0x0000000080117000
+        block_start = (uint8_t*)((((uint64_t)(bitmap + size)) & 0xfffff000) + 0x1000); //0x80174000
         bitmap_start = (uint64_t)block_start;
     }
 
@@ -164,15 +164,3 @@ void block_show()
     s_print(VGA_LIGHT_BLUE, 0, 2, "PMM: bitmap size: %d", size);
     s_print(VGA_LIGHT_BLUE, 0, 3, "PMM: addr strat: %a", (uint64_t)block_start);
 }
-
-
-
-
-
-
-
-
-
-
-
-

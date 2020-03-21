@@ -6,6 +6,8 @@ using namespace standardout;
 
 struct IDT_entry IDT[256];
 
+extern void disable_pic(void) asm("disable_pic");
+
 typedef struct {
     uint16_t limit;
     uint64_t base;
@@ -174,35 +176,33 @@ extern "C" void panic(const char *message)
     for(;;);
 }
 
-/*extern void save_regs(void) asm("save_regs");
+extern void save_regs(void) asm("save_regs");
 extern void save_regs16(void) asm("save_regs16");
 extern void save_segment(void) asm("save_segment");
 
 struct genregs
 {
-    uint32_t eax;
-    uint32_t ebx;
-    uint32_t ecx;
-    uint32_t edx;
+    uint64_t rax;
+    uint64_t rbx;
+    uint64_t rcx;
+    uint64_t rdx;
 
-    uint32_t edi;
-    uint32_t esi;
-    uint32_t ebp;
-    uint32_t esp;
-} gen_reg;
+    uint64_t rdi;
+    uint64_t rsi;
+    uint64_t rbp;
+    uint64_t rsp;
 
-struct genregs16
-{
-    uint16_t ax;
-    uint16_t bx;
-    uint16_t cx;
-    uint16_t dx;
+    uint64_t r8;
+    uint64_t r9;
+    uint64_t r10;
+    uint64_t r11;
+    uint64_t r12;
+    uint64_t r13;
+    uint64_t r14;
+    uint64_t r15;
+} __attribute__((packed));
 
-    uint16_t di;
-    uint16_t si;
-    uint16_t sp;
-    uint16_t bp;
-} gen_reg16;
+struct genregs gen_reg;
 
 struct segments
 {
@@ -218,41 +218,35 @@ void reg_flow()
 {
     save_regs();
     k_print("\nREGISTER DUMP\n");
-    k_print("Dump: EAX %x\n", gen_reg.eax);
-    k_print("Dump: EBX %x\n", gen_reg.ebx);
-    k_print("Dump: ECX %x\n", gen_reg.ecx);
-    k_print("Dump: EDX %x\n", gen_reg.edx);
-    k_print("Dump: ESP %x\n", gen_reg.esp);
-    k_print("Dump: EBP %x\n", gen_reg.ebp);
-    k_print("Dump: EDI %x\n", gen_reg.edi);
-    k_print("Dump: ESI %x", gen_reg.esi);
-}
-
-void reg_flow16()
-{
-    save_regs16();
-    k_print("\nREGISTER DUMP\n");
-    k_print("Dump: AX %x\n", gen_reg16.ax);
-    k_print("Dump: BX %x\n", gen_reg16.bx);
-    k_print("Dump: CX %x\n", gen_reg16.cx);
-    k_print("Dump: DX %x\n", gen_reg16.dx);
-    k_print("Dump: SP %x\n", gen_reg16.sp);
-    k_print("Dump: BP %x\n", gen_reg16.bp);
-    k_print("Dump: DI %x\n", gen_reg16.di);
-    k_print("Dump: SI %x", gen_reg16.si);
+    k_print("Dump: RAX %a\n", gen_reg.rax);
+    k_print("Dump: RBX %a\n", gen_reg.rbx);
+    k_print("Dump: RCX %a\n", gen_reg.rcx);
+    k_print("Dump: RDX %a\n", gen_reg.rdx);
+    k_print("Dump: RSP %a\n", gen_reg.rsp);
+    k_print("Dump: RBP %a\n", gen_reg.rbp);
+    k_print("Dump: RDI %a\n", gen_reg.rdi);
+    k_print("Dump: RSI %a\n", gen_reg.rsi);
+    k_print("Dump: R8  %a\n", gen_reg.r8);
+    k_print("Dump: R9  %a\n", gen_reg.r9);
+    k_print("Dump: R10 %a\n", gen_reg.r10);
+    k_print("Dump: R11 %a\n", gen_reg.r11);
+    k_print("Dump: R12 %a\n", gen_reg.r12);
+    k_print("Dump: R13 %a\n", gen_reg.r13);
+    k_print("Dump: R14 %a\n", gen_reg.r14);
+    k_print("Dump: R15 %a\n", gen_reg.r15);
 }
 
 void seg_flow()
 {
     save_segment();
     k_print("\nSEGMENT DUMP\n");
-    k_print("Dump SS %x\n", segment.ss);
-    k_print("Dump CS %x\n", segment.cs);
-    k_print("Dump DS %x\n", segment.ds);
-    k_print("Dump ES %x\n", segment.es);
-    k_print("Dump FS %x\n", segment.fs);
-    k_print("Dump GS %x", segment.gs);
-}*/
+    k_print("Dump SS %a\n", segment.ss);
+    k_print("Dump CS %a\n", segment.cs);
+    k_print("Dump DS %ax\n", segment.ds);
+    k_print("Dump ES %a\n", segment.es);
+    k_print("Dump FS %a\n", segment.fs);
+    k_print("Dump GS %a", segment.gs);
+}
 
 static inline void pit_send_data(uint16_t data, uint8_t counter)
 {

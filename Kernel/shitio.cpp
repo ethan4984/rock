@@ -175,7 +175,7 @@ namespace standardout
                         putchar('0');
                         putchar('x');
                         int offset_zeros = 16 - strlen(string);
-                        for(size_t i = 0; i < offset_zeros; i++)
+                        for(int i = 0; i < offset_zeros; i++)
                             putchar('0');
                         for(size_t i = 0; i < strlen(string); i++)
                             putchar(string[i]);
@@ -227,7 +227,7 @@ namespace standardout
                         special_char('0', x++, y, color);
                         special_char('x', x++, y, color);
                         int offset_zeros = 16 - strlen(string);
-                        for(size_t i = 0; i < offset_zeros; i++)
+                        for(uint64_t i = 0; i < offset_zeros; i++)
                             special_char('0', x++, y, color);
                         for(size_t i = 0; i < strlen(string); i++)
                             special_char(string[i], x++, y, color);

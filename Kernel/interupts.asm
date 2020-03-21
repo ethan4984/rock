@@ -5,7 +5,6 @@ global draw
 global keyboard_handler
 global time_handler
 global save_regs
-global save_regs16
 global save_segment
 global irq2
 global irq3
@@ -23,6 +22,8 @@ global irq14
 global irq15
 global tss_flush
 
+global disable_pic
+
 global test_div
 
 extern keyboard_handler_main
@@ -35,6 +36,12 @@ extern gen_reg
 extern gen_reg16
 extern segment
 extern divide
+
+disable_pic:
+    mov al, 0xff
+    out 0xa1, al
+    out 0x21, al
+    ret
 
 %macro pushall 0
     push rax
@@ -175,42 +182,35 @@ irq15:
     popall
     iretq
 
-;save_regs:
-;    pushad
-;    mov [gen_reg + 4], [esp - 4]
-;    mov [gen_reg + 8], [esp - 8]
-;    mov [gen_reg + 12], [esp - 12]
-;    mov [gen_reg + 16], [esp - 16]
-;
-;    mov [gen_reg + 20], [esp - 20]
-;    mov [gen_reg + 24], [esp - 24]
-;    mov [gen_reg + 28], [esp - 28]
-;    mov [gen_reg + 32], [esp - 32]
-;    popad
-;    ret
-;
-;global save_regs16
-;extern gen_regs16
-;
-;save_regs16:
-;    pusha
-;    mov[gen_reg16 + 2], ax
-;    mov[gen_reg16 + 4], bx
-;    mov[gen_reg16 + 6], cx
-;    mov[gen_reg16 + 8], dx
-;
-;    mov[gen_reg16 + 10], si
-;    mov[gen_reg16 + 12], di
-;    mov[gen_reg16 + 14], sp
-;    mov[gen_reg16 + 16], bp
-;    popa
-;    ret
-;
-;save_segment:
-;    mov[segment + 2], ss
-;    mov[segment + 4], cs
-;    mov[segment + 6], ds
-;    mov[segment + 8], es
-;    mov[segment + 10], fs
-;    mov[segment + 12], gs
-;    ret
+extern gen_reg
+extern segment
+
+save_regs:
+    mov [gen_reg], rax
+    mov [gen_reg + 8], rbx
+    mov [gen_reg + 16], rcx
+    mov [gen_reg + 24], rdx
+
+    mov [gen_reg + 32], rdi
+    mov [gen_reg + 40], rsi
+    mov [gen_reg + 48], rbp
+    mov [gen_reg + 56], rsp
+
+    mov [gen_reg + 64], r8
+    mov [gen_reg + 72], r9
+    mov [gen_reg + 80], r10
+    mov [gen_reg + 88], r11
+    mov [gen_reg + 96], r12
+    mov [gen_reg + 104], r13
+    mov [gen_reg + 112], r14
+    mov [gen_reg + 120], r15
+    ret
+
+save_segment:
+    mov [segment], ss
+    mov [segment + 2], cs
+    mov [segment + 4], ds
+    mov [segment + 6], es
+    mov [segment + 8], fs
+    mov [segment + 10], gs
+    ret
