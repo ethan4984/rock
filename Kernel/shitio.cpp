@@ -451,28 +451,3 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
     const size_t index = y * VGA_WIDTH + x;
     terminal_buffer[index] = vga_entry(c, color);
 }
-
-size_t utoa(unsigned long n, char *s, int base)
-{
-    char tmp[64];// be careful with the length of the buffer
-    char *tp = tmp;
-    unsigned long i;
-    unsigned long v;
-
-    v = (unsigned long)n;
-
-    while (v || tp == tmp) {
-        i = v % base;
-        v /= base; // v/=radix uses less CPU clocks than v=v/radix does
-        if (i < 10)
-          *tp++ = i+'0';
-        else
-          *tp++ = i + 'a' - 10;
-    }
-
-    int len = tp - tmp;
-    while (tp > tmp)
-        *s++ = *--tp;
-
-    return len;
-}
