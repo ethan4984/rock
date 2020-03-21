@@ -38,7 +38,9 @@ extern "C" void kernel_main() {
 
     k_print("\n\n\n\n");
 
-    k_print("> ");
+    change_text_color(VGA_LIGHT_BLUE);
+    k_print("(*ROOT*) > ");
+    change_text_color(VGA_BLUE);
     startInput();
     for(;;);
 }

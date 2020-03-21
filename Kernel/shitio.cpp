@@ -66,6 +66,11 @@ namespace standardout
         return (terminal_column + offset >= 45) ? true : false;
     }
 
+    void change_text_color(uint8_t color)
+    {
+        terminal_color = vga_entry_color(color, current_color);
+    }
+
     bool terminal_setcolor(uint8_t bg, uint8_t fg)
     {
         if(bg <= 15 && bg > 0) {

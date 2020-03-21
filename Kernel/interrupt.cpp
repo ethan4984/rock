@@ -245,7 +245,7 @@ void seg_flow()
     k_print("Dump DS %ax\n", segment.ds);
     k_print("Dump ES %a\n", segment.es);
     k_print("Dump FS %a\n", segment.fs);
-    k_print("Dump GS %a", segment.gs);
+    k_print("Dump GS %a\n", segment.gs);
 }
 
 static inline void pit_send_data(uint16_t data, uint8_t counter)
