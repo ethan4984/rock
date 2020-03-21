@@ -29,8 +29,6 @@ int strcmp(const char *a, const char *b);
 
 char *strcpy(char *dest, const char *src);
 
-size_t utoa(uint64_t n, char *s, int base);
-
 namespace standardout
 {
     static uint16_t *const VGA_MEMORY = (uint16_t*)0xB8000;

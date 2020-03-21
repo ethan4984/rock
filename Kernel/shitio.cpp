@@ -171,7 +171,7 @@ namespace standardout
                         string = convert(hold, 16);
                         putchar('0');
                         putchar('x');
-                        for(size_t i = 0; i < utoa(hold, string, 16); i++)
+                        for(size_t i = 0; i < strlen(string); i++)
                             putchar(string[i]);
                         break;
                     case 'a':
