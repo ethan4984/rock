@@ -1,19 +1,17 @@
 #include <interrupt.h>
 #include <port.h>
 #include <shitio.h>
+#include <keyboard.h>
 
 using namespace standardout;
 
 struct IDT_entry IDT[256];
 
-extern void disable_pic(void) asm("disable_pic");
+void irq_l();
+void irq_h();
+void PITI();
 
-typedef struct {
-    uint16_t limit;
-    uint64_t base;
-} __attribute__((packed)) idt_register_t;
-
-idt_register_t idt_reg;
+idtr idt_r;
 
 void idt_gate(uint64_t IRQ)
 {
@@ -46,6 +44,18 @@ void idt_expection(uint64_t IRQ, uint64_t over_ride = 0)
     IDT[cnt].high_offset = (uint32_t)(IRQ >> 32);
 
     cnt++;
+}
+
+typedef void (*irqReferences)();
+
+irqReferences irqFuncs[] =  {   PITI, keyboard_handler_main, irq_l, irq_l,
+                                irq_l, irq_l, irq_l, irq_h, irq_h, irq_h,
+                                irq_h, irq_h, irq_h, irq_h
+                            };
+
+extern "C" void irq_handler(int irqNum)
+{
+    irqFuncs[irqNum]();
 }
 
 void idt_init(void)
@@ -104,9 +114,9 @@ void idt_init(void)
     idt_gate((uint64_t)irq14);
     idt_gate((uint64_t)irq15);
 
-    idt_reg.base = (uint64_t)&IDT;
-    idt_reg.limit = 256 * sizeof(IDT_entry) - 1;
-    asm volatile("lidtq %0" ::"m"(idt_reg));
+    idt_r.base = (uint64_t)&IDT;
+    idt_r.limit = 256 * sizeof(IDT_entry) - 1;
+    asm volatile("lidtq %0" ::"m"(idt_r));
 }
 
 void mask_irq(unsigned char channel)
@@ -144,12 +154,12 @@ extern "C" void gdt_info(uint64_t addr)
     k_print("GDT: mapped to %x\n", addr);
 }
 
-extern "C" void irq_l(void)
+void irq_l(void)
 {
     outb(0x20, 0x20);
 }
 
-extern "C" void irq_h(void)
+void irq_h(void)
 {
     outb(0xA0, 0x20);
     outb(0x20, 0x20);
@@ -158,7 +168,7 @@ extern "C" void irq_h(void)
 volatile int timer_ticks = 0;
 volatile int seconds = 0;
 
-extern "C" void PITI()
+void PITI()
 {
     outb(0x20, 0x20);
     timer_ticks++;
@@ -170,9 +180,8 @@ extern "C" void panic(const char *message)
 {
     initalize(VGA_BLUE, VGA_RED);
     k_print("PANIC : fatal error : %s\n", message);
-    //reg_flow();
+    reg_flow();
     putchar('\n');
-    //seg_flow();
     for(;;);
 }
 
@@ -180,39 +189,8 @@ extern void save_regs(void) asm("save_regs");
 extern void save_regs16(void) asm("save_regs16");
 extern void save_segment(void) asm("save_segment");
 
-struct genregs
-{
-    uint64_t rax;
-    uint64_t rbx;
-    uint64_t rcx;
-    uint64_t rdx;
-
-    uint64_t rdi;
-    uint64_t rsi;
-    uint64_t rbp;
-    uint64_t rsp;
-
-    uint64_t r8;
-    uint64_t r9;
-    uint64_t r10;
-    uint64_t r11;
-    uint64_t r12;
-    uint64_t r13;
-    uint64_t r14;
-    uint64_t r15;
-} __attribute__((packed));
-
-struct genregs gen_reg;
-
-struct segments
-{
-    uint16_t ss;
-    uint16_t cs;
-    uint16_t ds;
-    uint16_t es;
-    uint16_t fs;
-    uint16_t gs;
-} segment;
+seg_register segment;
+registers gen_reg;
 
 void reg_flow()
 {
@@ -283,9 +261,8 @@ void start_counter(int frequency, uint8_t counter, uint8_t mode)
     pit_send_data((divisor >> 8) & 0xff, 0);
 }
 
-void sleep(int ticks)
+void sleep(volatile int ticks)
 {
     seconds = 0;
-    while(seconds < ticks)
-        asm volatile("nop");
+    while(seconds < ticks);
 }

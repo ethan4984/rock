@@ -33,7 +33,7 @@ void startInput()
     key_entry.takingInput = true;
 }
 
-extern "C" void keyboard_handler_main()
+void keyboard_handler_main()
 {
     outb(0x20, 0x20);
 

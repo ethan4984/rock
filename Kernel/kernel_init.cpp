@@ -10,6 +10,8 @@
 using namespace standardout;
 using namespace MM;
 
+extern void div_test() asm("test_div");
+
 extern "C" void kernel_main() {
     initalize(VGA_WHITE, VGA_BLUE);
     idt_init();
@@ -29,6 +31,8 @@ extern "C" void kernel_main() {
     page_frame_init(0xf42400);
 
     block_show();
+
+    //div_test(); /* tests exceptions */
 
     process proc(0x2001);
     proc.pmalloc(0x4);

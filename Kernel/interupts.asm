@@ -1,7 +1,3 @@
-global load_idt
-global load_gdt
-global draw
-
 global keyboard_handler
 global time_handler
 global save_regs
@@ -16,32 +12,17 @@ global irq8
 global irq9
 global irq10
 global irq11
-global mouse_handler
+global irq12
 global irq13
 global irq14
 global irq15
-global tss_flush
 
 global disable_pic
-
 global test_div
-
-extern keyboard_handler_main
-extern PITI
-extern mouse_handler_main
-extern irq_l
-extern irq_h
-extern gdt_info
 extern gen_reg
 extern gen_reg16
 extern segment
 extern divide
-
-disable_pic:
-    mov al, 0xff
-    out 0xa1, al
-    out 0x21, al
-    ret
 
 %macro pushall 0
     push rax
@@ -79,107 +60,82 @@ disable_pic:
     pop rax
 %endmacro
 
-test_div:
-    mov rdx, 0
-    mov rax, 250
-    mov rcx, 0
-    div rcx
+extern irq_handler
+
+generic_irq:
+    pushall
+    cld
+    call irq_handler
+    popall
     ret
 
+%macro irq_send 1
+    mov rdi, %1
+    call generic_irq
+%endmacro
+
 time_handler:
-    pushall
-    call PITI
-    popall
+    irq_send 0
     iretq
 
 keyboard_handler:
-    pushall
-    call    keyboard_handler_main
-    popall
+    irq_send 1
     iretq
 
 irq2:
-    pushall
-    call irq_l
-    popall
+    irq_send 2
     iretq
 
 irq3:
-    pushall
-    call irq_l
-    popall
+    irq_send 3
     iretq
 
 irq4:
-    pushall
-    call irq_l
-    popall
+    irq_send 4
     iretq
 
 irq5:
-    pushall
-    call irq_l
-    popall
+    irq_send 5
     iretq
 
 irq6:
-    pushall
-    call irq_l
-    popall
+    irq_send 6
     iretq
 
 irq7:
-    pushall
-    call irq_l
-    popall
+    irq_send  7
     iretq
 
 irq8:
-    pushall
-    call irq_h
-    popall
+    irq_send 8
     iretq
 
 irq9:
-    pushall
-    call irq_h
-    popall
+    irq_send 9
     iretq
 
 irq10:
-    pushall
-    call irq_h
-    popall
+    irq_send 10
     iretq
 
 irq11:
-    pushall
-    call irq_h
-    popall
+    irq_send 11
     iretq
 
-mouse_handler:
-    pushall
-    call irq_h
-    popall
+irq12:
+    irq_send 12
     iretq
 
 irq13:
-    pushall
-    call irq_h
-    popall
+    irq_send 13
     iretq
 
 irq14:
-    pushall
-    call irq_h
-    popall
+    irq_send 14
     iretq
 
 irq15:
-    pushall
-    call irq_h
-    popall
+    irq_send 15
     iretq
 
 extern gen_reg
@@ -213,4 +169,17 @@ save_segment:
     mov [segment + 6], es
     mov [segment + 8], fs
     mov [segment + 10], gs
+    ret
+
+test_div:
+    mov rdx, 0
+    mov rax, 250
+    mov rcx, 0
+    div rcx
+    ret
+
+disable_pic:
+    mov al, 0xff
+    out 0xa1, al
+    out 0x21, al
     ret

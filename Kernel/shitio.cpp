@@ -232,7 +232,7 @@ namespace standardout
                         special_char('0', x++, y, color);
                         special_char('x', x++, y, color);
                         int offset_zeros = 16 - strlen(string);
-                        for(uint64_t i = 0; i < offset_zeros; i++)
+                        for(int i = 0; i < offset_zeros; i++)
                             special_char('0', x++, y, color);
                         for(size_t i = 0; i < strlen(string); i++)
                             special_char(string[i], x++, y, color);
@@ -282,10 +282,10 @@ namespace standardout
                     case 'a':
                         hold = va_arg(arg, uint64_t);
                         string = convert(hold, 16);
-                        putchar('0');
-                        putchar('x');
+                        serial_write('0');
+                        serial_write('x');
                         int offset_zeros = 16 - strlen(string);
-                        for(size_t i = 0; i < offset_zeros; i++)
+                        for(int i = 0; i < offset_zeros; i++)
                             serial_write('0');
                         for(size_t i = 0; i < strlen(string); i++)
                             serial_write(string[i]);

@@ -61,7 +61,7 @@ extern panic
 %macro expection_handler 1
     cli
     pushall
-    push %1
+    mov rdi, %1
     call panic
     popall
 %endmacro
