@@ -1,8 +1,8 @@
 # crepOS
 
-This is a simple operating system made for fun and learning
+This is a simple x86_64 operating system made for fun and learning
 
-![Basic demo](Demo/osdemo3.gif)
+![Basic demo](Demo/osdemo6.gif)
 
 ## About
 
@@ -19,14 +19,16 @@ This is a simple operating system made for fun and learning
   - Text based graphics
   
   - Process allocation
+  
+  - Long mode
 
   This OS is only around a month old and all of the features that we currently support will be 100% improved upon and more
 
   Here are some project aspirations:
 
-  - Long mode
-
   - Multi-processing and multi-threading
+  
+  - apic instead of pic
 
   - Process scheduler
 
@@ -36,7 +38,7 @@ This is a simple operating system made for fun and learning
 
 ## Build
 
-  This project uses a cross compiler, for obvious reasons this is required. Since this OS is 32 bit, we use the `i686-elf`
+  This project uses a cross compiler, for obvious reasons this is required. Since this OS is 64 bit, we use the `x86_64-elf`
   variant of cross compilers. To setup this cross compiler, simply just run the `Tools/cross.sh` script. However, if you
   are feeling dangerous and dont want to wait the compile time, just edit the Makefile and change the compiler options
   and flags.
