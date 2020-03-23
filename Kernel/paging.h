@@ -12,9 +12,9 @@ namespace MM
 
     uint8_t isset(uint64_t location);
 
-    void *malloc(size_t size);
+    void *pagalloc(uint64_t size);
 
-    void free(void *location, size_t size = sizeof(uint64_t));
+    void pagfree(void *location, size_t size = sizeof(uint64_t));
 
     void page_frame_init(uint64_t mem_range);
 
@@ -31,18 +31,6 @@ namespace MM
     void free_address_space(void *location);
 
     uint8_t *grab_start();
-
-    class virtual_address_space
-    {
-        public:
-            void setup();
-        protected:
-            uint64_t page_dir[512] __attribute__((aligned(0x1000)));
-
-            uint64_t page_tab[512] __attribute__((aligned(0x1000)));
-
-            uint64_t page_dir_ptr_tab[4] __attribute__((aligned(0x20)));
-    };
 }
 
 void page_setup();

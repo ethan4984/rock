@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <interrupt.h>
 #include <paging.h>
+#include <alloc.h>
 
 /* prototypes */
 

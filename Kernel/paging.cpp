@@ -74,7 +74,7 @@ namespace MM
         return total_blocks + 1;
     }
 
-    void *malloc(size_t size)
+    void *pagalloc(uint64_t size)
     {
         t_print("\nBlock Allocation in process\n");
 
@@ -122,7 +122,7 @@ namespace MM
         return block_start + (freed*i)*0x20000; //fix me
     }
 
-    void free(void *location, size_t size)
+    void pagfree(void *location, size_t size)
     {
         if(location == NULL) {
             t_print("BRUH: wtf are you doing trying to free NULL memory");

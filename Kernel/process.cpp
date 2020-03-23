@@ -11,7 +11,7 @@ using namespace MM;
 
 process::process(uint64_t range, void (*entry)()) : num_of_blocks(range), entry_point(entry)
 {
-    process_begin = (uint64_t*)malloc(range);
+    process_begin = (uint64_t*)pagalloc(range);
 
     uint64_t blocks = 0;
     while(++blocks*0x20000 < range);
@@ -47,7 +47,7 @@ void free_process(process &ref)
     }
 
     t_print("Process %x freed\n", (uint64_t)ref.process_begin);
-    free(ref.process_begin, ref.num_of_blocks);
+    pagfree(ref.process_begin, ref.num_of_blocks);
     ref.process_begin = NULL;
 }
 
