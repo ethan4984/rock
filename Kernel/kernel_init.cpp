@@ -6,13 +6,15 @@
 #include <keyboard.h>
 #include <paging.h>
 #include <process.h>
+#include <scheduler.h>
 
 using namespace standardout;
 using namespace MM;
 
 extern void div_test() asm("test_div");
 
-extern "C" void kernel_main() {
+extern "C" void kernel_main()
+{
     initalize(VGA_WHITE, VGA_BLUE);
     idt_init();
 
@@ -20,7 +22,7 @@ extern "C" void kernel_main() {
 
     start_counter(1, 0, 6);
 
-    sprit_draw_main();
+    //sprit_draw_main();
     clear_screen();
 
     s_print(VGA_LIGHT_BLUE, 50, 1, "crepOS 64 bit Dynamic Debugger");
@@ -28,17 +30,21 @@ extern "C" void kernel_main() {
     grab_current_y();
     draw_vline(VGA_MAGENTA, 48, 0, 25);
 
-    page_frame_init(0xf42400);
+    t_print("Hey yo");
+
+    page_frame_init(120000000);
+    t_print("Hey yo");
 
     block_show();
 
     //div_test(); /* tests exceptions */
 
-    process proc(0x2001);
+    /*process proc(0x2001, main);
+
     proc.pmalloc(0x4);
     uint16_t *ptrbruh = (uint16_t*)proc.pmalloc(0x8);
     proc.pfree(ptrbruh);
-    uint64_t *ptruh = (uint64_t*)proc.pmalloc(0x4);
+    uint64_t *ptruh = (uint64_t*)proc.pmalloc(0x4);*/
 
     k_print("\n\n\n\n");
 

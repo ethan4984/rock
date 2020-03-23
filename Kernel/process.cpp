@@ -9,18 +9,29 @@
 using namespace standardout;
 using namespace MM;
 
-process::process(size_t range) : num_of_blocks(range)
+process::process(uint64_t range, void (*entry)()) : num_of_blocks(range), entry_point(entry)
 {
     process_begin = (uint64_t*)malloc(range);
 
     uint64_t blocks = 0;
-    while(++blocks*0x1000 < range);
+    while(++blocks*0x20000 < range);
 
     t_print("New process allocated at %x\n", (uint64_t)process_begin);
     s_print(VGA_GREEN, 50, grab_current_y() + 1, "New process requesting %d kb", blocks);
 
-    for(uint32_t i = 0; i < range/0x80; i++) /* process allocator uses blocks of 128 bytes */
+    for(uint64_t i = 0; i < range/0x80; i++) /* process allocator uses blocks of 128 bytes */
         pmem_map.available_blocks[i] = 1;
+}
+
+process::~process() 
+{
+	process_begin = 0; 
+	entry_point = 0;
+}
+
+process::process()
+{
+	
 }
 
 bool process::null_check()
@@ -40,7 +51,7 @@ void free_process(process &ref)
     ref.process_begin = NULL;
 }
 
-uint32_t process::first_freep()
+uint64_t process::first_freep()
 {
     for(uint64_t i = 0; i < num_of_blocks; i++) {
         if(pmem_map.available_blocks[i] == 1)
@@ -48,12 +59,12 @@ uint32_t process::first_freep()
     }
 
     t_print("ok: you are out of blocks, this process will probably break");
-    return 0;
+    return num_of_blocks + 1;
 }
 
-uint32_t process::allocate_pblock()
+uint64_t process::allocate_pblock()
 {
-    uint32_t new_pblock = first_freep();
+    uint64_t new_pblock = first_freep();
     pmem_map.available_blocks[new_pblock] = 2;
     return new_pblock;
 }
@@ -72,18 +83,18 @@ void *process::pmalloc(size_t size)
         return 0;
     }
 
-    uint32_t reqiured_blocks = 0;
+    uint64_t reqiured_blocks = 0;
 
     bool is_one = true;
 
     while(++reqiured_blocks*0x80 < size)
         is_one = false;
 
-    uint32_t freed = first_freep();
+    uint64_t freed = first_freep();
 
     if(is_one) {
         t_print("\n\tstatus: single block\n\treqiured blocks: %d\n", reqiured_blocks);
-        if(first_freep() == static_cast<unsigned int>(-69)) {
+        if(first_freep() == num_of_blocks + 1) {
             t_print("BRUH: we ran out of blocks bruh");
             return 0;
         }
@@ -94,12 +105,14 @@ void *process::pmalloc(size_t size)
         return block_start + freed*0x80;
     }
 
-    uint32_t i;
+    uint64_t i;
     t_print("\n\tstatus: multi block\n\treqiured blocks: %d\n", reqiured_blocks);
 
     for(i = 0; i < reqiured_blocks; i++) {
-        if(allocate_pblock() == static_cast<unsigned int>(-69))
+        if(allocate_pblock() == num_of_blocks + 1) {
             t_print("BRUH: we ran out of blocks bruh");
+            return 0;
+        }
     }
     t_print("\nProcess block allocation finished : returning %x\n", block_start + (freed*i)*0x80);
     return block_start + (freed*i)*0x80;
@@ -139,22 +152,64 @@ void process::show_blocks(uint64_t range)
     }
 }
 
-stack_switcher *root;
+extern void back_state(void) asm("back_state");
+extern void new_state(void) asm("new_state");
+extern void restore_state(void) asm("restore_state");
 
-void new_stack(uint64_t address)
+/*void task_switch(process &task)
 {
-    asm volatile ("movq %%rsp, %0" : "=r"(root->esp0));
-    //asm volatile ("movq %%rip, %0" : "=r"(root->eip0));
-    t_print("%x and %x", root->esp0, root->eip0);
+    //back_state(); //saves old stack
+    task_tree->new_rsp = (uint64_t)task.pmalloc(0x1000) + 0x1000;
+    t_print("New stack %x", task_tree->new_rsp);
+    uint64_t rsp;
+    asm volatile ("movq %%rsp, %0" : "=r"(rsp));
+    task_tree->rsp = rsp;
+    t_print("Old stack %x", task_tree->rsp);
+    asm volatile ("movq %0, 0x8(%%rsp)" :: "r"((uint64_t*)task_tree->new_rsp));
+    (task.entry_point)();
+    asm volatile ("movq %0, 0x8(%%rsp)" :: "r"((uint64_t*)task_tree->rsp));
+}*/
+
+void process::save_regs()
+{
+    asm volatile ("movq %%rax, %0" : "=r"(rax));
+    asm volatile ("movq %%rbx, %0" : "=r"(rbx));
+    asm volatile ("movq %%rcx, %0" : "=r"(rcx));
+    asm volatile ("movq %%rdx, %0" : "=r"(rdx));
+
+    asm volatile ("movq %%rsi, %0" : "=r"(rsi));
+    asm volatile ("movq %%rdi, %0" : "=r"(rdi));
+    asm volatile ("movq %%rbp, %0" : "=r"(rbp));
+    asm volatile ("movq %%rsp, %0" : "=r"(rsp));
+
+    asm volatile ("movq %%r8, %0" : "=r"(r8));
+    asm volatile ("movq %%r9, %0" : "=r"(r9));
+    asm volatile ("movq %%r10, %0" : "=r"(r10));
+    asm volatile ("movq %%r11, %0" : "=r"(r11));
+    asm volatile ("movq %%r12, %0" : "=r"(r12));
+    asm volatile ("movq %%r13, %0" : "=r"(r13));
+    asm volatile ("movq %%r14, %0" : "=r"(r14));
+    asm volatile ("movq %%r15, %0" : "=r"(r15));
 }
 
+void process::restore()
+{
+    asm volatile ("movq %0, 0x8(%%rsp)" :: "r"((uint64_t*)rsp));
+    asm volatile ("movq %0, 0x8(%%rbp)" :: "r"((uint64_t*)rbp));
+    asm volatile ("movq %0, %%rsi" :: "r"(rsi));
+    asm volatile ("movq %0, %%rdi" :: "r"(rdi));
 
+    asm volatile ("movq %0, %%rax" :: "r"(rax));
+    asm volatile ("movq %0, %%rbx" :: "r"(rbx));
+    asm volatile ("movq %0, %%rcx" :: "r"(rcx));
+    asm volatile ("movq %0, %%rdx" :: "r"(rdx));
 
-
-
-
-
-
-
-
-
+    asm volatile ("movq %0, %%r8" :: "r"(r8));
+    asm volatile ("movq %0, %%r9" :: "r"(r9));
+    asm volatile ("movq %0, %%r10" :: "r"(r10));
+    asm volatile ("movq %0, %%r11" :: "r"(r11));
+    asm volatile ("movq %0, %%r12" :: "r"(r12));
+    asm volatile ("movq %0, %%r13" :: "r"(r13));
+    asm volatile ("movq %0, %%r14" :: "r"(r14));
+    asm volatile ("movq %0, %%r15" :: "r"(r15));
+}

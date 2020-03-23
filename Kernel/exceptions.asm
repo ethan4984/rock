@@ -19,6 +19,7 @@ global machine_check
 global simd_floating_point
 global vm_expection
 global security_expection
+global reserved
 
 extern panic
 
@@ -152,6 +153,10 @@ security_expection:
     expection_handler sec_m
     iretq
 
+reserved:
+    expection_handler reserved_m
+    iretq
+
 section .data
     div0_m: dq 'divide by zero retard', 0
     debug_m: db 'debug fault', 0
@@ -173,3 +178,4 @@ section .data
     machine_m db 'stop creating a vm!', 0
     simd_m db 'simp!', 0
     sec_m db 'your security is trash!', 0
+    reserved_m db 'bruh reserved', 0

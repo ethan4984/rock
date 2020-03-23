@@ -38,16 +38,17 @@ namespace MM
 
     void page_frame_init(uint64_t mem_range)
     {
-        total_blocks = mem_range / 0x1000; //4Kb blocks
+        total_blocks = mem_range / 0x20000; //4Kb blocks
 
-        size = total_blocks / 16;
+        size = total_blocks / 8;
         if(size * 16 < total_blocks)
             size++;
 
         memset(bitmap, 0, size);
-        block_start = (uint8_t*)((((uint64_t)(bitmap + size)) & 0xfffff000) + 0x1000); //0x80174000
+        block_start = (uint8_t*)((uint64_t)(bitmap + size) + 0x20000); //0x80174000
         bitmap_start = (uint64_t)block_start;
     }
+
 
     uint64_t allocate_block()
     {
@@ -70,7 +71,7 @@ namespace MM
                 return i;
         }
         t_print("Bruh: we are running out a blocks, make some more bitch\n");
-        return -69;
+        return total_blocks + 1;
     }
 
     void *malloc(size_t size)
@@ -86,7 +87,7 @@ namespace MM
 
         bool is_one = true;
 
-        while(reqiured_blocks*0x1000 < size) {
+        while(reqiured_blocks*0x20000 < size) {
             reqiured_blocks++;
             is_one = false;
         }
@@ -94,7 +95,7 @@ namespace MM
 		uint64_t freed = first_free();
 
         if(is_one) {
-            if(first_free() == static_cast<unsigned int>(-69)) {
+            if(first_free() == total_blocks + 1) {
                 t_print("BRUH: we ran out of blocks bruh");
                 panic("We ran out of blocks");
             }
@@ -103,22 +104,22 @@ namespace MM
 
 			allocate_block();
 
-            t_print("\nBlock allocation finished : %x\n", block_start + freed*0x1000);
+            t_print("\nBlock allocation finished : %x\n", block_start + freed*0x20000);
 
-            return block_start + freed*0x1000;
+            return block_start + freed*0x20000;
         }
 
         t_print("\tStatus: Multi-block\n\tBlocks reqiured: %d\n", reqiured_blocks);
 
         uint64_t i;
         for(i = 0; i < reqiured_blocks; i++) {
-            if(allocate_block() == static_cast<unsigned int>(-69)) {
+            if(allocate_block() == total_blocks + 1) {
                 t_print("BRUH: we ran out of blocks bruh");
                 panic("We ran out of blocks");
             }
         }
         t_print("\nBlock allocation finished\n");
-        return block_start + (freed*i)*0x1000; //fix me
+        return block_start + (freed*i)*0x20000; //fix me
     }
 
     void free(void *location, size_t size)
@@ -131,23 +132,23 @@ namespace MM
         uint64_t yest = (uint64_t)location;
 
         uint64_t reqiured_blocks = 0;
-        while(++reqiured_blocks*0x1000 < size);
+        while(++reqiured_blocks*0x20000 < size);
 
         if(reqiured_blocks == 1) {
-            free_block((yest - bitmap_start) / 0x1000);
-            t_print("trying to free %x", (yest - bitmap_start) / 0x1000);
-            t_print("this block was just freed %x", (yest - bitmap_start) / 0x1000);
+            free_block((yest - bitmap_start) / 0x20000);
+            t_print("trying to free %x", (yest - bitmap_start) / 0x20000);
+            t_print("this block was just freed %x", (yest - bitmap_start) / 0x20000);
             return;
         }
 
-        free_block((yest - bitmap_start) / 0x1000);
+        free_block((yest - bitmap_start) / 0x20000);
         for(uint64_t i = 0; i < reqiured_blocks; i++)
-            t_print("this block was just freed %x", (yest - bitmap_start) / 0x1000);
+            t_print("this block was just freed %x", (yest - bitmap_start) / 0x20000);
     }
 
     void check_blocks(uint64_t range)
     {
-        for(uint32_t i = 0; i < range; i++) {
+        for(uint64_t i = 0; i < range; i++) {
             if(!isset(i))
                 t_print("This block is not allocated: %d", i);
             else

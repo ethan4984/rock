@@ -193,7 +193,7 @@ namespace standardout
 
     void s_print(uint8_t color, size_t x, size_t y, const char str[256],...)
     {
-        unsigned int hold = 0;
+        uint64_t hold = 0;
         char *string;
 
         va_list arg;
@@ -208,18 +208,18 @@ namespace standardout
                 i++;
                 switch(str[i]) {
                     case 'd':
-                        hold = va_arg(arg, int);
+                        hold = va_arg(arg, long);
                         string = convert(hold, 10);
                         for(size_t i = 0; i < strlen(string); i++)
                             special_char(string[i], x++, y, color);
                         break;
                     case 's':
-                        string = va_arg(arg, char *);
+                        string = va_arg(arg, char*);
                         for(size_t i = 0; i < strlen(string); i++)
                             special_char(string[i], x++, y, color);
                         break;
                     case 'x':
-                        hold = va_arg(arg, unsigned int);
+                        hold = va_arg(arg, uint64_t);
                         string = convert(hold, 16);
                         special_char('0', x++, y, color);
                         special_char('x', x++, y, color);

@@ -2,6 +2,8 @@
 #include <port.h>
 #include <shitio.h>
 #include <keyboard.h>
+#include <process.h>
+#include <scheduler.h> 
 
 using namespace standardout;
 
@@ -9,7 +11,6 @@ struct IDT_entry IDT[256];
 
 void irq_l();
 void irq_h();
-void PITI();
 
 idtr idt_r;
 
@@ -77,12 +78,23 @@ void idt_init(void)
     idt_expection((uint64_t)stack_seg_fault);
     idt_expection((uint64_t)gen_fault);
     idt_expection((uint64_t)page_fault);
-    idt_expection((uint64_t)floating_point_fault, 16);
+    idt_expection((uint64_t)reserved);
+    idt_expection((uint64_t)floating_point_fault);
     idt_expection((uint64_t)alignment_check);
     idt_expection((uint64_t)machine_check);
     idt_expection((uint64_t)simd_floating_point);
     idt_expection((uint64_t)vm_expection);
+    idt_expection((uint64_t)reserved);
+    idt_expection((uint64_t)reserved);
+    idt_expection((uint64_t)reserved);
+    idt_expection((uint64_t)reserved);
+    idt_expection((uint64_t)reserved);
+    idt_expection((uint64_t)reserved);
+    idt_expection((uint64_t)reserved);
+    idt_expection((uint64_t)reserved);
+    idt_expection((uint64_t)reserved);
     idt_expection((uint64_t)security_expection);
+    idt_expection((uint64_t)reserved);
 
     outb(0x20, 0x11);
     outb(0xA0, 0x11);
@@ -163,17 +175,6 @@ void irq_h(void)
 {
     outb(0xA0, 0x20);
     outb(0x20, 0x20);
-}
-
-volatile int timer_ticks = 0;
-volatile int seconds = 0;
-
-void PITI()
-{
-    outb(0x20, 0x20);
-    timer_ticks++;
-    if(timer_ticks % 94 == 0)
-        ++seconds;
 }
 
 extern "C" void panic(const char *message)
@@ -259,10 +260,4 @@ void start_counter(int frequency, uint8_t counter, uint8_t mode)
 
     pit_send_data(divisor & 0xff, 0);
     pit_send_data((divisor >> 8) & 0xff, 0);
-}
-
-void sleep(volatile int ticks)
-{
-    seconds = 0;
-    while(seconds < ticks);
 }

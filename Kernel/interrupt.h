@@ -98,6 +98,7 @@ extern void machine_check(void) asm("machine_check");
 extern void simd_floating_point(void) asm("simd_floating_point");
 extern void vm_expection(void) asm("vm_expection");
 extern void security_expection(void) asm("security_expection");
+extern void reserved(void) asm("reserved");
 
 extern "C" void panic(const char *message);
 
