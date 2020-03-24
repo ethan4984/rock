@@ -9,13 +9,14 @@
 #include <scheduler.h>
 #include <alloc.h>
 #include <vector.h>
+#include <string.h>
 
 using namespace standardout;
 using namespace MM;
 
 
 /* test vector class */
-void br()
+/*void br()
 {
     vector<int> v;
     t_print("size: %d", v.size());
@@ -32,7 +33,7 @@ void br()
 
     for(int i = 0; i < v.used(); i++)
         t_print("%d ", v.at(i));
-}
+}*/
 
 extern void div_test() asm("test_div");
 
@@ -58,8 +59,6 @@ extern "C" void kernel_main()
     block_show();
 
     blocks_init();
-
-    br();
 
     //div_test(); /* tests exceptions */
 

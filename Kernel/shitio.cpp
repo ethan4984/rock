@@ -377,7 +377,7 @@ namespace standardout
 
 char *convert(uint64_t num, int base)
 {
-    static char hold[]= "0123456789ABCDEF";
+    static char hold[] = "0123456789ABCDEF";
     static char buffer[50];
     char *str;
 
@@ -390,41 +390,6 @@ char *convert(uint64_t num, int base)
     } while(num != 0);
 
     return str;
-}
-
-size_t strlen(const char *str)
-{
-    size_t len = 0;
-    while (str[len])
-        len++;
-    return len;
-}
-
-int strcmp(const char *a, const char *b)
-{
-    while(*a && *a == *b) {
-        a++;
-        b++;
-    }
-    return (int)(unsigned char)(*a) - (int)(unsigned char)(*b);
-}
-
-char *strcpy(char *dest, const char *src)
-{
-    if(dest == NULL)
-    return NULL;
-
-    char *new_dest = dest;
-
-    while (*src != '\0') {
-        *dest = *src;
-        dest++;
-        src++;
-    }
-
-    *dest = '\0';
-
-    return new_dest;
 }
 
 void update_cursor(size_t terminal_row, size_t terminal_column)

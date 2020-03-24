@@ -19,12 +19,16 @@ class vector {
             fsize = ((sizeof(T) * fsize) / sizeof(T));
             iterator = 0;
         }
-
-        void operator =(T *initalizer)
+        
+        vector(T *bruh)
         {
-            uint64_t i = 0;
-            while(initalizer[i++])
-                push_back(initalizer[i]);
+            uint64_t len = 0;
+            while(bruh[len])
+                len++;
+            array = (T*)malloc(sizeof(T) * len);
+            
+            for(int i = 0; i < len; i++)
+                array[i] = bruh[i];
         }
         
         void erase(uint64_t index)
@@ -61,12 +65,25 @@ class vector {
             array[iterator] = data;
             iterator++;
         }
+        
+        void new_back()
+        {
+            if(iterator == fsize) {
+                T *tmp = (T*)malloc((sizeof(T) * fsize) + sizeof(T));
+
+                for(uint64_t i = 0; i < fsize; i++)
+                    tmp[i] = array[i];
+
+                free(array);
+                fsize += 1;
+                array = tmp;
+            }
+        }
 
         T at(uint64_t index)
         {
             if(iterator > index)
                 return array[index];
-            return 0;
         }
 
         uint64_t size()

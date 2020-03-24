@@ -25,13 +25,13 @@ process::process(uint64_t range, void (*entry)()) : num_of_blocks(range), entry_
 
 process::~process() 
 {
-	process_begin = 0; 
-	entry_point = 0;
+    process_begin = 0; 
+    entry_point = 0;
 }
 
 process::process()
 {
-	
+    
 }
 
 bool process::null_check()

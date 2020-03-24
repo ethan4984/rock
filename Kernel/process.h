@@ -35,12 +35,6 @@ class process
         void save_regs();
 
         void restore();
-
-        void operator =(const process &obj)
-        {
-			num_of_blocks = obj.num_of_blocks;
-			process_begin = obj.process_begin;
-		}
     private:
         struct memory_table
         {

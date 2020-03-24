@@ -5,6 +5,7 @@
 #include <interrupt.h>
 #include <paging.h>
 #include <alloc.h>
+#include <string.h>
 
 /* prototypes */
 
