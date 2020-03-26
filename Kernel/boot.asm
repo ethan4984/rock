@@ -66,9 +66,7 @@ higher_half:
     lgdt [gdt.gen_ptr]
 
     extern kernel_main
-    extern _init
 
-    call _init
     call kernel_main
 
     cli

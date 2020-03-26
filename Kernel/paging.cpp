@@ -53,7 +53,7 @@ namespace MM
     uint64_t allocate_block()
     {
         uint64_t new_block = first_free();
-		t_print("\tAllocated page: %d", new_block);
+		t_print("\tAllocated page: %d\n", new_block);
         set(new_block);
         return new_block;
     }
@@ -104,7 +104,7 @@ namespace MM
 
 			allocate_block();
 
-            t_print("\page allocation finished : %x\n", block_start + freed*0x20000);
+            t_print("page allocation finished : %x\n", block_start + freed*0x20000);
 
             return block_start + freed*0x20000;
         }
@@ -118,7 +118,7 @@ namespace MM
                 panic("We ran out of blocks");
             }
         }
-        t_print("\pagmalloc allocation finished\n");
+        t_print("pagmalloc allocation finished\n");
         return block_start + (freed*i)*0x20000; //fix me
     }
 

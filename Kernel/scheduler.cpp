@@ -7,20 +7,20 @@
 using namespace standardout;
 using namespace MM;
 
-vector<process> obj;
+//vector<process> obj;
 
 uint64_t num_of_proc = 0;
 uint64_t *running;
 uint64_t current_process = 0;
 
-void request_new_process(uint64_t range, void (*entry_function)())
+/*void request_new_process(uint64_t range, void (*entry_function)())
 {
     process new_process(range, entry_function);
 
     obj.push_back(new_process);
 
     t_print("Hmm");
-}
+}*/
 
 volatile int timer_ticks = 0;
 volatile int seconds = 0;

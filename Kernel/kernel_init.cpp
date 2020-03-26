@@ -14,15 +14,8 @@
 using namespace standardout;
 using namespace MM;
 
-void main() {
-	t_print("Bruh");
-}
-
-void other_main() {
-	t_print("no bruh");
-}
-
 extern void div_test() asm("test_div");
+extern void _init() asm("_init");
 
 extern "C" void kernel_main()
 {
@@ -34,6 +27,7 @@ extern "C" void kernel_main()
     start_counter(1, 0, 6);
 
     sprit_draw_main();
+
     clear_screen();
 
     s_print(VGA_LIGHT_BLUE, 50, 1, "crepOS 64 bit Dynamic Debugger");
@@ -45,9 +39,11 @@ extern "C" void kernel_main()
 
     block_show();
 
+    t_print("Before");
+
     blocks_init();
 
-    //div_test();
+    _init(); //needed for global constructors ~ be careful about putting things before this
 
     k_print("\n\n\n\n");
 

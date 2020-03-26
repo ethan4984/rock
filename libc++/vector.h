@@ -67,6 +67,8 @@ class vector {
                 array = tmp;
             }
 
+            t_print("PUSHING");
+
             array[iterator] = data;
             iterator++;
         }

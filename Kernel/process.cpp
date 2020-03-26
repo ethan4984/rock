@@ -17,7 +17,7 @@ process::process(uint64_t range, void (*entry)()) : num_of_blocks(range), entry_
     while(++blocks*0x20000 < range);
 
     t_print("New process allocated at %x\n", (uint64_t)process_begin);
-    s_print(VGA_GREEN, 50, grab_current_y() + 1, "New process requesting %d kb", blocks);
+    s_print(VGA_GREEN, 50, grab_current_y() + 1, "New process requesting %d pages", blocks);
 
     for(uint64_t i = 0; i < range/0x80; i++) /* process allocator uses blocks of 128 bytes */
         pmem_map.available_blocks[i] = 1;
@@ -79,7 +79,7 @@ void *process::pmalloc(size_t size)
     t_print("pmalloc in process\n");
 
     if(!size) {
-        t_print("\PMALLOC: stop trying to allocate blocks of zero size");
+        t_print("PMALLOC: stop trying to allocate blocks of zero size");
         return 0;
     }
 
