@@ -14,26 +14,13 @@
 using namespace standardout;
 using namespace MM;
 
+void main() {
+	t_print("Bruh");
+}
 
-/* test vector class */
-/*void br()
-{
-    vector<int> v;
-    t_print("size: %d", v.size());
-    v.push_back(10);
-    v.push_back(20);
-    v.push_back(30);
-    v.push_back(40);
-    v.push_back(50);
-
-    v.erase(1);
-
-    t_print("size: %d", v.size());
-
-
-    for(int i = 0; i < v.used(); i++)
-        t_print("%d ", v.at(i));
-}*/
+void other_main() {
+	t_print("no bruh");
+}
 
 extern void div_test() asm("test_div");
 
@@ -60,14 +47,7 @@ extern "C" void kernel_main()
 
     blocks_init();
 
-    //div_test(); /* tests exceptions */
-
-    /*process proc(0x2001, main);
-
-    proc.pmalloc(0x4);
-    uint16_t *ptrbruh = (uint16_t*)proc.pmalloc(0x8);
-    proc.pfree(ptrbruh);
-    uint64_t *ptruh = (uint64_t*)proc.pmalloc(0x4);*/
+    //div_test();
 
     k_print("\n\n\n\n");
 

@@ -23,15 +23,15 @@ process::process(uint64_t range, void (*entry)()) : num_of_blocks(range), entry_
         pmem_map.available_blocks[i] = 1;
 }
 
-process::~process() 
+process::~process()
 {
-    process_begin = 0; 
+    process_begin = 0;
     entry_point = 0;
 }
 
 process::process()
 {
-    
+
 }
 
 bool process::null_check()
@@ -76,10 +76,10 @@ void process::free_pblock(uint64_t index)
 
 void *process::pmalloc(size_t size)
 {
-    t_print("Process block allocation in process\n");
+    t_print("pmalloc in process\n");
 
     if(!size) {
-        t_print("\tBRUH: stop trying to allocate blocks of zero size");
+        t_print("\PMALLOC: stop trying to allocate blocks of zero size");
         return 0;
     }
 
@@ -95,13 +95,13 @@ void *process::pmalloc(size_t size)
     if(is_one) {
         t_print("\n\tstatus: single block\n\treqiured blocks: %d\n", reqiured_blocks);
         if(first_freep() == num_of_blocks + 1) {
-            t_print("BRUH: we ran out of blocks bruh");
+            t_print("PMALLOC: we ran out of blocks bruh");
             return 0;
         }
 
         allocate_pblock();
 
-        t_print("\nProcess block allocation finished : returning %x\n", block_start + freed*0x80);
+        t_print("\npmalloc finished : returning %x\n", block_start + freed*0x80);
         return block_start + freed*0x80;
     }
 
@@ -114,7 +114,7 @@ void *process::pmalloc(size_t size)
             return 0;
         }
     }
-    t_print("\nProcess block allocation finished : returning %x\n", block_start + (freed*i)*0x80);
+    t_print("\npmalloc allocation finished : returning %x\n", block_start + (freed*i)*0x80);
     return block_start + (freed*i)*0x80;
 }
 

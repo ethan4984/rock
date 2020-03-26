@@ -53,14 +53,14 @@ namespace MM
     uint64_t allocate_block()
     {
         uint64_t new_block = first_free();
-		t_print("\tAllocated block: %d", new_block);
+		t_print("\tAllocated page: %d", new_block);
         set(new_block);
         return new_block;
     }
 
     void free_block(uint64_t block_num)
     {
-        t_print("freeing %d", block_num);
+        t_print("freeing page%d", block_num);
         clear(block_num);
     }
 
@@ -70,16 +70,16 @@ namespace MM
             if(!isset(i))
                 return i;
         }
-        t_print("Bruh: we are running out a blocks, make some more bitch\n");
+        t_print("we are running out a pages, make some more dude\n");
         return total_blocks + 1;
     }
 
     void *pagalloc(uint64_t size)
     {
-        t_print("\nBlock Allocation in process\n");
+        t_print("\nPage Allocation in process\n");
 
         if(!size) {
-            t_print("BRUH: wtf are you doing trying to allocate a blocks of zero size");
+            t_print("pagalloc: wtf are you doing trying to allocate a blocks of zero size");
             return 0;
         }
 
@@ -96,15 +96,15 @@ namespace MM
 
         if(is_one) {
             if(first_free() == total_blocks + 1) {
-                t_print("BRUH: we ran out of blocks bruh");
+                t_print("pagalloc : we ran out of blocks bruh");
                 panic("We ran out of blocks");
             }
 
-            t_print("\tStatus: Single Block\n");
+            t_print("\tStatus: Single page\n");
 
 			allocate_block();
 
-            t_print("\nBlock allocation finished : %x\n", block_start + freed*0x20000);
+            t_print("\page allocation finished : %x\n", block_start + freed*0x20000);
 
             return block_start + freed*0x20000;
         }
@@ -114,18 +114,18 @@ namespace MM
         uint64_t i;
         for(i = 0; i < reqiured_blocks; i++) {
             if(allocate_block() == total_blocks + 1) {
-                t_print("BRUH: we ran out of blocks bruh");
+                t_print("pagmalloc: we ran out of blocks bruh");
                 panic("We ran out of blocks");
             }
         }
-        t_print("\nBlock allocation finished\n");
+        t_print("\pagmalloc allocation finished\n");
         return block_start + (freed*i)*0x20000; //fix me
     }
 
     void pagfree(void *location, size_t size)
     {
         if(location == NULL) {
-            t_print("BRUH: wtf are you doing trying to free NULL memory");
+            t_print("pagalloc: wtf are you doing trying to free NULL memory");
             return;
         }
 

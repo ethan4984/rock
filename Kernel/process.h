@@ -35,6 +35,8 @@ class process
         void save_regs();
 
         void restore();
+        
+        bool starting = true;
     private:
         struct memory_table
         {
