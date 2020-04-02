@@ -10,6 +10,7 @@
 #include <alloc.h>
 #include <vector.h>
 #include <string.h>
+#include <sound.h>
 
 using namespace standardout;
 using namespace MM;
@@ -26,7 +27,7 @@ extern "C" void kernel_main()
 
     start_counter(1, 0, 6);
 
-    sprit_draw_main();
+    //sprit_draw_main();
 
     clear_screen();
 
@@ -45,7 +46,7 @@ extern "C" void kernel_main()
 
     _init(); //needed for global constructors ~ be careful about putting things before this
 
-    k_print("\n\n\n\n");
+    k_print("\n\n\n");
 
     change_text_color(VGA_LIGHT_BLUE);
     k_print("(*ROOT*) > ");

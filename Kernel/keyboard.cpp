@@ -33,6 +33,8 @@ void startInput()
     key_entry.takingInput = true;
 }
 
+bool binds = false;
+
 void keyboard_handler_main()
 {
     outb(0x20, 0x20);
@@ -45,64 +47,68 @@ void keyboard_handler_main()
 
     unsigned char keycode = inb(0x60);
 
-    switch(keycode) {
-        case 0x1c:
-            if(!key_entry.takingInput) {
-                putchar('\n');
-                break;
-            }
-
-            key_entry.input[counter] = 0;
-
-            command_handler(key_entry.input);
-
-            memset(key_entry.input, 0, strlen(key_entry.input));
-
-            counter = 0;
-
-            buffer_counter = 0;
-
-            break;
-        case 0x0e:
-            if(!key_entry.takingInput) { // minor buffering issues - fix me
-                putchar('\b');
-                break;
-            }
-
-            putchar('\b');
-
-            key_entry.input[counter] = 0;
-
-            if(counter != 0)
-                counter--;
-
-            break;
-        case 0x2a:
-            up_key = true;
-            break;
-        case 0xaa:
-            up_key = false;
-            break;
-        case 0xF:
-            putchar('\t');
-            break;
-        default:
-            if(keycode <= 128) {
+    if(!binds) {
+        switch(keycode) {
+            case 0x1c:
                 if(!key_entry.takingInput) {
+                    putchar('\n');
+                    break;
+                }
+
+                key_entry.input[counter] = 0;
+
+                command_handler(key_entry.input);
+
+                memset(key_entry.input, 0, strlen(key_entry.input));
+
+                counter = 0;
+
+                buffer_counter = 0;
+
+                break;
+            case 0x0e:
+                if(!key_entry.takingInput) { // minor buffering issues - fix me
+                    putchar('\b');
+                    break;
+                }
+
+                putchar('\b');
+
+                key_entry.input[counter] = 0;
+
+                if(counter != 0)
+                    counter--;
+
+                break;
+            case 0x2a:
+                up_key = true;
+                break;
+            case 0xaa:
+                up_key = false;
+                break;
+            case 0xF:
+                putchar('\t');
+                break;
+            default:
+                if(keycode <= 128) {
+                    if(!key_entry.takingInput) {
+                        putchar(keyboard_map[(unsigned char)keycode]);
+                        break;
+                    }
+
+                    if(++buffer_counter == 256)
+                        memset(key_entry.input, 0, strlen(key_entry.input));
+
+                    if(up_key) {
+                        putchar(cap_map[(unsigned char)keycode]);
+                        key_entry.input[counter++] = cap_map[(unsigned char)keycode];
+                        break;
+                    }
                     putchar(keyboard_map[(unsigned char)keycode]);
-                    break;
+                    key_entry.input[counter++] = keyboard_map[(unsigned char)keycode];
                 }
-
-                if(++buffer_counter == 256)
-                    memset(key_entry.input, 0, strlen(key_entry.input));
-
-                if(up_key) {
-                    putchar(cap_map[(unsigned char)keycode]);
-                    key_entry.input[counter++] = cap_map[(unsigned char)keycode];
-                    break;
-                }
-                putchar(keyboard_map[(unsigned char)keycode]);
-                key_entry.input[counter++] = keyboard_map[(unsigned char)keycode];
-            }
+        }
+        return;
     }
+
 }

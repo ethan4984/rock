@@ -164,16 +164,15 @@ void reboot()
     asm volatile("hlt");
 }
 
-/* not APIC, just qemu bochs and virtual machine */
+/* not ACPI, just qemu bochs and virtual machine */
 
 void shutdown(void)
 {
-    asm volatile ("cli");
     while(1) {
-        outw (0xB004, 0x2000);
-        for (const char *s = "Shutdown"; *s; ++s)
-            outb (0x8900, *s);
-        asm volatile ("cli; hlt");
+        outw(0xB004, 0x2000);
+        for(const char *s = "Shutdown"; *s; ++s)
+            outb(0x8900, *s);
+        asm volatile("cli; hlt");
     }
 }
 

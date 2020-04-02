@@ -3,7 +3,7 @@
 #include <shitio.h>
 #include <keyboard.h>
 #include <process.h>
-#include <scheduler.h> 
+#include <scheduler.h>
 
 using namespace standardout;
 

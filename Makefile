@@ -9,7 +9,8 @@ CFLAGS = $(NORMAL_CFLAGS) $(KERNEL_CRAP)
 SCRC = $(shell find . -type f -name '*.cpp')
 SRCA = $(shell find . -type f -name '*.asm')
 SRCS = $(shell find . -type f -name '*.s')
-OBJ = alloc.o graphics.o interrupt.o memory.o keyboard.o kernel_init.o paging.o port.o process.o scheduler.o shell.o shitio.o boot.o exceptions.o interrupts.o string.o
+OBJ = alloc.o graphics.o interrupt.o memory.o keyboard.o kernel_init.o paging.o port.o process.o scheduler.o shell.o shitio.o boot.o exceptions.o interrupts.o string.o sound.o
+QEMUFLAGS = -smp cpus=4 -m 4G -vga vmware -serial file:serial.log -soundhw pcspk
 
 
 CRTI_OBJ=crti.o
@@ -35,7 +36,7 @@ compile:
 
 qemu: kernel
 	touch serial.log
-	qemu-system-x86_64 -smp cpus=4 -cdrom crepOS.iso -m 4G -vga vmware -serial file:serial.log &
+	qemu-system-x86_64 $(QEMUFLAGS) -cdrom crepOS.iso &
 	tail -n0 -f serial.log
 
 qemuinfo: kernel

@@ -156,20 +156,6 @@ extern void back_state(void) asm("back_state");
 extern void new_state(void) asm("new_state");
 extern void restore_state(void) asm("restore_state");
 
-/*void task_switch(process &task)
-{
-    //back_state(); //saves old stack
-    task_tree->new_rsp = (uint64_t)task.pmalloc(0x1000) + 0x1000;
-    t_print("New stack %x", task_tree->new_rsp);
-    uint64_t rsp;
-    asm volatile ("movq %%rsp, %0" : "=r"(rsp));
-    task_tree->rsp = rsp;
-    t_print("Old stack %x", task_tree->rsp);
-    asm volatile ("movq %0, 0x8(%%rsp)" :: "r"((uint64_t*)task_tree->new_rsp));
-    (task.entry_point)();
-    asm volatile ("movq %0, 0x8(%%rsp)" :: "r"((uint64_t*)task_tree->rsp));
-}*/
-
 void process::save_regs()
 {
     asm volatile ("movq %%rax, %0" : "=r"(rax));
@@ -194,22 +180,5 @@ void process::save_regs()
 
 void process::restore()
 {
-    asm volatile ("movq %0, 0x8(%%rsp)" :: "r"((uint64_t*)rsp));
-    asm volatile ("movq %0, 0x8(%%rbp)" :: "r"((uint64_t*)rbp));
-    asm volatile ("movq %0, %%rsi" :: "r"(rsi));
-    asm volatile ("movq %0, %%rdi" :: "r"(rdi));
-
-    asm volatile ("movq %0, %%rax" :: "r"(rax));
-    asm volatile ("movq %0, %%rbx" :: "r"(rbx));
-    asm volatile ("movq %0, %%rcx" :: "r"(rcx));
-    asm volatile ("movq %0, %%rdx" :: "r"(rdx));
-
-    asm volatile ("movq %0, %%r8" :: "r"(r8));
-    asm volatile ("movq %0, %%r9" :: "r"(r9));
-    asm volatile ("movq %0, %%r10" :: "r"(r10));
-    asm volatile ("movq %0, %%r11" :: "r"(r11));
-    asm volatile ("movq %0, %%r12" :: "r"(r12));
-    asm volatile ("movq %0, %%r13" :: "r"(r13));
-    asm volatile ("movq %0, %%r14" :: "r"(r14));
-    asm volatile ("movq %0, %%r15" :: "r"(r15));
+    /*TODO*/
 }

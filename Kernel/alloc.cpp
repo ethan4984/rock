@@ -74,6 +74,7 @@ void *malloc(uint64_t size)
             panic("We ran out of blocks");
         }
     }
+
     t_print("\nMALLOC allocation finished\n");
 
     if((uint64_t*)block_start_b + (freed*i) > (uint64_t*)block_start_b + 0x20000)
@@ -82,21 +83,6 @@ void *malloc(uint64_t size)
     t_print("bro %x", (uint64_t)block_start_b + (freed*i));
 
     return block_start_b + (freed*i);
-}
-
-void *realloc(void *location)
-{
-    if(location == NULL) {
-        t_print("REALLOC: wtf bruh, your trying to realloc NULL memory");
-        return NULL;
-    }
-
-    uint64_t memory = (uint64_t)location;
-
-    if(first_bfree() > (memory - (uint64_t)block_start_b)) {
-        t_print("REALLOC: you dont need to reallocate");
-        return (uint64_t*)memory;
-    }
 }
 
 void free(void *location)

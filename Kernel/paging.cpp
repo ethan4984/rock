@@ -162,6 +162,5 @@ void block_show()
 {
     s_print(VGA_GREEN, 0, 0, "PMM: blocks num: %d", total_blocks);
     s_print(VGA_GREEN, 0, 1, "PMM: bitmap addr: %a", (uint64_t)bitmap);
-    s_print(VGA_GREEN, 0, 2, "PMM: bitmap size: %d", size);
-    s_print(VGA_GREEN, 0, 3, "PMM: addr strat: %a", (uint64_t)block_start);
+    s_print(VGA_GREEN, 0, 2, "PMM: addr strat: %a", (uint64_t)block_start);
 }

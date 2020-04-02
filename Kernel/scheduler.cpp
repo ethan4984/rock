@@ -31,22 +31,16 @@ void PITI()
     timer_ticks++;
     if(timer_ticks % 94 == 0)
         ++seconds;
-
-    /*static int bruh = 0;
-    if(!bruh) {
-		obj.at(0).save_regs();
-		void (*main_func)() = obj.at(1).entry_point;
-        (*main_func)();
-        bruh++;
-	}
-	if(bruh == 1) {
-		obj.at(1).save_regs();
-		obj.at(0).restore();
-	}*/
 }
 
 void sleep(volatile int ticks)
 {
     seconds = 0;
     while(seconds < ticks);
+}
+
+void nanosleep(volatile int offset)
+{
+    timer_ticks = 0;
+    while(timer_ticks < offset);
 }
