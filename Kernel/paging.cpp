@@ -31,7 +31,7 @@ namespace MM
         bitmap[location / 8] = bitmap[location / 8] & (~(1 << (location % 8)));
     }
 
-    uint8_t isset(uint64_t location)
+    bool isset(uint64_t location)
     {
         return (bitmap[location / 8] >> (location % 8)) & 0x1;
     }
@@ -53,14 +53,14 @@ namespace MM
     uint64_t allocate_block()
     {
         uint64_t new_block = first_free();
-		t_print("\tAllocated page: %d\n", new_block);
+        t_print("\tAllocated page: %d\n", new_block);
         set(new_block);
         return new_block;
     }
 
     void free_block(uint64_t block_num)
     {
-        t_print("freeing page%d", block_num);
+        t_print("freeing page %d", block_num);
         clear(block_num);
     }
 

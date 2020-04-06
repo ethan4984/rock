@@ -230,6 +230,11 @@ void test()
 {
     t_print("testing");
     k_print("\nTesting Malloc & Free:\n");
+/*  uint64_t *ptr = (uint64_t*)pagalloc(1);  //tests page allocator
+    uint64_t *ptr1 = (uint64_t*)pagalloc(1);
+    pagfree(ptr);
+    uint64_t *ptr2 = (uint64_t*)pagalloc(1);*/
+
     uint32_t *ptr = (uint32_t*)malloc(sizeof(uint32_t));
     uint16_t *ptr1 = (uint16_t*)malloc(sizeof(uint16_t));
     uint16_t *ptr2 = (uint16_t*)malloc(sizeof(uint16_t));
@@ -237,9 +242,14 @@ void test()
     k_print("Space allocated for ptr1: %a\n", ptr1);
     k_print("Space allocated for ptr2: %a\n", ptr2);
     k_print("Freeing ptr2\n");
-    free(ptr2);
+    free(ptr);
+    check_blocks_b();
     uint16_t *ptr3 = (uint16_t*)malloc(sizeof(uint16_t));
+    uint16_t *ptr4 = (uint16_t*)malloc(sizeof(uint16_t));
+    uint16_t *ptr5 = (uint16_t*)malloc(sizeof(uint16_t));
 	k_print("Space allocated for ptr3: %a\n", ptr3);
+	k_print("Space allocated for ptr4: %a\n", ptr4);
+    k_print("Space allocated for ptr5: %a\n", ptr5);
 }
 
 void test_panic() {

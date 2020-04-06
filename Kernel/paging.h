@@ -6,12 +6,6 @@ extern uint8_t *block_start;
 
 namespace MM
 {
-    void set(uint64_t location);
-
-    void clear(uint64_t location);
-
-    uint8_t isset(uint64_t location);
-
     void *pagalloc(uint64_t size);
 
     void pagfree(void *location, size_t size = sizeof(uint64_t));

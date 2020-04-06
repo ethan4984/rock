@@ -27,7 +27,7 @@ extern "C" void kernel_main()
 
     start_counter(1, 0, 6);
 
-    //sprit_draw_main();
+    sprit_draw_main();
 
     clear_screen();
 
