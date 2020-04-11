@@ -3,6 +3,7 @@
 #include <keyboard.h>
 #include <memory.h>
 #include <shell.h>
+#include <alloc.h>
 
 using namespace standardout;
 
@@ -24,7 +25,7 @@ char cap_map[] = {
 
 struct keyboard_buffer
 {
-    char *input = {0};
+    char *input;
     bool takingInput;
 } key_entry;
 
@@ -38,6 +39,12 @@ bool binds = false;
 void keyboard_handler_main()
 {
     outb(0x20, 0x20);
+
+    static bool first = false;
+    if(!first) {
+        key_entry.input = (char*)malloc(sizeof(char*));
+        first = true;
+    }
 
     static bool up_key = false;
 

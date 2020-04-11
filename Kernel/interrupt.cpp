@@ -129,6 +129,8 @@ void idt_init(void)
     idt_r.base = (uint64_t)&IDT;
     idt_r.limit = 256 * sizeof(IDT_entry) - 1;
     asm volatile("lidtq %0" ::"m"(idt_r));
+    k_print("IDT init:\n\tIDT located at %a\n", idt_r);
+    k_print("\tExceptions initalized\n\tIRQs initalized");
 }
 
 void mask_irq(unsigned char channel)
@@ -250,7 +252,7 @@ void start_counter(int frequency, uint8_t counter, uint8_t mode)
     if(!frequency)
         return;
 
-    uint16_t divisor = 1193181/frequency;
+    uint16_t divisor = 1193181 / frequency;
 
     uint8_t ossal = 0;
     ossal = (ossal & ~0xe) | mode;

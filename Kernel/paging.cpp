@@ -160,7 +160,7 @@ namespace MM
 
 void block_show()
 {
-    s_print(VGA_GREEN, 0, 0, "PMM: blocks num: %d", total_blocks);
-    s_print(VGA_GREEN, 0, 1, "PMM: bitmap addr: %a", (uint64_t)bitmap);
-    s_print(VGA_GREEN, 0, 2, "PMM: addr strat: %a", (uint64_t)block_start);
+    k_print("\nPMM init:\n\tPMM: blocks num: %d\n", total_blocks);
+    k_print("\tPMM: bitmap addr: %a\n", (uint64_t)bitmap);
+    k_print("\tPMM: addr start: %a\n", (uint64_t)block_start);
 }

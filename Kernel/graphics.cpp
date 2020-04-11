@@ -1,6 +1,7 @@
 #include <shitio.h>
 #include <memory.h>
 #include <interrupt.h>
+#include <scheduler.h>
 
 using namespace standardout;
 
@@ -164,13 +165,13 @@ void draw_pixels(uint32_t pixels[], int size, size_t offset_x, size_t offset_y)
 
 void sprit_draw_main()
 {
-	disable_cursor();
+    disable_cursor();
 
     mask_irq(1); /* disables irq1/keyboard */
 
     draw_vline(VGA_MAGENTA, 3, 0, 25);
     draw_hline(VGA_MAGENTA, 3, 0, 80);
-    s_print(VGA_LIGHT_BLUE, 10, 1, "Welcome to crepOS");
+    s_print(VGA_LIGHT_BLUE, 10, 1, "This is crepOS");
 
     draw_pixels(bruh, 402, 10, 5);
 
@@ -188,11 +189,3 @@ void sprit_draw_main()
 
     enable_cursor();
 }
-
-
-
-
-
-
-
-

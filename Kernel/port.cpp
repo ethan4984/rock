@@ -78,20 +78,12 @@ void serial_write(uint8_t data)
     outb(COM1, data);
 }
 
-inline void io_wait(void)
+void cpuGetMSR(uint32_t msr, uint32_t *lo, uint32_t *hi)
 {
-    asm volatile(   "jmp 1f\n\t"
-                    "1:jmp 2f\n\t"
-                    "2:"
-                );
+   asm volatile("rdmsr" : "=a"(*lo), "=d"(*hi) : "c"(msr));
 }
 
-inline bool are_interrupts_enabled()
+void cpuSetMSR(uint32_t msr, uint32_t lo, uint32_t hi)
 {
-    unsigned long flags;
-    asm volatile(   "pushf\n\t"
-                    "pop %0"
-                    :"=g"(flags)
-                );
-    return flags & (1 << 9);
+   asm volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
 }

@@ -7,6 +7,8 @@ void command_handler(const char *input);
 
 void clr_keyboard_entry();
 
+void drawing();
+
 namespace shell
 {
     struct command

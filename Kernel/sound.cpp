@@ -17,7 +17,7 @@ uint32_t song[9] = { 'c', false, 15, 'd', false, 15, 'd', true, 15 };
 
 void play_note(const char note_x, bool sharp = false)
 {
-    int frequency;
+    int frequency = 0;
     for(int i = 0; i < 7; i++) {
         if(note_x == note_c[i] && sharp)
             frequency = note_s[i];
@@ -40,10 +40,15 @@ void play_note(const char note_x, bool sharp = false)
 
 void play_song(uint32_t notes[], uint32_t size)
 {
-    for(int i = 0; i < size; i += 3) {
+    for(uint32_t i = 0; i < size; i += 3) {
         play_note(notes[i], notes[i+1]);
         nanosleep(notes[i+2]);
     }
+}
+
+void play()
+{
+    play_song(song, 9);
 }
 
 void stop_sound()

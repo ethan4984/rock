@@ -106,4 +106,3 @@ void reg_flow();
 void seg_flow();
 
 void start_counter(int freq, uint8_t counter, uint8_t mode);
-void sleep(int ticks);

@@ -6,6 +6,9 @@
 #include <paging.h>
 #include <alloc.h>
 #include <string.h>
+#include <scheduler.h>
+#include <graphics.h>
+#include <sound.h>
 
 /* prototypes */
 
@@ -27,6 +30,8 @@ void test();
 
 void test_panic();
 
+void print_uptime();
+
 void add_command(const char base_name[10], int args, int size);
 
 int command_parse(char argument[5][10], int start, const char *input);
@@ -40,7 +45,8 @@ using namespace MM;
 command arg[1];
 
 const char *command_list[] = {  "version", "clr", "shutdown", "reboot",
-                                "testMM", "reg-dump", "seg-dump", "help"
+                                "testMM", "reg-dump", "seg-dump", "uptime",
+                                "demo", "song", "help"
                              };
 
 const char *arg_command[] = { "print" };
@@ -48,7 +54,8 @@ const char *arg_command[] = { "print" };
 typedef void (*command_functions)();
 
 command_functions comm_func[] = {   version, clear_promnt, shutdown, reboot,
-                                    test, reg_flow, seg_flow, help
+                                    test, reg_flow, seg_flow, print_uptime,
+                                    drawing, play, help
                                 };
 
 void command_handler(const char *input)
@@ -66,6 +73,7 @@ void command_handler(const char *input)
 
     for(long unsigned int i = 0; i < sizeof command_list/sizeof *command_list; i++) {
         if(strcmp(input, command_list[i]) == 0) {
+            t_print("SHELL: receiving request for command \"%s\"", input);
             comm_func[i]();
             commandFound = true;
         }
@@ -74,7 +82,6 @@ void command_handler(const char *input)
     }
 
     if(!commandFound) {
-
         char base[10];
 
         int length = strlen(input);
@@ -228,7 +235,6 @@ int command_parse(char argument[5][10], int start, const char *input)
 
 void test()
 {
-    t_print("testing");
     k_print("\nTesting Malloc & Free:\n");
 /*  uint64_t *ptr = (uint64_t*)pagalloc(1);  //tests page allocator
     uint64_t *ptr1 = (uint64_t*)pagalloc(1);
@@ -250,6 +256,11 @@ void test()
 	k_print("Space allocated for ptr3: %a\n", ptr3);
 	k_print("Space allocated for ptr4: %a\n", ptr4);
     k_print("Space allocated for ptr5: %a\n", ptr5);
+}
+
+void print_uptime()
+{
+    k_print("Gamer");
 }
 
 void test_panic() {
