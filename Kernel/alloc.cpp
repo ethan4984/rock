@@ -21,7 +21,7 @@ void set(uint64_t location)
 
 void clear(uint64_t location)
 {
-    bitmap_b[location / 64] = bitmap_b[location / 64] & (~(1 << (location % 64)));
+    bitmap_b[location / 8] = bitmap_b[location / 8] & (~(1 << (location % 8)));
 }
 
 bool isset(uint64_t location)
@@ -74,12 +74,6 @@ uint64_t allocate_bblock()
     return new_block;
 }
 
-void free_bblock(uint64_t block_num)
-{
-    t_print("freeing %d", block_num);
-    clear(block_num);
-}
-
 void *malloc(uint64_t size)
 {
     t_print("\nMALLOC Allocation in process\n");
@@ -105,14 +99,14 @@ void *malloc(uint64_t size)
 
     reserve(first_bfree());
 
-    t_print("\nMALLOC allocation finished\n");
+    uint64_t return_address = (uint64_t)block_start_b + freed;
 
-    if((uint64_t*)block_start_b + (freed*i) > (uint64_t*)block_start_b + 0x20000)
+    t_print("MALLOC allocation finished at %x", return_address);
+
+    if((uint64_t*)block_start_b + freed > (uint64_t*)block_start_b + 0x20000) /* test me */
         blocks_init();
 
-    t_print("bro %x", block_start_b + (freed*i));
-
-    return block_start_b + (freed*i);
+    return (uint64_t*)return_address;
 }
 
 void free(void *location)
@@ -122,7 +116,11 @@ void free(void *location)
         return;
     }
 
-    uint64_t current_block = ((uint64_t*)location - block_start_b) / 2;
+    uint64_t current_block = ((uint64_t)location - (uint64_t)block_start_b);
+
+    t_print("Freeing in process: \n");
+    t_print("\tAddr: %x\n", location);
+    t_print("\tBlock Numbers: %d\n", current_block);
 
     while(1) {
         clear(current_block);
@@ -131,6 +129,8 @@ void free(void *location)
     }
 
     sell(current_block);
+
+    t_print("Freeing finished");
 }
 
 void check_blocks_b()

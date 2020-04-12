@@ -249,7 +249,6 @@ void test()
     k_print("Space allocated for ptr2: %a\n", ptr2);
     k_print("Freeing ptr2\n");
     free(ptr);
-    check_blocks_b();
     uint16_t *ptr3 = (uint16_t*)malloc(sizeof(uint16_t));
     uint16_t *ptr4 = (uint16_t*)malloc(sizeof(uint16_t));
     uint16_t *ptr5 = (uint16_t*)malloc(sizeof(uint16_t));

@@ -60,7 +60,7 @@ extern "C" void kernel_main()
 
     mask_irq(1);
 
-    for(int i = 4; i > 0; i--) {
+    for(int i = 1; i > 0; i--) {
         if(i == 0) {
             special_char('0', 1, 1, VGA_WHITE);
             sleep(1);
