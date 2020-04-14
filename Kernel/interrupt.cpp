@@ -61,7 +61,7 @@ extern "C" void irq_handler(int irqNum)
 
 void idt_init(void)
 {
-    /* cpu excpetions */
+    /* cpu exceptions */
 
     idt_expection((uint64_t)divide_zero);
     idt_expection((uint64_t)debug);

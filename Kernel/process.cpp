@@ -79,7 +79,7 @@ void *process::pmalloc(size_t size)
     t_print("pmalloc in process\n");
 
     if(!size) {
-        t_print("PMALLOC: stop trying to allocate blocks of zero size");
+        t_print("PMALLOC: stop trying to allocate block with no size");
         return 0;
     }
 
@@ -93,7 +93,7 @@ void *process::pmalloc(size_t size)
     uint64_t freed = first_freep();
 
     if(is_one) {
-        t_print("\n\tstatus: single block\n\treqiured blocks: %d\n", reqiured_blocks);
+        t_print("\n\tstatus: single block\n\trequired blocks: %d\n", reqiured_blocks);
         if(first_freep() == num_of_blocks + 1) {
             t_print("PMALLOC: we ran out of blocks bruh");
             return 0;
@@ -106,7 +106,7 @@ void *process::pmalloc(size_t size)
     }
 
     uint64_t i;
-    t_print("\n\tstatus: multi block\n\treqiured blocks: %d\n", reqiured_blocks);
+    t_print("\n\tstatus: multi block\n\trequired blocks: %d\n", reqiured_blocks);
 
     for(i = 0; i < reqiured_blocks; i++) {
         if(allocate_pblock() == num_of_blocks + 1) {
@@ -126,7 +126,7 @@ void process::pfree(void *location, size_t size)
     }
 
     if(location <= process_begin && location >= process_begin + (num_of_blocks*0x4000)) {
-        t_print("Bruh your out of bounds");
+        t_print("Bruh you're out of bounds");
         return;
     }
 
@@ -135,7 +135,7 @@ void process::pfree(void *location, size_t size)
 
     if(reqiured_blocks == 1) {
         free_pblock(((uint64_t)location - (uint64_t)process_begin) / 0x80);
-        t_print("This process blokc was just freed %d\n", ((uint64_t)location - (uint64_t)process_begin) / 0x80);
+        t_print("This process block was just freed %d\n", ((uint64_t)location - (uint64_t)process_begin) / 0x80);
         return;
     }
 

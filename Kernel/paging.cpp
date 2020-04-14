@@ -70,7 +70,7 @@ namespace MM
             if(!isset(i))
                 return i;
         }
-        t_print("we are running out a pages, make some more dude\n");
+        t_print("we are running out of pages, make some more dude\n");
         return total_blocks + 1;
     }
 
@@ -79,7 +79,7 @@ namespace MM
         t_print("\nPage Allocation in process\n");
 
         if(!size) {
-            t_print("pagalloc: wtf are you doing trying to allocate a blocks of zero size");
+            t_print("pagalloc: wtf why are you trying to allocate a block with no size");
             return 0;
         }
 
@@ -109,7 +109,7 @@ namespace MM
             return block_start + freed*0x20000;
         }
 
-        t_print("\tStatus: Multi-block\n\tBlocks reqiured: %d\n", reqiured_blocks);
+        t_print("\tStatus: Multi-block\n\tBlocks required: %d\n", reqiured_blocks);
 
         uint64_t i;
         for(i = 0; i < reqiured_blocks; i++) {
