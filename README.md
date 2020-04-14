@@ -2,24 +2,24 @@
 
 This is a simple x86_64 operating system made for fun and learning
 
-![Basic demo](Demo/osdemo6.gif)
+![Basic demo](Demo/osdemo8.gif)
 
 ## About
 
   This project strives for simplicity. This project exists as a means for fun, "software from scracth" is really fun. This OS is amateur, however, here are some of the features we do include:
 
-  - interrupts including irqs and exceptions 
+  - interrupts including irqs and exceptions
 
   - Basic mm with identity paging and a pmm
 
   - A basic shell with simple commands
 
   - Malloc & Free and panic
-  
+
   - Text based graphics
-  
+
   - Process allocation
-  
+
   - Long mode
 
   This OS is only around a month old and all of the features that we currently support will be 100% improved upon and more
@@ -27,7 +27,7 @@ This is a simple x86_64 operating system made for fun and learning
   Here are some project aspirations:
 
   - Multi-processing and multi-threading
-  
+
   - apic instead of pic
 
   - Process scheduler
