@@ -1,45 +1,35 @@
 OUTPUT_FORMAT(elf64-x86-64)
 
 ENTRY(_start)
+
+kernel_vma_start = 0xFFFFFFFF80000000;
+
 SECTIONS
 {
-    kernel_virt_offset = 0xffffffff80000000;
+    . = kernel_vma_start + 0x100000;
 
-    . = 0x100000;
-    .multiboot ALIGN(4K) : AT(ADDR(.multiboot))
-    {
-        *(.multiboot)
+    __kernel_start = ALIGN(4K);
+
+    .stivalehdr : ALIGN(4K) {
+        KEEP(*(.stivalehdr))
     }
 
-    . += kernel_virt_offset;
-    .text ALIGN(4K) :  AT(ADDR(.text) - kernel_virt_offset)
-    {
-        sections_text = . - kernel_virt_offset;
-        KEEP(*(.text))
-        sections_text_end = . - kernel_virt_offset;
+    .text : ALIGN(4K) {
+        *(.text*)
     }
 
-    .rodata ALIGN(4K) :  AT(ADDR(.rodata) - kernel_virt_offset)
-    {
-        sections_rodata = . - kernel_virt_offset;
-        KEEP(*(.rodata*))
-        sections_rodata_end = . - kernel_virt_offset;
+    .rodata : ALIGN(4K) {
+        *(.rodata*)
     }
 
-	.data ALIGN(4K) :  AT(ADDR(.data) - kernel_virt_offset)
-	{
-		sections_data = . - kernel_virt_offset;
-        KEEP(*(.data*))
-        sections_data_end = . - kernel_virt_offset;
-	}
+    .data : ALIGN(4K) {
+        *(.data*)
+    }
 
-	.bss ALIGN(4K) :  AT(ADDR(.bss) - kernel_virt_offset)
-	{
-		sections_bss = . - kernel_virt_offset;
-        KEEP(*(COMMON))
-        KEEP(*(.bss*))
-        sections_bss_end = . - kernel_virt_offset;
-	}
+    .bss : ALIGN(4K) {
+        *(.bss*)
+        *(COMMON)
+    }
 
-    kernel_end = .;
+    kernel_end = ALIGN(4K);
 }

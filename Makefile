@@ -22,10 +22,17 @@ OBJ_LINK_LIST:=$(CRTI_OBJ) $(CRTBEGIN_OBJ) $(OBJ) $(CRTEND_OBJ) $(CRTN_OBJ)
 INTERNAL_OBJS:=$(CRTI_OBJ) $(OBJ) $(CRTN_OBJ)
 
 kernel: compile
-	$(CC) -lgcc -nodefaultlibs -nostartfiles -n -T link.ld -o iso/boot/crepOS.bin $(OBJ_LINK_LIST)
-	grub-mkrescue -o crepOS.iso iso
-	rm $(OBJ) crtn.o crti.o
-
+	rm -f crepOS.img
+	$(CC) -lgcc -no-pie -nodefaultlibs -nostartfiles -n -T link.ld -o Bin/crepOS.elf $(OBJ_LINK_LIST)
+	dd if=/dev/zero bs=1M count=0 seek=64 of=crepOS.img
+	parted -s crepOS.img mklabel msdos
+	parted -s crepOS.img mkpart primary 1 100%
+	echfs-utils -m -p0 crepOS.img quick-format 32768
+	echfs-utils -m -p0 crepOS.img import qloader2.cfg qloader2.cfg
+	echfs-utils -m -p0 crepOS.img import Bin/crepOS.elf crepOS.elf
+	echfs-utils -m -p0 crepOS.img import Bin/crepOS.elf crepOS.img
+	cd ../qloader2 && ./qloader2-install qloader2.bin ../crepOS/crepOS.img
+	rm $(OBJ) crti.o crtn.o Bin/crepOS.elf
 compile:
 	$(CC) $(SCRC) $(CFLAGS) -c
 	$(NASM) Kernel/boot.asm -o boot.o
@@ -36,14 +43,14 @@ compile:
 
 qemu: kernel
 	touch serial.log
-	qemu-system-x86_64 $(QEMUFLAGS) -cdrom crepOS.iso &
+	qemu-system-x86_64 $(QEMUFLAGS) crepOS.img &
 	tail -n0 -f serial.log
 
 qemuinfo: kernel
-	qemu-system-x86_64 -smp cpus=4 -cdrom crepOS.iso -m 4G -no-reboot -monitor stdio -d int -D qemu.log -no-shutdown -vga vmware
+	qemu-system-x86_64 -smp cpus=4 crepOS.img -m 4G -no-reboot -monitor stdio -d int -D qemu.log -no-shutdown -vga vmware
 
 qemudebug: kernel
-	qemu-system-x86_64 -smp cpus=4 -cdrom crepOS.iso -m 4G -no-reboot -monitor stdio -d int -no-shutdown -vga vmware
+	qemu-system-x86_64 -smp cpus=4 crepOS.img -m 4G -no-reboot -monitor stdio -d int -no-shutdown -vga vmware
 
 clean:
 	rm $(OBJ)

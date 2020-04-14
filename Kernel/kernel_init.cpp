@@ -1,5 +1,4 @@
 #include <shitio.h>
-#include <multiboot.h>
 #include <interrupt.h>
 #include <graphics.h>
 #include <shell.h>
@@ -19,25 +18,10 @@ using namespace MM;
 extern void div_test() asm("test_div");
 extern void _init() asm("_init");
 
-void drawing()
-{
-    sleep(2);
-//    while(1);
-/*    start_counter(1, 0, 6);
-
-    clear_screen();
-
-    sprit_draw_main();
-
-    s_print(VGA_LIGHT_BLUE, 50, 1, "crepOS 64 bit Dynamic Debugger");
-
-    grab_current_y();
-    draw_vline(VGA_MAGENTA, 48, 0, 25); */
-}
-
 extern "C" void kernel_main()
 {
     initalize(VGA_BLACK, VGA_WHITE);
+
     idt_init();
 
     asm volatile ("sti");
@@ -60,9 +44,9 @@ extern "C" void kernel_main()
 
     mask_irq(1);
 
-    for(int i = 1; i > 0; i--) {
+    for(int i = 3; i >= 0; i--) {
         if(i == 0) {
-            special_char('0', 1, 1, VGA_WHITE);
+            special_char('0', 2, 22, VGA_WHITE);
             sleep(1);
             continue;
         }

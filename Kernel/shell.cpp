@@ -46,7 +46,7 @@ command arg[1];
 
 const char *command_list[] = {  "version", "clr", "shutdown", "reboot",
                                 "testMM", "reg-dump", "seg-dump", "uptime",
-                                "demo", "song", "help"
+                                "song", "help"
                              };
 
 const char *arg_command[] = { "print" };
@@ -55,7 +55,7 @@ typedef void (*command_functions)();
 
 command_functions comm_func[] = {   version, clear_promnt, shutdown, reboot,
                                     test, reg_flow, seg_flow, print_uptime,
-                                    drawing, play, help
+                                    play, help
                                 };
 
 void command_handler(const char *input)

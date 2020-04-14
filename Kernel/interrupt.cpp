@@ -129,6 +129,7 @@ void idt_init(void)
     idt_r.base = (uint64_t)&IDT;
     idt_r.limit = 256 * sizeof(IDT_entry) - 1;
     asm volatile("lidtq %0" ::"m"(idt_r));
+    t_print("%a\n", idt_r);
     k_print("IDT init:\n\tIDT located at %a\n", idt_r);
     k_print("\tExceptions initalized\n\tIRQs initalized");
 }
