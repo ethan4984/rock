@@ -6,7 +6,7 @@ This is a simple x86_64 operating system made for fun and learning
 
 ## About
 
-  This project strives for simplicity. This project exists as a means for fun, "software from scracth" is really fun. This OS is amateur, however, here are some of the features we do include:
+  This project strives for simplicity. This project exists as a means for fun, "software from scratch" is really fun. This OS is amateur, however, here are some of the features we do include:
 
   - interrupts including irqs and exceptions
 
@@ -33,7 +33,7 @@ This is a simple x86_64 operating system made for fun and learning
   - Process scheduler
 
   - Virtual address spaces for individual programs
-  
+
   - File system and disk driver
 
   - GUI
@@ -47,7 +47,7 @@ This is a simple x86_64 operating system made for fun and learning
   To setup the cross compiler on Linux, you will need a few dependencies, some but not all include: mtools, xorriso, grub,
   qemu, etc
 
-  During the build, if you find yourself getting a `Command not found` error as a result of a missing dependency, 
+  During the build, if you find yourself getting a `Command not found` error as a result of a missing dependency,
   just put the error into google, and install the dependency. Its fairly easy to find missing dependencies.
 
   Then After everything is setup just simply run `make qemu` to build and run the OS
