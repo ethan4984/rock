@@ -1,0 +1,39 @@
+0x0000FFFFFFFF8010
+
+Before
+
+Page Allocation in process
+
+	Status: Single page
+
+	Allocated page: 0
+
+page allocation finished : 0xFFFFFFFF8012E072
+
+
+MALLOC Allocation in process
+
+	Status: Multi-block
+	Blocks required: 8
+
+	Allocated block: 0
+
+	Allocated block: 1
+
+	Allocated block: 2
+
+	Allocated block: 3
+
+	Allocated block: 4
+
+	Allocated block: 5
+
+	Allocated block: 6
+
+	Allocated block: 7
+
+MALLOC allocation finished at 0xFFFFFFFF8012E072
+SHELL: receiving request for command "help"
+SHELL: receiving request for command "reg-dump"
+sup-gamers
+we are here right?
