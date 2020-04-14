@@ -96,7 +96,7 @@ void command_handler(const char *input)
                 base[i] = input[i];
         }
 
-        for(int i = 0; i < 1; i++) { //toDo: make this nicer
+        for(int i = 0; i < 1; i++) { //TODO: make this nicer
 
             if(strcmp(arg[i].name, base) == 0) {
 
