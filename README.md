@@ -33,23 +33,21 @@ This is a simple x86_64 operating system made for fun and learning
   - Process scheduler
 
   - Virtual address spaces for individual programs
+  
+  - File system and disk driver
 
   - GUI
 
 ## Build
 
   This project uses a cross compiler, for obvious reasons this is required. Since this OS is 64 bit, we use the `x86_64-elf`
-  variant of cross compilers. To setup this cross compiler, simply just run the `Tools/cross.sh` script. However, if you
-  are feeling dangerous and dont want to wait the compile time, just edit the Makefile and change the compiler options
-  and flags.
+  variant of cross compilers. To setup this cross compiler, simply just run the `Tools/setup.sh` script. Within `setup.sh`, it also
+  installs and sets up qloader2 and echfs
 
   To setup the cross compiler on Linux, you will need a few dependencies, some but not all include: mtools, xorriso, grub,
   qemu, etc
 
-  During the build, if you find yourself getting a `Command not found` error, just put the error into google, and install
-  the dependency. Its fairly easy to find missing dependencies.
+  During the build, if you find yourself getting a `Command not found` error as a result of a missing dependency, 
+  just put the error into google, and install the dependency. Its fairly easy to find missing dependencies.
 
   Then After everything is setup just simply run `make qemu` to build and run the OS
-
- (If you have already sorted out a compiler and dont need to run the `Tools/cross.sh` script then create the Bin directory
- If its not already created)
