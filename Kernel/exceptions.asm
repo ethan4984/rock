@@ -168,7 +168,7 @@ section .data
     device_m db 'device not available!', 0
     double_fault_m db 'bruh you got a double fault!', 0
     process_m db 'coprocessor seg overrun!', 0
-    tss_m db 'invaild tss!', 0
+    tss_m db 'invalid tss!', 0
     seg_not_found_m db 'segment not found bruh!', 0
     ssf_m db 'stack segment fault!', 0
     gen_m dq 'general protection fault!', 0

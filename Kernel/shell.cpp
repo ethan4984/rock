@@ -96,7 +96,7 @@ void command_handler(const char *input)
                 base[i] = input[i];
         }
 
-        for(int i = 0; i < 1; i++) { //toDo: make this nicer
+        for(int i = 0; i < 1; i++) { //TODO: make this nicer
 
             if(strcmp(arg[i].name, base) == 0) {
 
@@ -121,7 +121,7 @@ void command_handler(const char *input)
     }
 
     if(!commandFound && strlen(input) != 0)
-        k_print("\n%s commnad not found\n", input);
+        k_print("\n%s command not found\n", input);
 
     if(!commandFound && strlen(input) == 0)
         putchar('\n');
@@ -223,7 +223,7 @@ int command_parse(char argument[5][10], int start, const char *input)
                 argsize++;
             }
             else {
-                t_print("Woah there you, you almost casued a seg fault");
+                t_print("Woah there you, you almost caused a seg fault");
                 break;
             }
         }

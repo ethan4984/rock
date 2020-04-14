@@ -79,13 +79,13 @@ void *malloc(uint64_t size)
     t_print("\nMALLOC Allocation in process\n");
 
     if(!size) {
-        t_print("MALLOC: wtf are you doing trying to allocate a blocks of zero size");
+        t_print("MALLOC: wtf why are you trying to allocate a block with no size");
         return 0;
     }
 
     uint64_t freed = first_bfree();
 
-    t_print("\tStatus: Multi-block\n\tBlocks reqiured: %d\n", size);
+    t_print("\tStatus: Multi-block\n\tBlocks required: %d\n", size);
 
     reserve(freed);
 
@@ -112,7 +112,7 @@ void *malloc(uint64_t size)
 void free(void *location)
 {
     if(location == 0) {
-        t_print("MALLOC: wtf are you doing trying to free NULL memory");
+        t_print("MALLOC: wtf why are you trying to free NULL memory");
         return;
     }
 

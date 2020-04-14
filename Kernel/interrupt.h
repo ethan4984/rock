@@ -62,7 +62,7 @@ extern void load_idt(unsigned long *idt_ptr) asm("load_idt"); /* non generic */
 extern void keyboard_handler(void) asm("keyboard_handler");
 extern void time_handler(void) asm("time_handler");
 
-extern uint64_t irq2() asm("irq2");  /* generic: ToDo: Make not generic */
+extern uint64_t irq2() asm("irq2");  /* generic: TODO: Make not generic */
 extern uint64_t irq3() asm("irq3");
 extern uint64_t irq4() asm("irq4");
 extern uint64_t irq5() asm("irq5");
