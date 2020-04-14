@@ -83,12 +83,12 @@ namespace MM
             return 0;
         }
 
-        uint64_t reqiured_blocks = 1;
+        uint64_t required_blocks = 1;
 
         bool is_one = true;
 
-        while(reqiured_blocks*0x20000 < size) {
-            reqiured_blocks++;
+        while(required_blocks*0x20000 < size) {
+            required_blocks++;
             is_one = false;
         }
 
@@ -109,10 +109,10 @@ namespace MM
             return block_start + freed*0x20000;
         }
 
-        t_print("\tStatus: Multi-block\n\tBlocks required: %d\n", reqiured_blocks);
+        t_print("\tStatus: Multi-block\n\tBlocks required: %d\n", required_blocks);
 
         uint64_t i;
-        for(i = 0; i < reqiured_blocks; i++) {
+        for(i = 0; i < required_blocks; i++) {
             if(allocate_block() == total_blocks + 1) {
                 t_print("pagmalloc: we ran out of blocks bruh");
                 panic("We ran out of blocks");
@@ -131,10 +131,10 @@ namespace MM
 
         uint64_t yest = (uint64_t)location;
 
-        uint64_t reqiured_blocks = 0;
-        while(++reqiured_blocks*0x20000 < size);
+        uint64_t required_blocks = 0;
+        while(++required_blocks*0x20000 < size);
 
-        if(reqiured_blocks == 1) {
+        if(required_blocks == 1) {
             free_block((yest - bitmap_start) / 0x20000);
             t_print("trying to free %x", (yest - bitmap_start) / 0x20000);
             t_print("this block was just freed %x", (yest - bitmap_start) / 0x20000);
@@ -142,7 +142,7 @@ namespace MM
         }
 
         free_block((yest - bitmap_start) / 0x20000);
-        for(uint64_t i = 0; i < reqiured_blocks; i++)
+        for(uint64_t i = 0; i < required_blocks; i++)
             t_print("this block was just freed %x", (yest - bitmap_start) / 0x20000);
     }
 
