@@ -3,16 +3,15 @@ AS = ~/opt64/cross/bin/x86_64-elf-as
 NASM = nasm -felf64
 
 NORMAL_CFLAGS = -ffreestanding -Wall -O2 -Wextra -fno-stack-protector -fno-exceptions -I../Kernel -I../libc++
-KERNEL_CRAP = -fno-pic -mno-sse -mno-sse2 -mno-mmx -mno-80387 -mno-red-zone -gdwarf -mcmodel=kernel -fno-omit-frame-pointer -fno-threadsafe-statics
+KERNEL_CRAP = -fno-pic -mno-sse -mno-sse2 -mno-mmx -mno-80387 -mno-red-zone -gdwarf -mcmodel=kernel -fno-omit-frame-pointer -fno-threadsafe-statics -msoft-float
 CFLAGS = $(NORMAL_CFLAGS) $(KERNEL_CRAP)
 
 SCRC = $(shell find . -type f -name '*.cpp')
 SRCA = $(shell find . -type f -name '*.asm')
 SRCS = $(shell find . -type f -name '*.s')
-OBJ = ../Bin/alloc.o ../Bin/graphics.o ../Bin/interrupt.o ../Bin/memory.o ../Bin/keyboard.o ../Bin/kernel_init.o ../Bin/paging.o ../Bin/port.o ../Bin/process.o ../Bin/scheduler.o ../Bin/shell.o ../Bin/shitio.o ../Bin/boot.o ../Bin/exceptions.o ../Bin/interrupts.o ../Bin/string.o ../Bin/sound.o ../Bin/acpi.o
-OBJQ = alloc.o graphics.o interrupt.o memory.o keyboard.o kernel_init.o paging.o port.o process.o scheduler.o shell.o shitio.o sound.o acpi.o
-QEMUFLAGS = -smp cpus=4 -m 4G -vga vmware -serial file:serial.log -soundhw pcspk
-QEMUFLAGS = -smp cpus=4 -m 4G -vga vmware -serial file:serial.log -soundhw pcspk
+OBJ = ../Bin/alloc.o ../Bin/interrupt.o ../Bin/memory.o ../Bin/keyboard.o ../Bin/kernel_init.o ../Bin/paging.o ../Bin/port.o ../Bin/process.o ../Bin/scheduler.o ../Bin/shell.o ../Bin/shitio.o ../Bin/boot.o ../Bin/exceptions.o ../Bin/interrupts.o ../Bin/string.o ../Bin/sound.o ../Bin/acpi.o ../Bin/vesa.o ../Bin/mouse.o
+OBJQ = alloc.o interrupt.o memory.o keyboard.o kernel_init.o paging.o port.o process.o scheduler.o shell.o shitio.o sound.o acpi.o vesa.o mouse.o
+QEMUFLAGS = -smp cpus=4 -m 4G -vga vmware -serial file:serial.log -soundhw pcspk -enable-kvm
 
 
 CRTI_OBJ=crti.o
@@ -24,7 +23,7 @@ OBJ_LINK_LIST:=$(CRTI_OBJ) $(CRTBEGIN_OBJ) $(OBJ) $(CRTEND_OBJ) $(CRTN_OBJ)
 INTERNAL_OBJS:=$(CRTI_OBJ) $(OBJ) $(CRTN_OBJ)
 
 kernel: compile
-	rm -f crepOS.img
+	rm -f ../crepOS.img
 	mv $(OBJQ) ../Bin
 	$(CC) -lgcc -no-pie -nodefaultlibs -nostartfiles -n -T ../link.ld -o ../Bin/crepOS.elf $(OBJ_LINK_LIST)
 	dd if=/dev/zero bs=1M count=0 seek=64 of=../crepOS.img

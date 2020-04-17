@@ -20,22 +20,16 @@ uint8_t checksum()
 }
 
 void init_acpi() {
-    k_print("ACPI init:\n");
     for(uint64_t i = kernel_high + 0xe0000; i < kernel_high + 0x100000; i += 16) {
         if(!strncmp((char*)i, "RSD PTR ", 8)) {
             rsdp = (rsdp_t*)i; /* fill the table */
-            k_print("\tRSDP filled at: %x\n", rsdp);
 
             uint8_t sum = checksum();
 
-            if(rsdp->revision == 2 && rsdp->xsdtAddr) { /* no xsdt on acpi 1.0 */
+            if(rsdp->revision == 2 && rsdp->xsdtAddr) /* no xsdt on acpi 1.0 */
                 xsdt = (xsdt_t*)((size_t)rsdp->xsdtAddr + kernel_high);
-                k_print("\tXSDT filled at: %x\n", xsdt);
-            }
-            else {
+            else
                 rsdt = (rsdt_t*)((size_t)rsdp->rsdtAddr + kernel_high);
-                k_print("\tRSDT filled at: %x\n", rsdt);
-            }
             return;
         }
     }

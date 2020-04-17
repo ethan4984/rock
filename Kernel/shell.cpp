@@ -7,7 +7,6 @@
 #include <alloc.h>
 #include <string.h>
 #include <scheduler.h>
-#include <graphics.h>
 #include <sound.h>
 
 /* prototypes */

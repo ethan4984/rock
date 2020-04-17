@@ -1,6 +1,5 @@
 #include <shitio.h>
 #include <interrupt.h>
-#include <graphics.h>
 #include <shell.h>
 #include <keyboard.h>
 #include <paging.h>
@@ -11,6 +10,9 @@
 #include <string.h>
 #include <sound.h>
 #include <acpi.h>
+#include <stivale.h>
+#include <vesa.h>
+#include <mouse.h>
 
 using namespace standardout;
 using namespace MM;
@@ -18,10 +20,8 @@ using namespace MM;
 extern void div_test() asm("test_div");
 extern void _init() asm("_init");
 
-extern "C" void kernel_main()
+extern "C" void kernel_main(stivale_info_t *boot_info)
 {
-    initalize(VGA_BLACK, VGA_WHITE);
-
     idt_init();
 
     asm volatile ("sti");
@@ -30,41 +30,51 @@ extern "C" void kernel_main()
 
     page_frame_init(120000000);
 
-    block_show();
-
-    t_print("Before");
-
     blocks_init();
 
-    _init(); //needed for global constructors ~ be careful about putting things before this
+    _init();
 
     init_acpi();
 
-    disable_cursor();
+    init_graphics(boot_info);
 
-    mask_irq(1);
+    uint32_t bruh[4][2] = { { 20, 20 }, { 20, 25 }, { 25, 20 }, { 25, 25} };
 
-    for(int i = 3; i >= 0; i--) {
-        if(i == 0) {
-            special_char('0', 2, 22, VGA_WHITE);
-            sleep(1);
-            continue;
-        }
-        special_num(i, count_digits(i), 2, 22, VGA_WHITE);
-        sleep(1);
-    }
+    vec2 desk = { { 0, 0 }, { 0, 1024 }, { 768, 0 }, { 1024, 768 } };
 
-    clear_irq(1);
+    window desktop(desk, 0xFFF, 0xFFF);
 
-    enable_cursor();
+    sleep(1);
 
-    clear_screen();
-    initalize(VGA_WHITE, VGA_BLUE);
+    widget thing(bruh, 4, 0xfffffff, 0xfffffff);
 
-    change_text_color(VGA_LIGHT_BLUE);
-    k_print("(*ROOT*) > ");
-    change_text_color(VGA_BLUE);
-    startInput();
+    sleep(1);
+
+    thing.move_right(bruh, 4);
+    thing.move_right(bruh, 4);
+    thing.move_right(bruh, 4);
+    thing.move_right(bruh, 4);
+
+    sleep(1);
+
+    thing.move_up(bruh, 4);
+    thing.move_up(bruh, 4);
+    thing.move_up(bruh, 4);
+    thing.move_up(bruh, 4);
+
+    sleep(1);
+
+    thing.move_down(bruh, 4);
+    thing.move_down(bruh, 4);
+    thing.move_down(bruh, 4);
+    thing.move_down(bruh, 4);
+    thing.move_down(bruh, 4);
+    thing.move_down(bruh, 4);
+    thing.move_down(bruh, 4);
+    thing.move_down(bruh, 4);
+    thing.move_down(bruh, 4);
+
+    mouse_setup();
 
     for(;;);
 }

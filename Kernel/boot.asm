@@ -5,9 +5,9 @@ section .stivalehdr
 stivale_header:
     dq stack.top
     dw 1
-    dw 0
-    dw 0
-    dw 0
+    dw 1024 ; framebuffer height
+    dw 768 ; frame buffer width
+    dw 32 ; bits per pixel / bpp
 
 section .text
 

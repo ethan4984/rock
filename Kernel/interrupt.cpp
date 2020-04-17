@@ -4,6 +4,7 @@
 #include <keyboard.h>
 #include <process.h>
 #include <scheduler.h>
+#include <mouse.h>
 
 using namespace standardout;
 
@@ -51,7 +52,7 @@ typedef void (*irqReferences)();
 
 irqReferences irqFuncs[] =  {   PITI, keyboard_handler_main, irq_l, irq_l,
                                 irq_l, irq_l, irq_l, irq_h, irq_h, irq_h,
-                                irq_h, irq_h, irq_h, irq_h
+                                irq_h, irq_h, mouse_handler, irq_h
                             };
 
 extern "C" void irq_handler(int irqNum)
@@ -129,9 +130,6 @@ void idt_init(void)
     idt_r.base = (uint64_t)&IDT;
     idt_r.limit = 256 * sizeof(IDT_entry) - 1;
     asm volatile("lidtq %0" ::"m"(idt_r));
-    t_print("%a\n", idt_r);
-    k_print("IDT init:\n\tIDT located at %a\n", idt_r);
-    k_print("\tExceptions initalized\n\tIRQs initalized");
 }
 
 void mask_irq(unsigned char channel)

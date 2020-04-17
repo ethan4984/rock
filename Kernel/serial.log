@@ -1,6 +1,3 @@
-0x0000FFFFFFFF8010
-
-Before
 
 Page Allocation in process
 
@@ -33,7 +30,55 @@ MALLOC Allocation in process
 	Allocated block: 7
 
 MALLOC allocation finished at 0xFFFFFFFF8012E072
-SHELL: receiving request for command "help"
-SHELL: receiving request for command "reg-dump"
-sup-gamers
-we are here right?
+VBE VESA init:
+	Framebuffer address: 0xFD000000
+	Framebuffer Height: 768
+	Framebuffer Width: 1024
+	Framebuffer pitch: 4096
+	Framebuffer BPP: 32
+
+MALLOC Allocation in process
+
+	Status: Multi-block
+	Blocks required: 8
+
+	Allocated block: 8
+
+	Allocated block: 9
+
+	Allocated block: 10
+
+	Allocated block: 11
+
+	Allocated block: 12
+
+	Allocated block: 13
+
+	Allocated block: 14
+
+	Allocated block: 15
+
+MALLOC allocation finished at 0xFFFFFFFF8012E07A
+
+MALLOC Allocation in process
+
+	Status: Multi-block
+	Blocks required: 8
+
+	Allocated block: 16
+
+	Allocated block: 17
+
+	Allocated block: 18
+
+	Allocated block: 19
+
+	Allocated block: 20
+
+	Allocated block: 21
+
+	Allocated block: 22
+
+	Allocated block: 23
+
+MALLOC allocation finished at 0xFFFFFFFF8012E082
