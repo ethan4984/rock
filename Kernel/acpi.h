@@ -6,7 +6,8 @@
 
 void init_acpi();
 
-typedef struct {
+typedef struct
+{
     char signature[4];
     uint32_t length;
     uint8_t revision;
@@ -16,9 +17,10 @@ typedef struct {
     uint32_t oemRevision;
     uint32_t creatorID;
     uint32_t creatorRevision;
-} __attribute__((packed)) sdt_t;
+} __attribute__((packed)) ACPI_header_t;
 
-typedef struct {
+typedef struct
+{
     char signature[8];
     uint8_t checksum;
     char OEMID[6];
@@ -30,16 +32,43 @@ typedef struct {
     uint8_t reserved[3];
 } __attribute__((packed)) rsdp_t;
 
-typedef struct {
-    sdt_t sdt;
-    uint32_t sdtPtr[];
+typedef struct
+{
+    ACPI_header_t ACPI_header;
+    uint32_t ACPI_hptr[]; /* pointer to other sdt */
 } __attribute__((packed)) rsdt_t;
 
-typedef struct {
-    sdt_t sdt;
+typedef struct
+{
+    ACPI_header_t ACPI_header;
+    uint32_t firmwarer_control;
+    uint32_t dsdt;
+    uint8_t reserved;
+    uint8_t PPMP; // Preferred Power Management Profile
+    uint16_t SMI_int;
+    uint32_t SMT_command_port;
+    uint8_t acpi_enable;
+    uint8_t acpi_disable;
+    uint8_t s4bios_req;
+    uint8_t pstat_control;
+    // fill the rest
+} __attribute__((packed)) fadt_t;
+
+typedef struct
+{
+    ACPI_header_t sdt;
     uint64_t sdtPtr[];
 } __attribute__((packed)) xsdt_t;
+
+typedef struct
+{
+    ACPI_header_t ACPI_header;
+    uint32_t lacpi_addr;
+    uint32_t flags;
+} __attribute__((packed)) madt_t;
 
 extern rsdp_t* rsdp;
 extern rsdt_t* rsdt;
 extern xsdt_t* xsdt;
+extern fadt_t* fadt;
+extern madt_t* madt;

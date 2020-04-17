@@ -30,6 +30,15 @@ MALLOC Allocation in process
 	Allocated block: 7
 
 MALLOC allocation finished at 0xFFFFFFFF8012E072
+
+ACPI: RSDP found at 0xBFFE1405
+
+ACPI: FACP
+found at 0xBFFE12C9
+
+ACPI: APIC
+found at 0xBFFE133D
+
 VBE VESA init:
 	Framebuffer address: 0xFD000000
 	Framebuffer Height: 768

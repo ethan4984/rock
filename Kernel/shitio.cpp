@@ -197,7 +197,7 @@ namespace standardout
         char *string;
 
         va_list arg;
-        va_start(arg, str);
+        va_start(arg, 2);
 
         int length = strlen(str);
 
@@ -252,9 +252,7 @@ namespace standardout
         va_list arg;
         va_start(arg, str);
 
-        int length = strlen(str);
-
-        for(int i = 0; i < length; i++) {
+        for(int i = 0; i < strlen(str); i++) {
             if(str[i] != '%')
                 serial_write(str[i]);
             else {
@@ -267,7 +265,7 @@ namespace standardout
                             serial_write(string[i]);
                         break;
                     case 's':
-                        string = va_arg(arg, char *);
+                        string = va_arg(arg, char*);
                         for(size_t i = 0; i < strlen(string); i++)
                             serial_write(string[i]);
                         break;
