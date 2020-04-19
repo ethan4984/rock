@@ -44,37 +44,10 @@ extern "C" void kernel_main(stivale_info_t *boot_info)
 
     window desktop(desk, 0xFFF, 0xFFF);
 
-    sleep(1);
+    initalize(0xffffffff, 0xfff, 1024, 786);
 
-    widget thing(bruh, 4, 0xfffffff, 0xfffffff);
-
-    sleep(1);
-
-    thing.move_right(bruh, 4);
-    thing.move_right(bruh, 4);
-    thing.move_right(bruh, 4);
-    thing.move_right(bruh, 4);
-
-    sleep(1);
-
-    thing.move_up(bruh, 4);
-    thing.move_up(bruh, 4);
-    thing.move_up(bruh, 4);
-    thing.move_up(bruh, 4);
-
-    sleep(1);
-
-    thing.move_down(bruh, 4);
-    thing.move_down(bruh, 4);
-    thing.move_down(bruh, 4);
-    thing.move_down(bruh, 4);
-    thing.move_down(bruh, 4);
-    thing.move_down(bruh, 4);
-    thing.move_down(bruh, 4);
-    thing.move_down(bruh, 4);
-    thing.move_down(bruh, 4);
-
-    mouse_setup();
+    k_print("(*ROOT*) > ");
+    startInput();
 
     for(;;);
 }

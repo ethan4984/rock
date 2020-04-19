@@ -8,6 +8,7 @@
 #include <string.h>
 #include <scheduler.h>
 #include <sound.h>
+#include <vesa.h>
 
 /* prototypes */
 
@@ -108,7 +109,7 @@ void command_handler(const char *input)
                     for(int j = 0; j < argsize; j++)
                         sendstr[j] = arguments[i][j];
 
-                t_print("%s", sendstr);
+                k_print("%s", sendstr);
 
                 print(sendstr);
 
@@ -133,12 +134,7 @@ void command_handler(const char *input)
 
 void print(const char *str)
 {
-    int length = strlen(str);
-    t_print("we are here right?");
-    putchar('\n');
-    for(int i = 0; i < length; i++)
-        putchar(str[i]);
-    putchar('\n');
+    k_print("\n%s", str);
 }
 
 void version()
@@ -235,7 +231,7 @@ int command_parse(char argument[5][10], int start, const char *input)
 void test()
 {
     k_print("\nTesting Malloc & Free:\n");
-/*  uint64_t *ptr = (uint64_t*)pagalloc(1);  //tests page allocator
+    /*uint64_t *ptr = (uint64_t*)pagalloc(1);  //tests page allocator
     uint64_t *ptr1 = (uint64_t*)pagalloc(1);
     pagfree(ptr);
     uint64_t *ptr2 = (uint64_t*)pagalloc(1);*/
@@ -258,7 +254,7 @@ void test()
 
 void print_uptime()
 {
-    k_print("Gamer");
+    t_print("Gamer");
 }
 
 void test_panic() {

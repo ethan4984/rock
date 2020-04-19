@@ -1,6 +1,7 @@
 #include <port.h>
 #include <shitio.h>
 #include <memory.h>
+#include <vesa.h>
 
 #include <stdarg.h>
 
@@ -16,9 +17,9 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
 
 /* globals */
 
-const size_t VGA_WIDTH = 80;
+uint32_t WIDTH;
 
-static const size_t VGA_HEIGHT = 25;
+uint32_t HEIGHT;
 
 uint8_t current_color = 0;
 
@@ -26,7 +27,9 @@ size_t terminal_row;
 
 size_t terminal_column;
 
-uint8_t terminal_color;
+uint32_t terminal_bg;
+
+uint32_t terminal_fg;
 
 uint16_t *terminal_buffer;
 
@@ -38,48 +41,34 @@ int current_y = 0;
 
 namespace standardout
 {
-    void initalize(uint8_t bg, uint8_t fg)
+    void initalize(uint32_t fg, uint32_t bg, uint64_t x, uint64_t y)
     {
-        clear_screen();
         terminal_row = 0;
         terminal_column = 0;
-        terminal_color = vga_entry_color(fg, bg);
-        terminal_buffer = VGA_MEMORY;
 
-        current_color = bg;
+        terminal_bg = bg;
+        terminal_fg = fg;
 
-        for(y = 0; y < VGA_HEIGHT; y++) {
-            for(x = 0; x < VGA_WIDTH; x++) {
-                const size_t index = y * VGA_WIDTH + x;
-                terminal_buffer[index] = vga_entry(' ', terminal_color);
-            }
-        }
+        WIDTH = x;
+        HEIGHT = y;
     }
 
     bool end_of_terminal()
     {
-        return (terminal_row >= 24) ? true : false;
+        return (terminal_column >= 768) ? true : false;
     }
 
     bool end_of_screen(size_t offset)
     {
-        return (terminal_column + offset >= 45) ? true : false;
+        return (terminal_row + offset >= 1024) ? true : false;
     }
 
     void change_text_color(uint8_t color)
     {
-        terminal_color = vga_entry_color(color, current_color);
     }
 
     bool terminal_setcolor(uint8_t bg, uint8_t fg)
     {
-        if(bg <= 15 && bg > 0) {
-            if(fg <= 15 && fg > 0) {
-                terminal_buffer = VGA_MEMORY;
-                terminal_color = vga_entry_color(fg, bg);
-                return true;
-            }
-        }
         return false;
     }
 
@@ -101,150 +90,50 @@ namespace standardout
 
     void putchar(char c)
     {
+        static bool is_back = false;
         switch(c) {
             case '\n':
                 reference_column[terminal_row] = terminal_column;
-                terminal_row++;
-                terminal_column = 0;
-                update_cursor(terminal_row, terminal_column);
+                terminal_row = 0;
+                terminal_column += 8;
                 break;
             case '\t':
                 for(int i = 0; i < 4; i++)
                     putchar(' ');
                 break;
             case '\b':
-                if(terminal_column == 0) {
-                    if(terminal_row != 0) {
-                        terminal_row--;
-                        terminal_column = reference_column[terminal_row];
-                        update_cursor(terminal_row, terminal_column);
-                    }
+                is_back = true;
+                if(terminal_row == 0) {
+                    if(terminal_column == 0)
+                        break;
+                    terminal_column -= 8;
+                    terminal_row = WIDTH;
+                    terminal_row -= 8;
+                    putchar(' ');
+                    terminal_row -= 8;
                     break;
                 }
-                terminal_column--;
-                terminal_putentryat(' ', terminal_color, terminal_column, terminal_row);
-                update_cursor(terminal_row, terminal_column);
+                terminal_row -= 8;
+                putchar(' ');
+                terminal_row -= 8;
+                is_back = false;
                 break;
             default:
-                terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
-                if(++terminal_column == VGA_WIDTH) {
-                    terminal_column = 0;
-                    if (++terminal_row == VGA_HEIGHT)
-                        terminal_row = 0;
+                render_char(terminal_row, terminal_column, terminal_fg, terminal_bg, c);
+                terminal_row += 8;
+                if(terminal_row == WIDTH && !(is_back)) {
+                    terminal_row = 0;
+                    terminal_column += 8;
+                    if(terminal_column == HEIGHT)
+                        terminal_column = 0;
                 }
-                update_cursor(terminal_row, terminal_column);
                 break;
         }
         if(end_of_terminal())
             clear_promnt();
     }
 
-    void k_print(const char str[256],...)
-    {
-        uint64_t hold = 0;
-        char *string;
-
-        va_list arg;
-        va_start(arg, str);
-
-        int length = strlen(str);
-
-        for(int i = 0; i < length; i++) {
-            if(str[i] != '%')
-                putchar(str[i]);
-            else {
-                i++;
-                switch(str[i]) {
-                    case 'd':
-                        hold = va_arg(arg, long);
-                        string = convert(hold, 10);
-                        for(size_t i = 0; i < strlen(string); i++)
-                            putchar(string[i]);
-                        break;
-                    case 's':
-                        string = va_arg(arg, char *);
-                        for(size_t i = 0; i < strlen(string); i++)
-                            putchar(string[i]);
-                        break;
-                    case 'x':
-                        hold = va_arg(arg, uint64_t);
-                        string = convert(hold, 16);
-                        putchar('0');
-                        putchar('x');
-                        for(size_t i = 0; i < strlen(string); i++)
-                            putchar(string[i]);
-                        break;
-                    case 'a':
-                        hold = va_arg(arg, uint64_t);
-                        string = convert(hold, 16);
-                        putchar('0');
-                        putchar('x');
-                        int offset_zeros = 16 - strlen(string);
-                        for(int i = 0; i < offset_zeros; i++)
-                            putchar('0');
-                        for(size_t i = 0; i < strlen(string); i++)
-                            putchar(string[i]);
-                        break;
-                }
-                va_end(arg);
-            }
-        }
-    }
-
-    void s_print(uint8_t color, size_t x, size_t y, const char str[256],...)
-    {
-        uint64_t hold = 0;
-        char *string;
-
-        va_list arg;
-        va_start(arg, 2);
-
-        int length = strlen(str);
-
-        for(int i = 0; i < length; i++) {
-            if(str[i] != '%')
-                special_char(str[i], x++, y, color);
-            else {
-                i++;
-                switch(str[i]) {
-                    case 'd':
-                        hold = va_arg(arg, long);
-                        string = convert(hold, 10);
-                        for(size_t i = 0; i < strlen(string); i++)
-                            special_char(string[i], x++, y, color);
-                        break;
-                    case 's':
-                        string = va_arg(arg, char*);
-                        for(size_t i = 0; i < strlen(string); i++)
-                            special_char(string[i], x++, y, color);
-                        break;
-                    case 'x':
-                        hold = va_arg(arg, uint64_t);
-                        string = convert(hold, 16);
-                        special_char('0', x++, y, color);
-                        special_char('x', x++, y, color);
-                        for(size_t i = 0; i < strlen(string); i++)
-                            special_char(string[i], x++, y, color);
-                        break;
-                    case 'a':
-                        hold = va_arg(arg, uint64_t);
-                        string = convert(hold, 16);
-                        special_char('0', x++, y, color);
-                        special_char('x', x++, y, color);
-                        int offset_zeros = 16 - strlen(string);
-                        for(int i = 0; i < offset_zeros; i++)
-                            special_char('0', x++, y, color);
-                        for(size_t i = 0; i < strlen(string); i++)
-                            special_char(string[i], x++, y, color);
-                        break;
-                }
-                va_end(arg);
-            }
-        }
-        current_y = y;
-    }
-
-    void t_print(const char str[256],...)
+    void t_print(const char str[256], ...)
     {
         uint64_t hold = 0;
         char *string;
@@ -295,14 +184,61 @@ namespace standardout
         serial_write('\n');
     }
 
+    void k_print(const char *str, ...)
+    {
+        char *string;
+        uint64_t number;
+
+        va_list args;
+        va_start(args, str);
+
+        for(int i = 0; i < strlen(str); i++) {
+            if(str[i] != '%')
+                putchar(str[i]);
+            else {
+                switch(str[++i]) {
+                    case 'd':
+                        number = va_arg(args, long);
+                        string = convert(number, 10);
+                        for(size_t i = 0; i < strlen(string); i++)
+                            putchar(string[i]);
+                        break;
+                    case 's':
+                        string = va_arg(args, char *);
+                        for(size_t i = 0; i < strlen(string); i++)
+                            putchar(string[i]);
+                        break;
+                    case 'x':
+                        number = va_arg(args, uint64_t);
+                        string = convert(number, 16);
+                        putchar('0');
+                        putchar('x');
+                        for(size_t i = 0; i < strlen(string); i++)
+                            putchar(string[i]);
+                        break;
+                    case 'a':
+                        number = va_arg(args, uint64_t);
+                        string = convert(number, 16);
+                        putchar('0');
+                        putchar('x');
+                        int offset_zeros = 16 - strlen(string);
+                        for(int i = 0; i < offset_zeros; i++)
+                            putchar('0');
+                        for(size_t i = 0; i < strlen(string); i++)
+                            putchar(string[i]);
+                        break;
+                }
+            }
+        }
+        va_end(args);
+    }
+
     void clear_screen()
     {
         terminal_column = 0;
         terminal_row = 0;
-        for(y = 0; y < VGA_HEIGHT; y++) {
-            for(x = 0; x < VGA_WIDTH; x++) {
-                const size_t index = y * VGA_WIDTH + x;
-                terminal_buffer[index]=vga_entry(' ', terminal_color);
+        for(y = 0; y < HEIGHT; y++) {
+            for(x = 0; x < WIDTH; x++) {
             }
         }
     }
@@ -311,11 +247,9 @@ namespace standardout
     {
         terminal_column = 0;
         terminal_row = 0;
-        for(y = 0; y < 25; y++) {
-            for(x = 0; x < 48; x++) {
-                const size_t index = y * 80 + x;
-                terminal_buffer[index] = vga_entry(' ', terminal_color);
-            }
+        for(int i = 0; i < 1024; i++) {
+            for(int j = 0; j < 768; j++)
+                render_char(i, j, terminal_fg, terminal_bg, ' ');
         }
     }
 
@@ -330,7 +264,7 @@ namespace standardout
 
     void special_char(char c, size_t x, size_t y, uint8_t fg, uint8_t bg)
     {
-        const size_t index = y * VGA_WIDTH + x;
+        const size_t index = y * WIDTH + x;
         if(bg == 17)
             terminal_buffer[index] = vga_entry(c, vga_entry_color(fg, current_color));
         else
@@ -411,6 +345,6 @@ inline uint16_t vga_entry(unsigned char uc, uint8_t color)
 
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
 {
-    const size_t index = y * VGA_WIDTH + x;
+    const size_t index = y * WIDTH + x;
     terminal_buffer[index] = vga_entry(c, color);
 }

@@ -160,7 +160,7 @@ namespace MM
 
 void block_show()
 {
-    k_print("\nPMM init:\n\tPMM: blocks num: %d\n", total_blocks);
+    /*k_print("\nPMM init:\n\tPMM: blocks num: %d\n", total_blocks);
     k_print("\tPMM: bitmap addr: %a\n", (uint64_t)bitmap);
-    k_print("\tPMM: addr start: %a\n", (uint64_t)block_start);
+    k_print("\tPMM: addr start: %a\n", (uint64_t)block_start);*/
 }

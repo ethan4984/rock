@@ -25,6 +25,6 @@ uint16_t inw(uint16_t port);
 
 uint32_t inl(uint16_t port);
 
-inline void io_wait(void);
+uint64_t get_msr(uint64_t msr);
 
-inline bool are_interrupts_enabled();
+void write_msr(uint64_t msr, uint64_t data);

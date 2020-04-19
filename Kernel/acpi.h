@@ -35,7 +35,7 @@ typedef struct
 typedef struct
 {
     ACPI_header_t ACPI_header;
-    uint32_t ACPI_hptr[]; /* pointer to other sdt */
+    uint32_t ACPI_hptr[];
 } __attribute__((packed)) rsdt_t;
 
 typedef struct
@@ -56,15 +56,16 @@ typedef struct
 
 typedef struct
 {
-    ACPI_header_t sdt;
-    uint64_t sdtPtr[];
+    ACPI_header_t ACPI_header;
+    uint64_t ACPI_hptr[];
 } __attribute__((packed)) xsdt_t;
 
 typedef struct
 {
     ACPI_header_t ACPI_header;
-    uint32_t lacpi_addr;
+    uint32_t lapic_addr;
     uint32_t flags;
+    uint8_t entries[];
 } __attribute__((packed)) madt_t;
 
 extern rsdp_t* rsdp;

@@ -35,11 +35,11 @@ namespace standardout
 
     void change_text_color(uint8_t color);
 
-    void initalize(uint8_t bg, uint8_t fg);
+    void initalize(uint32_t bg, uint32_t fg, uint64_t x, uint64_t y);
 
     void k_print(const char str[256],...);
 
-    void t_print(const char str[256],...);
+    void t_print(const char str[256], ...);
 
     void s_print(uint8_t color, size_t x, size_t y, const char str[256],...);
 

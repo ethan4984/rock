@@ -25,39 +25,54 @@ uint8_t checksum()
 
 void init_acpi()
 {
-    bool rsdp_found = false;
+    bool found_something = false;
     for(uint64_t i = kernel_high + 0xe0000; i < kernel_high + 0x100000; i += 16) { // looks for the rsdp (root system description pointer
         if(!strncmp((char*)i, "RSD PTR ", 8)) {
             rsdp = (rsdp_t*)i; // fill the tables
 
             uint8_t sum = checksum();
 
-            if(rsdp->revision == 2 && rsdp->xsdtAddr) // only on real hardware or a virtualizer that supports ACPI 2.0
+            if(rsdp->xsdtAddr) { // only on real hardware or a virtualizer that supports ACPI 2.0
                 xsdt = (xsdt_t*)((uint32_t)rsdp->xsdtAddr);
-            else
+                t_print("\nACPI: XSDT found at %x\n", rsdt);
+            }
+            else {
                 rsdt = (rsdt_t*)((uint32_t)rsdp->rsdtAddr);
-            rsdp_found = true;
-            t_print("\nACPI: RSDP found at %x\n", rsdt);
+                t_print("\nACPI: RSDP found at %x\n", rsdt);
+            }
+            found_something = true;
             break;
         }
     }
-    if(!rsdp_found)
+    if(!found_something)
         t_print("ACPI: No RSDP found");
 
     fadt = (fadt_t*)find_sdt("FACP");
     madt = (madt_t*)find_sdt("APIC");
 }
 
-void *find_sdt(const char *signature) // find any sdt (system discriptor table
+void *find_sdt(const char *signature) // find any sdt (system discriptor table)
 {
-    for(uint64_t i = 0; i < (rsdt->ACPI_header.length - sizeof(ACPI_header_t)) / 4; i++) {
-        ACPI_header_t *header = (ACPI_header_t*)rsdt->ACPI_hptr[i];
-        if(!strncmp(header->signature, signature, 4)) {
-            t_print("ACPI: %s", signature);
-            t_print("found at %x\n", header);
-            return (void*)header;
+    if(xsdt == NULL) {
+        for(uint64_t i = 0; i < (rsdt->ACPI_header.length - sizeof(ACPI_header_t)) / 4; i++) {
+            ACPI_header_t *header = (ACPI_header_t*)rsdt->ACPI_hptr[i];
+            if(!strncmp(header->signature, signature, 4)) {
+                t_print("ACPI: %s", signature);
+                t_print("found at %x\n", header);
+                return (void*)header;
+            }
         }
     }
-    t_print("ACPI: %s not found");
+    else {
+        for(uint64_t i = 0; i < (rsdt->ACPI_header.length - sizeof(ACPI_header_t)) / 4; i++) {
+            ACPI_header_t *header = (ACPI_header_t*)xsdt->ACPI_hptr[i];
+            if(!strncmp(header->signature, signature, 4)) {
+                t_print("ACPI: %s", signature);
+                t_print("found at %x\n", header);
+                return (void*)header;
+            }
+        }
+    }
+    t_print("ACPI: %s not found", signature);
     return NULL;
 }

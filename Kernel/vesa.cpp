@@ -82,9 +82,10 @@ widget::widget(uint32_t vert[][2], uint32_t rows, uint32_t colour_t, uint32_t bo
 
 void widget::draw_widget(uint32_t vect[][2], uint32_t rows)
 {
-    for(uint32_t i = 0; i < rows; i++) {
-        background_colour[i] = grab_colour(vect[i][0], vect[i][1]);
-        set_pixel(vect[i][0], vect[i][1], colour);
+    for(int i = vect[0][1]; i < vect[3][1] + 1; i++) {
+        for(int j = vect[0][0]; j < vect[3][0] + 1; j++) {
+            set_pixel(j, i, colour);
+        }
     }
 }
 
@@ -108,7 +109,7 @@ void widget::move_left(uint32_t vect[][2], uint32_t rows)
     draw_widget(vect, rows);
 }
 
-void widget::move_down(uint32_t  vect[][2], uint32_t rows)
+void widget::move_down(uint32_t vect[][2], uint32_t rows)
 {
     for(uint32_t i = 0; i < rows; i++) {
         vect[i][1] += 1;
@@ -126,4 +127,36 @@ void widget::move_up(uint32_t  vect[][2], uint32_t rows)
     }
 
     draw_widget(vect, rows);
+}
+
+void widget::move(uint32_t vect[][2], uint32_t rows, uint64_t x, uint64_t y)
+{
+
+    for(uint32_t i = 0; i < rows; i++) {
+        if(vect[i][0] >= y)
+            vect[i][0] -= vect[3][0] - y;
+        else
+            vect[i][0] += y - vect[3][0];
+
+        if(vect[i][1] >= x)
+            vect[i][1] += vect[3][1] - x;
+        else
+            vect[i][1] -= x - vect[3][1];
+    }
+    draw_widget(vect, 4);
+}
+
+void render_char(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c) {
+    for (uint8_t i = 0; i < 8; i++) {
+        for (uint8_t j = 0; j < 8; j++) {
+            if ((font[(uint8_t)c][i] >> j) & 1) {
+                uint64_t offset = ((i + y) * framebuffer_pitch) + ((j + x) * 4);
+                *(uint32_t*)((uint64_t)framebuffer + offset) = fg ;
+            }
+            else {
+                uint64_t offset = ((i + y) * framebuffer_pitch) + ((j + x) * 4);
+                *(uint32_t *)((uint64_t)framebuffer + offset) = bg;
+            }
+        }
+    }
 }

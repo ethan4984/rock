@@ -180,7 +180,6 @@ void irq_h(void)
 
 extern "C" void panic(const char *message)
 {
-    initalize(VGA_BLUE, VGA_RED);
     k_print("PANIC : fatal error : %s\n", message);
     reg_flow();
     putchar('\n');
