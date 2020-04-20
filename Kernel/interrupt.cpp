@@ -130,6 +130,7 @@ void idt_init(void)
     idt_r.base = (uint64_t)&IDT;
     idt_r.limit = 256 * sizeof(IDT_entry) - 1;
     asm volatile("lidtq %0" ::"m"(idt_r));
+    k_print("IDT:\n\n\tIDT intialized at %x\n\tIRQs and Execpetions setup\n\n", idt_r);
 }
 
 void mask_irq(unsigned char channel)

@@ -150,6 +150,8 @@ void draw_rechtangle(vec2 vertices, uint32_t colour);
 
 void render_char(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c);
 
+void show_vesa_state();
+
 class window
 {
     public:

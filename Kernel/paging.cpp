@@ -49,7 +49,6 @@ namespace MM
         bitmap_start = (uint64_t)block_start;
     }
 
-
     uint64_t allocate_block()
     {
         uint64_t new_block = first_free();
@@ -160,7 +159,7 @@ namespace MM
 
 void block_show()
 {
-    /*k_print("\nPMM init:\n\tPMM: blocks num: %d\n", total_blocks);
+    k_print("PMM init:\n\n\tPMM: blocks num: %d\n", total_blocks);
     k_print("\tPMM: bitmap addr: %a\n", (uint64_t)bitmap);
-    k_print("\tPMM: addr start: %a\n", (uint64_t)block_start);*/
+    k_print("\tPMM: addr start: %a\n\n", (uint64_t)block_start);
 }

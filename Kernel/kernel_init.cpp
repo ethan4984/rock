@@ -13,6 +13,7 @@
 #include <stivale.h>
 #include <vesa.h>
 #include <mouse.h>
+#include <pci.h>
 
 using namespace standardout;
 using namespace MM;
@@ -22,6 +23,16 @@ extern void _init() asm("_init");
 
 extern "C" void kernel_main(stivale_info_t *boot_info)
 {
+    init_graphics(boot_info);
+
+    vec2 desk = { { 0, 0 }, { 0, 1024 }, { 768, 0 }, { 1024, 768 } };
+
+    window desktop(desk, 0xFFF, 0xFFF);
+
+    initalize(0xffffffff, 0xfff, 1024, 786);
+
+    show_vesa_state();
+
     idt_init();
 
     asm volatile ("sti");
@@ -30,24 +41,15 @@ extern "C" void kernel_main(stivale_info_t *boot_info)
 
     page_frame_init(120000000);
 
+    block_show();
+
     blocks_init();
 
     _init();
 
     init_acpi();
 
-    init_graphics(boot_info);
-
-    uint32_t bruh[4][2] = { { 20, 20 }, { 20, 25 }, { 25, 20 }, { 25, 25} };
-
-    vec2 desk = { { 0, 0 }, { 0, 1024 }, { 768, 0 }, { 1024, 768 } };
-
-    window desktop(desk, 0xFFF, 0xFFF);
-
-    initalize(0xffffffff, 0xfff, 1024, 786);
-
-    k_print("(*ROOT*) > ");
-    startInput();
+    pci_init();
 
     for(;;);
 }

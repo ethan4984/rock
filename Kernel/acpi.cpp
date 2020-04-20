@@ -25,6 +25,7 @@ uint8_t checksum()
 
 void init_acpi()
 {
+    k_print("ACPI init:\n\n");
     bool found_something = false;
     for(uint64_t i = kernel_high + 0xe0000; i < kernel_high + 0x100000; i += 16) { // looks for the rsdp (root system description pointer
         if(!strncmp((char*)i, "RSD PTR ", 8)) {
@@ -34,18 +35,18 @@ void init_acpi()
 
             if(rsdp->xsdtAddr) { // only on real hardware or a virtualizer that supports ACPI 2.0
                 xsdt = (xsdt_t*)((uint32_t)rsdp->xsdtAddr);
-                t_print("\nACPI: XSDT found at %x\n", rsdt);
+                k_print("\tACPI: XSDT found at %x\n", xsdt);
             }
             else {
                 rsdt = (rsdt_t*)((uint32_t)rsdp->rsdtAddr);
-                t_print("\nACPI: RSDP found at %x\n", rsdt);
+                k_print("\tACPI: RSDP found at %x\n", rsdt);
             }
             found_something = true;
             break;
         }
     }
     if(!found_something)
-        t_print("ACPI: No RSDP found");
+        k_print("\tACPI: No RSDP found\n");
 
     fadt = (fadt_t*)find_sdt("FACP");
     madt = (madt_t*)find_sdt("APIC");
@@ -57,8 +58,7 @@ void *find_sdt(const char *signature) // find any sdt (system discriptor table)
         for(uint64_t i = 0; i < (rsdt->ACPI_header.length - sizeof(ACPI_header_t)) / 4; i++) {
             ACPI_header_t *header = (ACPI_header_t*)rsdt->ACPI_hptr[i];
             if(!strncmp(header->signature, signature, 4)) {
-                t_print("ACPI: %s", signature);
-                t_print("found at %x\n", header);
+                k_print("\tACPI: %s found at %x\n", signature, header);
                 return (void*)header;
             }
         }
@@ -67,8 +67,7 @@ void *find_sdt(const char *signature) // find any sdt (system discriptor table)
         for(uint64_t i = 0; i < (rsdt->ACPI_header.length - sizeof(ACPI_header_t)) / 4; i++) {
             ACPI_header_t *header = (ACPI_header_t*)xsdt->ACPI_hptr[i];
             if(!strncmp(header->signature, signature, 4)) {
-                t_print("ACPI: %s", signature);
-                t_print("found at %x\n", header);
+                k_print("\tACPI: %s found at %x\n", signature, header);
                 return (void*)header;
             }
         }

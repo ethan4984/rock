@@ -17,12 +17,22 @@ void init_graphics(stivale_info_t *boot_info)
     framebuffer_pitch = boot_info->framebuffer_pitch;
     framebuffer_bpp = boot_info->framebuffer_bpp;
 
-    t_print("VBE VESA init:");
-    t_print("\tFramebuffer address: %x",  framebuffer);
-    t_print("\tFramebuffer Height: %d",  framebuffer_height);
-    t_print("\tFramebuffer Width: %d",  framebuffer_width);
-    t_print("\tFramebuffer pitch: %d",  framebuffer_pitch);
-    t_print("\tFramebuffer BPP: %d",  framebuffer_bpp);
+    t_print("VBE VESA init:\n\n");
+    t_print("Framebuffer address: %x\n",  framebuffer);
+    t_print("Framebuffer Height: %d\n",  framebuffer_height);
+    t_print("Framebuffer Width: %d\n",  framebuffer_width);
+    t_print("Framebuffer pitch: %d\n",  framebuffer_pitch);
+    t_print("Framebuffer BPP: %d\n\n",  framebuffer_bpp);
+}
+
+void show_vesa_state()
+{
+    k_print("VBE VESA init:\n\n");
+    k_print("\tFramebuffer address: %x\n",  framebuffer);
+    k_print("\tFramebuffer Height: %d\n",  framebuffer_height);
+    k_print("\tFramebuffer Width: %d\n",  framebuffer_width);
+    k_print("\tFramebuffer pitch: %d\n",  framebuffer_pitch);
+    k_print("\tFramebuffer BPP: %d\n\n",  framebuffer_bpp);
 }
 
 void set_pixel(uint16_t x, uint16_t y, uint32_t colour)
