@@ -9,8 +9,8 @@ CFLAGS = $(NORMAL_CFLAGS) $(KERNEL_CRAP)
 SCRC = $(shell find . -type f -name '*.cpp')
 SRCA = $(shell find . -type f -name '*.asm')
 SRCS = $(shell find . -type f -name '*.s')
-OBJ = ../Bin/alloc.o ../Bin/interrupt.o ../Bin/memory.o ../Bin/keyboard.o ../Bin/kernel_init.o ../Bin/paging.o ../Bin/port.o ../Bin/process.o ../Bin/scheduler.o ../Bin/shell.o ../Bin/shitio.o ../Bin/boot.o ../Bin/exceptions.o ../Bin/interrupts.o ../Bin/string.o ../Bin/sound.o ../Bin/acpi.o ../Bin/vesa.o ../Bin/mouse.o ../Bin/pci.o
-OBJQ = alloc.o interrupt.o memory.o keyboard.o kernel_init.o paging.o port.o process.o scheduler.o shell.o shitio.o sound.o acpi.o vesa.o mouse.o pci.o
+OBJ = ../Bin/alloc.o ../Bin/interrupt.o ../Bin/memory.o ../Bin/keyboard.o ../Bin/kernel_init.o ../Bin/paging.o ../Bin/port.o ../Bin/process.o ../Bin/scheduler.o ../Bin/shell.o ../Bin/shitio.o ../Bin/boot.o ../Bin/exceptions.o ../Bin/interrupts.o ../Bin/string.o ../Bin/sound.o ../Bin/acpi.o ../Bin/vesa.o ../Bin/mouse.o ../Bin/pci.o ../Bin/ahci.o
+OBJQ = alloc.o interrupt.o memory.o keyboard.o kernel_init.o paging.o port.o process.o scheduler.o shell.o shitio.o sound.o acpi.o vesa.o mouse.o pci.o ahci.o
 QEMUFLAGS = -smp cpus=4 -m 4G -vga vmware -serial file:serial.log -soundhw pcspk -enable-kvm
 
 

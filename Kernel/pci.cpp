@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <port.h>
 #include <pci.h>
+#include <ahci.h>
 
 using namespace standardout;
 
@@ -23,6 +24,7 @@ pci_device_id_t::pci_device_id_t(uint8_t bus_t, uint8_t device_t, uint8_t func_t
 pci_device_t *pci_devices;
 pci_device_id_t *pci_device_ids;
 
+uint64_t total_devices;
 uint64_t current_position = 0;
 uint64_t max_position = 9;
 
@@ -71,6 +73,7 @@ void pci_scan(uint8_t bus)
 
 void pci_init() {
     k_print("\nPCI init:\n\n");
+    total_devices = 0;
     pci_devices = (pci_device_t*)malloc(sizeof(pci_device_t) * 10); // 10 pci devices
     pci_device_ids = (pci_device_id_t*)malloc(sizeof(pci_device_id_t) * 10); // 10 pci devices
 
@@ -78,9 +81,11 @@ void pci_init() {
     for (uint64_t device = 0; device < current_position; device++) {
         pci_device_t device_info = pci_devices[device];
         pci_device_id_t device_ids = pci_device_ids[device];
-        k_print("\tPCI: Vendor: %x on [bus] %d [device] %d [function] %d\n", (uint32_t)pci_get_vendor(device_info.bus, device_info.device, device_info.function), (uint32_t)device_info.bus, (uint32_t)device_info.device, (uint32_t)device_info.function);
-        k_print("\tPCI: Device type: [class] %d [subclas] %d [prog_if] %d [Device ID] %x\n\n", device_ids.class_code, device_ids.subclass, device_ids.prog_if, (uint32_t)device_ids.device_id);
+        k_print("\tPCI Device %d:\n", device);
+        k_print("\t\tVendor: %x on [bus] %d [device] %d [function] %d\n", (uint32_t)pci_get_vendor(device_info.bus, device_info.device, device_info.function), (uint32_t)device_info.bus, (uint32_t)device_info.device, (uint32_t)device_info.function);
+        k_print("\t\tDevice type: [class] %d [subclas] %d [prog_if] %d [Device ID] %x\n\n", device_ids.class_code, device_ids.subclass, device_ids.prog_if, (uint32_t)device_ids.device_id);
     }
+    k_print("PCI: Total Devices: %d\n\n", total_devices);
 }
 
 uint8_t pci_is_multifunction(uint8_t bus, uint8_t device)
@@ -130,4 +135,5 @@ void add_device(pci_device_t new_device, pci_device_id_t new_device_id)
         max_position += 10;
     }
     current_position++;
+    total_devices++;
 }

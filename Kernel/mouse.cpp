@@ -14,11 +14,11 @@ int64_t mouse_y = 512;
 
 uint32_t bruh[4][2] = { { 512, 512 }, { 512, 532 }, { 532, 512 }, { 532, 532 } };
 
-widget cursor(bruh, 4, 0xffffffff, 0xffffffff);
-
 void mouse_handler() {
     outb(0xA0, 0x20); // EOI
     outb(0x20, 0x20);
+
+    static widget cursor(bruh, 4, 0xffffffff, 0xffffffff);
 
     uint8_t extra_bits = inb(0x60);
     uint8_t change_in_x = inb(0x60);

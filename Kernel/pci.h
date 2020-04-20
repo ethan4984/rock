@@ -25,6 +25,10 @@ class pci_device_id_t
         uint16_t vendor_id;
 };
 
+extern pci_device_t *pci_devices;
+extern pci_device_id_t *pci_device_ids;
+extern uint64_t total_devices;
+
 uint32_t pci_read(uint8_t bus_t, uint8_t device_t, uint8_t func_t, uint8_t reg_t);
 
 void pci_write(uint32_t data, uint8_t bus_t, uint8_t device_t, uint8_t func_t, uint8_t reg_t);

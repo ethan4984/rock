@@ -14,6 +14,11 @@
 #include <vesa.h>
 #include <mouse.h>
 #include <pci.h>
+#include <ahci.h>
+
+extern pci_device_t *pci_devices;
+extern pci_device_id_t *pci_device_ids;
+extern uint64_t total_devices;
 
 using namespace standardout;
 using namespace MM;
@@ -50,6 +55,8 @@ extern "C" void kernel_main(stivale_info_t *boot_info)
     init_acpi();
 
     pci_init();
+
+    ahci_init(pci_devices, pci_device_ids, total_devices);
 
     for(;;);
 }
