@@ -56,9 +56,9 @@ void blocks_init()
     memset(bitmap_b, 0, bitmap_size / 8);
 }
 
-uint64_t first_bfree()
+uint64_t first_bfree(uint64_t start)
 {
-    for(uint64_t i = 0; i < bitmap_size; i++) {
+    for(uint64_t i = start; i < bitmap_size; i++) {
         if(!isset(i))
             return i;
     }
@@ -66,42 +66,60 @@ uint64_t first_bfree()
     return bitmap_size + 1;
 }
 
-uint64_t allocate_bblock()
+uint64_t allocate_bblock(uint64_t start)
 {
-    uint64_t new_block = first_bfree();
-    t_print("\tAllocated block: %d\n", new_block);
+    uint64_t new_block = first_bfree(start);
+    //t_print("\tAllocated block: %d\n", new_block);
     set(new_block);
     return new_block;
 }
 
 void *malloc(uint64_t size)
 {
-    t_print("\nMALLOC Allocation in process\n");
+//    t_print("\nMALLOC Allocation in process\n");
 
     if(!size) {
         t_print("MALLOC: wtf why are you trying to allocate a block with no size");
         return 0;
     }
 
-    uint64_t freed = first_bfree();
+    uint64_t freed = first_bfree(0), offset = 0;
 
-    t_print("\tStatus: Multi-block\n\tBlocks required: %d\n", size);
+    //t_print("\tStatus: Multi-block\n\tBlocks required: %d\n", size);
+    int error_check = 0;
+    while(1) {
+        uint64_t check_size = 0;
+        for(int i = freed; i < freed + size; i++) {
+            if(!isset(i))
+                check_size++;
+        }
+
+        if(check_size == size) {
+            offset = freed;
+            break;
+        }
+        freed = first_bfree((freed + size) - 1);
+        if(++error_check == bitmap_size) {
+            k_print("You ran out of blocks retard");
+            panic("Bruh moment");
+        }
+    }
 
     reserve(freed);
 
     uint64_t i;
     for(i = 0; i < size; i++) {
-        if(allocate_bblock() == bitmap_size + 1) {
+        if(allocate_bblock(offset) == bitmap_size + 1) {
             t_print("BRUH: we ran out of blocks bruh");
             panic("We ran out of blocks");
         }
     }
 
-    reserve(first_bfree());
+    reserve(first_bfree(offset));
 
     uint64_t return_address = (uint64_t)block_start_b + freed;
 
-    t_print("MALLOC allocation finished at %x", return_address);
+    //t_print("MALLOC allocation finished at %x", return_address);
 
     if((uint64_t*)block_start_b + freed > (uint64_t*)block_start_b + 0x20000) /* test me */
         blocks_init();

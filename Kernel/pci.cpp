@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <port.h>
 #include <pci.h>
-#include <ahci.h>
 
 using namespace standardout;
 
@@ -79,11 +78,15 @@ void pci_init() {
 
     pci_scan(0); // scan bus 0 and all of its derivatives
     for (uint64_t device = 0; device < current_position; device++) {
+        pci_device_ids[device].bus = pci_devices[device].bus;
+        pci_device_ids[device].vaild = pci_devices[device].vaild;
+        pci_device_ids[device].function = pci_devices[device].function;
+        pci_device_ids[device].device = pci_devices[device].device;
         pci_device_t device_info = pci_devices[device];
         pci_device_id_t device_ids = pci_device_ids[device];
-        k_print("\tPCI Device %d:\n", device);
-        k_print("\t\tVendor: %x on [bus] %d [device] %d [function] %d\n", (uint32_t)pci_get_vendor(device_info.bus, device_info.device, device_info.function), (uint32_t)device_info.bus, (uint32_t)device_info.device, (uint32_t)device_info.function);
-        k_print("\t\tDevice type: [class] %d [subclas] %d [prog_if] %d [Device ID] %x\n\n", device_ids.class_code, device_ids.subclass, device_ids.prog_if, (uint32_t)device_ids.device_id);
+        k_print("\tPCI Device %d: ", device);
+        k_print("Vendor: %x on [bus] %d [device] %d [function] %d\n", (uint32_t)pci_get_vendor(device_info.bus, device_info.device, device_info.function), (uint32_t)device_info.bus, (uint32_t)device_info.device, (uint32_t)device_info.function);
+        k_print("\tDevice type: [class] %d [subclas] %d [prog_if] %d [Device ID] %x\n\n", device_ids.class_code, device_ids.subclass, device_ids.prog_if, (uint32_t)device_ids.device_id);
     }
     k_print("PCI: Total Devices: %d\n\n", total_devices);
 }

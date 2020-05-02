@@ -25,6 +25,6 @@ uint16_t inw(uint16_t port);
 
 uint32_t inl(uint16_t port);
 
-uint64_t get_msr(uint64_t msr);
+uint64_t read_msr(uint64_t msr);
 
 void write_msr(uint64_t msr, uint64_t data);

@@ -55,7 +55,7 @@ irqReferences irqFuncs[] =  {   PITI, keyboard_handler_main, irq_l, irq_l,
                                 irq_h, irq_h, mouse_handler, irq_h
                             };
 
-extern "C" void irq_handler(int irqNum)
+extern "C" void irq_handler(int irqNum) // worlds shittist isr
 {
     irqFuncs[irqNum]();
 }
@@ -100,7 +100,7 @@ void idt_init(void)
     outb(0x20, 0x11);
     outb(0xA0, 0x11);
     outb(0x21, 0x20);
-    outb(0xA1, 40);
+    outb(0xA1, 0x28);
     outb(0x21, 0x04);
     outb(0xA1, 0x02);
     outb(0x21, 0x01);

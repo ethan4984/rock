@@ -141,7 +141,6 @@ void widget::move_up(uint32_t  vect[][2], uint32_t rows)
 
 void widget::move(uint32_t vect[][2], uint32_t rows, uint64_t x, uint64_t y)
 {
-
     for(uint32_t i = 0; i < rows; i++) {
         if(vect[i][0] >= y)
             vect[i][0] -= vect[3][0] - y;
@@ -161,7 +160,7 @@ void render_char(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c) {
         for (uint8_t j = 0; j < 8; j++) {
             if ((font[(uint8_t)c][i] >> j) & 1) {
                 uint64_t offset = ((i + y) * framebuffer_pitch) + ((j + x) * 4);
-                *(uint32_t*)((uint64_t)framebuffer + offset) = fg ;
+                *(uint32_t*)((uint64_t)framebuffer + offset) = fg;
             }
             else {
                 uint64_t offset = ((i + y) * framebuffer_pitch) + ((j + x) * 4);

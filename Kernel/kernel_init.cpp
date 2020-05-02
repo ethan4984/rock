@@ -26,6 +26,8 @@ using namespace MM;
 extern void div_test() asm("test_div");
 extern void _init() asm("_init");
 
+uint32_t bruh_w[4][2] = { { 512, 512 }, { 512, 532 }, { 532, 512 }, { 532, 532 } };
+
 extern "C" void kernel_main(stivale_info_t *boot_info)
 {
     init_graphics(boot_info);
@@ -38,12 +40,6 @@ extern "C" void kernel_main(stivale_info_t *boot_info)
 
     show_vesa_state();
 
-    idt_init();
-
-    asm volatile ("sti");
-
-    start_counter(1, 0, 6);
-
     page_frame_init(120000000);
 
     block_show();
@@ -52,11 +48,19 @@ extern "C" void kernel_main(stivale_info_t *boot_info)
 
     _init();
 
+    idt_init();
+
+    asm volatile ("sti");
+
+    start_counter(1, 0, 6);
+
     init_acpi();
 
     pci_init();
 
     ahci_init(pci_devices, pci_device_ids, total_devices);
+
+    mouse_setup();
 
     for(;;);
 }

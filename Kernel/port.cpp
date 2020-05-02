@@ -78,7 +78,7 @@ void serial_write(uint8_t data)
     outb(COM1, data);
 }
 
-uint64_t get_msr(uint64_t msr)
+/*uint64_t read_msr(uint64_t msr)
 {
     uint64_t rax, rdx;
     asm volatile ("rdmsr" : "=a"(rax), "=d"(rdx) : "c"(msr));
@@ -89,4 +89,17 @@ void write_msr(uint64_t msr, uint64_t data)
 {
     uint64_t rax = data & 0xffffffff, rdx = data >> 32;
     asm volatile("wrmsr" :: "a"(rax), "d"(rdx), "c"(msr));
+}*/
+
+uint64_t read_msr(uint64_t msr) {
+    uint64_t rax, rdx;
+    asm("rdmsr" : "=a" (rax), "=d" (rdx) : "c"(msr));
+
+    return (rdx << 32) | rax;
+}
+
+void write_msr(uint64_t msr, uint64_t data) {
+    uint64_t rax = data & 0xFFFFFFFF;
+    uint64_t rdx = data >> 32;
+    asm("wrmsr" :: "a" (rax), "d" (rdx), "c"(msr));
 }

@@ -1,10 +1,12 @@
 #pragma once
 
 #include <stdint.h>
+#include <acpi.h>
 
 #define kernel_high 0xffffffff80000000
 
 void init_acpi();
+void init_madt();
 
 typedef struct
 {
@@ -68,8 +70,67 @@ typedef struct
     uint8_t entries[];
 } __attribute__((packed)) madt_t;
 
-extern rsdp_t* rsdp;
-extern rsdt_t* rsdt;
-extern xsdt_t* xsdt;
-extern fadt_t* fadt;
-extern madt_t* madt;
+typedef struct {
+    uint8_t processor_id;
+    uint8_t core_id;
+    uint32_t flags;
+} __attribute__ ((packed)) madt0_t;
+
+typedef struct {
+    uint8_t ioapic_id;
+    uint8_t reserved;
+    uint32_t ioapic_addr;
+    uint32_t gsi_base;
+} __attribute__ ((packed)) madt1_t;
+
+typedef struct {
+    uint8_t bus_src;
+    uint8_t irq_src;
+    uint32_t gsi;
+    uint16_t flags;
+} __attribute__ ((packed)) madt2_t;
+
+typedef struct {
+    uint8_t processor_id;
+    uint16_t flags;
+    uint8_t lint;
+} __attribute__ ((packed)) madt4_t;
+
+typedef struct {
+    uint16_t reserved;
+    uint64_t lapic_override;
+} __attribute__ ((packed)) madt5_t;
+
+class madt_info_t
+{
+    public:
+        madt_info_t();
+
+        uint64_t lapic;
+        uint64_t core_count = 0;
+        uint64_t ioapic_count = 0;
+        uint64_t iso_count = 0;
+        uint64_t nmi_count = 0;
+        uint64_t lapic_override_count = 0;
+
+        madt0_t *cores;
+        madt1_t *ioapic;
+        madt2_t *iso;
+        madt4_t *non_maskable_int;
+        madt5_t *lapic_override;
+
+        void new_core(madt0_t *core);
+        void new_iso(madt2_t *iso_t);
+        void new_nmi(madt4_t *nmi);
+        void new_lapic_override(madt5_t *lapic_override);
+
+        void cpu_info();
+        void iso_info();
+};
+
+extern rsdp_t *rsdp;
+extern rsdt_t *rsdt;
+extern xsdt_t *xsdt;
+extern fadt_t *fadt;
+extern madt_t *madt;
+extern madt_info_t madt_info;
