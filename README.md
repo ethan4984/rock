@@ -11,6 +11,8 @@ This is a simple x86_64 operating system made for fun and learning
   - interrupts including irqs and exceptions
 
   - Basic mm with identity paging and a pmm
+  
+  - Multitasking
 
   - A basic shell with simple commands
 
@@ -26,11 +28,7 @@ This is a simple x86_64 operating system made for fun and learning
 
   Here are some project aspirations:
 
-  - Multi-processing and multi-threading
-
-  - apic instead of pic
-
-  - Process scheduler
+  - apic and smp
 
   - Virtual address spaces for individual programs
 
