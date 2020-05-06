@@ -18,6 +18,7 @@ extern "C" void switch_process(uint64_t rsp, uint64_t rbp) asm("switch_process")
 #define WAITING_TO_START 0
 #define WAITING 1
 #define RUNNING 2
+#define DEAD 3
 
 class task
 {
@@ -29,3 +30,5 @@ class task
 };
 
 void add_task(uint8_t *stack, void *main);
+
+void create_task(void *main);

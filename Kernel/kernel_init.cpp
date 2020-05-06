@@ -69,7 +69,7 @@ extern "C" void kernel_main(stivale_info_t *boot_info)
 
     init_scheduler();
 
-    add_task((uint8_t*)1000, (void*)kernel_task);
+    create_task((void*)kernel_task);
 
     for(;;);
 }

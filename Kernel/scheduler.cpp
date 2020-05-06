@@ -77,6 +77,24 @@ extern "C" void PITI(uint64_t last_rbp, uint64_t last_rsp)
     }
 }
 
+void create_task(void *main) // by default stack = 8kb
+{
+    static uint64_t stack = 0xF4240;
+    stack += 8000; // stack size of 8kb
+    add_task((uint8_t*)stack, main);
+    t_print("New task created: On stack: %x: On method: %x", stack, main);
+}
+
+void end_task(void *main_method)
+{
+    for(int i = 0; i < total_tasks; i++) {
+        if(tasks[i].task = main_method) {
+            tasks[i].status = DEAD;
+            total_tasks--;
+        }
+    }
+}
+
 void sleep(volatile int ticks)
 {
     seconds = 0;
