@@ -24,41 +24,54 @@ extern gen_reg16
 extern segment
 extern divide
 
+global start_process
+global switch_process
+global generic_irq
+
+extern PITI
+
 %macro pushall 0
-    push rax
-    push rcx
-    push rdx
-    push rbx
-    push rbp
-    push rsi
-    push rdi
-    push r8
-    push r9
-    push r10
-    push r11
-    push r12
-    push r13
-    push r14
-    push r15
+push rax
+push rbx
+push rcx
+push rdx
+push rbp
+push rdi
+push rsi
+push r8
+push r9
+push r10
+push r11
+push r12
+push r13
+push r14
+push r15
 %endmacro
 
 %macro popall 0
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rdi
-    pop rsi
-    pop rbp
-    pop rbx
-    pop rdx
-    pop rcx
-    pop rax
+pop r15
+pop r14
+pop r13
+pop r12
+pop r11
+pop r10
+pop r9
+pop r8
+pop rsi
+pop rdi
+pop rbp
+pop rdx
+pop rcx
+pop rbx
+pop rax
 %endmacro
+
+%macro irq_send 1
+    mov rdi, %1
+    call generic_irq
+%endmacro
+
+section .text
 
 extern irq_handler
 
@@ -69,13 +82,36 @@ generic_irq:
     popall
     ret
 
-%macro irq_send 1
-    mov rdi, %1
-    call generic_irq
-%endmacro
-
 time_handler:
-    irq_send 0
+    cli
+    pushall
+
+    mov rdi, rbp
+    mov rsi, rsp
+
+    call PITI
+    hlt
+
+start_process:
+    mov rbx, rsi ; ptr to main function
+    mov rax, rdi ; new stack
+
+    mov rsp, rax ; new stack
+    mov rbp, rsp
+
+    sti
+    jmp rbx
+
+switch_process:
+    mov rbx, rsi ; old rbp
+    mov rax, rdi ; old stack pointer
+
+    mov rbp, rbx ; restores stack frame
+    mov rsp, rax
+
+    popall
+
+    sti
     iretq
 
 keyboard_handler:

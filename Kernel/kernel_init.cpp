@@ -28,6 +28,13 @@ extern void _init() asm("_init");
 
 uint32_t bruh_w[4][2] = { { 512, 512 }, { 512, 532 }, { 532, 512 }, { 532, 532 } };
 
+void kernel_task(void)
+{
+    mouse_setup();
+
+    for(;;);
+}
+
 extern "C" void kernel_main(stivale_info_t *boot_info)
 {
     init_graphics(boot_info);
@@ -46,21 +53,23 @@ extern "C" void kernel_main(stivale_info_t *boot_info)
 
     blocks_init();
 
-    _init();
-
-    idt_init();
-
-    asm volatile ("sti");
-
-    start_counter(1, 0, 6);
+    _init(); // needed for global constructors
 
     init_acpi();
 
     pci_init();
 
+    idt_init();
+
+    asm volatile ("sti");
+
+    start_counter(1000, 0, 6);
+
     ahci_init(pci_devices, pci_device_ids, total_devices);
 
-    mouse_setup();
+    init_scheduler();
+
+    add_task((uint8_t*)1000, (void*)kernel_task);
 
     for(;;);
 }

@@ -1,0 +1,92 @@
+VBE VESA init:
+
+
+Framebuffer address: 0xFD000000
+
+Framebuffer Height: 768
+
+Framebuffer Width: 1024
+
+Framebuffer pitch: 4096
+
+Framebuffer BPP: 32
+
+
+
+Page Allocation in process
+
+	Status: Single page
+
+	Allocated page: 0
+
+page allocation finished : 0xFFFFFFFF80130072
+
+IOAPIC:
+
+	Addr: 0xFEC00000
+
+None Maskable Interrupt on:
+
+	core ID: 255
+	LINT: 1
+	Flags: 0
+
+ISO:
+
+	bus: 0
+	IRQ: 0
+	GSI: 2
+	Flags: 0x0
+
+ISO:
+
+	bus: 0
+	IRQ: 5
+	GSI: 5
+	Flags: 0xD
+
+ISO:
+
+	bus: 0
+	IRQ: 9
+	GSI: 9
+	Flags: 0xD
+
+ISO:
+
+	bus: 0
+	IRQ: 10
+	GSI: 10
+	Flags: 0xD
+
+ISO:
+
+	bus: 0
+	IRQ: 11
+	GSI: 11
+	Flags: 0xD
+
+Core 1
+
+	processor id: 0
+	core id: 0
+	flags: 1
+
+Core 2
+
+	processor id: 1
+	core id: 1
+	flags: 1
+
+Core 3
+
+	processor id: 2
+	core id: 2
+	flags: 1
+
+Core 4
+
+	processor id: 3
+	core id: 3
+	flags: 1
+

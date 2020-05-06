@@ -15,6 +15,9 @@ madt_t *madt;
 madt_info_t madt_info;
 
 void *find_sdt(const char *signature);
+extern "C" void spin_lock(volatile uint64_t *lock) asm ("spin_lock");
+extern "C" void spin_unlock(volatile uint64_t *lock) asm ("spin_unlock");
+extern "C" bool spin_try_lock(volatile uint64_t *lock) asm ("spin_try_lock");
 
 madt_info_t::madt_info_t()
 {

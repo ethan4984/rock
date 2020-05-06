@@ -34,7 +34,7 @@ kernel: compile
 	echfs-utils -m -p0 ../crepOS.img import ../Bin/crepOS.elf crepOS.elf
 	echfs-utils -m -p0 ../crepOS.img import ../Bin/crepOS.elf ../crepOS.img
 	cd ../qloader2 && ./qloader2-install qloader2.bin ../crepOS.img
-	rm $(OBJ) crti.o crtn.o ../Bin/crepOS.elf
+	rm $(OBJ) crti.o crtn.o
 compile:
 	$(CC) $(SCRC) $(CFLAGS) -c
 	$(NASM) boot.asm -o ../Bin/boot.o

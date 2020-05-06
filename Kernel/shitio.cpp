@@ -178,9 +178,9 @@ namespace standardout
                             serial_write(string[i]);
                         break;
                 }
-                va_end(arg);
             }
         }
+        va_end(arg);
         serial_write('\n');
     }
 

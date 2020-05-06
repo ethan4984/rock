@@ -50,14 +50,14 @@ void idt_expection(uint64_t IRQ, uint64_t over_ride = 0)
 
 typedef void (*irqReferences)();
 
-irqReferences irqFuncs[] =  {   PITI, keyboard_handler_main, irq_l, irq_l,
+irqReferences irqFuncs[] =  {   keyboard_handler_main, irq_l, irq_l,
                                 irq_l, irq_l, irq_l, irq_h, irq_h, irq_h,
                                 irq_h, irq_h, mouse_handler, irq_h
                             };
 
 extern "C" void irq_handler(int irqNum) // worlds shittist isr
 {
-    irqFuncs[irqNum]();
+    irqFuncs[irqNum - 1]();
 }
 
 void idt_init(void)
@@ -130,7 +130,7 @@ void idt_init(void)
     idt_r.base = (uint64_t)&IDT;
     idt_r.limit = 256 * sizeof(IDT_entry) - 1;
     asm volatile("lidtq %0" ::"m"(idt_r));
-    k_print("IDT:\n\n\tIDT intialized at %x\n\tIRQs and Execpetions setup\n\n", idt_r);
+    k_print("\nIDT:\n\n\tIDT intialized at %x\n\tIRQs and Execpetions setup\n\n", idt_r);
 }
 
 void mask_irq(unsigned char channel)
