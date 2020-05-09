@@ -117,7 +117,7 @@ uint8_t pci_multifunction(uint8_t bus, uint8_t device) {
 
 bool is_bridge(uint8_t bus, uint8_t device, uint8_t function)
 {
-    if((uint8_t)(pci_read(bus, device, function, 0xC) >> 16) & ~(1 << 7) != 1)
+    if(((uint8_t)(pci_read(bus, device, function, 0xC) >> 16) & ~(1 << 7)) != 1)
         return false;
     if((uint8_t)(pci_read(bus, device, function, 0x8) >> 24) != 6)
         return false;
@@ -139,4 +139,47 @@ void add_device(pci_device_t new_device, pci_device_id_t new_device_id)
     }
     current_position++;
     total_devices++;
+}
+
+int pci_read_bar(pci_device_id_t device, int bar, struct pci_bar_t *out) {
+    if (bar > 5)
+        return -1;
+
+    size_t reg_index = 0x10 + bar * 4;
+    uint64_t bar_low = pci_read(device.bus, device.device, device.function, reg_index), bar_size_low;
+    uint64_t bar_high = 0, bar_size_high = 0;
+
+    if (!bar_low)
+        return -1;
+
+    uintptr_t base;
+    size_t size;
+
+    int is_mmio = !(bar_low & 1);
+    int is_prefetchable = is_mmio && bar_low & (1 << 3);
+    int is_64bit = is_mmio && ((bar_low >> 1) & 0b11) == 0b10;
+
+    if (is_64bit)
+        bar_high = pci_read(device.bus, device.device, device.function, reg_index + 4);
+
+    base = ((bar_high << 32) | bar_low) & ~(is_mmio ? (0b1111) : (0b11));
+
+    pci_write(0xFFFFFFFF, device.bus, device.device, device.function, reg_index);
+    bar_size_low = pci_read(device.bus, device.device, device.function, reg_index);
+    pci_write(bar_low, device.bus, device.device, device.function, reg_index);
+
+    if (is_64bit) {
+        pci_write(0xFFFFFFFF, device.bus, device.device, device.function, reg_index + 4);
+        bar_size_high = pci_read(device.bus, device.device, device.function, reg_index + 4);
+        pci_write(bar_high, device.bus, device.device, device.function, reg_index + 4);
+    }
+
+    size = ((bar_size_high << 32) | bar_size_low) & ~(is_mmio ? (0b1111) : (0b11));
+    size = ~size + 1;
+
+    if (out) {
+        *out = (struct pci_bar_t){base, size, is_mmio, is_prefetchable};
+    }
+
+    return 0;
 }

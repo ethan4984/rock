@@ -2,7 +2,7 @@
 #include <shitio.h>
 #include <port.h>
 #include <memory.h>
-#include <interrupt.h>
+#include <pic.h>
 #include <paging.h>
 #include <alloc.h>
 #include <string.h>
@@ -127,7 +127,7 @@ void command_handler(const char *input)
         putchar('\n');
 
     change_text_color(VGA_LIGHT_BLUE);
-    k_print("(*ROOT*) > ");
+    k_print("> ");
     change_text_color(VGA_BLUE);
 }
 

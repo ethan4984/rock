@@ -12,7 +12,7 @@ using namespace standardout;
 int64_t mouse_x = 512;
 int64_t mouse_y = 512;
 
-uint32_t bruh[4][2] = { { 512, 512 }, { 512, 532 }, { 532, 512 }, { 532, 532 } };
+uint32_t bruh[4][2] = { { 512, 512 }, { 512, 522 }, { 522, 512 }, { 522, 522 } };
 
 void mouse_handler() {
     outb(0xA0, 0x20); // EOI

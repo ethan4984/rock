@@ -51,6 +51,8 @@ namespace standardout
 
         WIDTH = x;
         HEIGHT = y;
+
+        clear_promnt();
     }
 
     bool end_of_terminal()
@@ -90,7 +92,13 @@ namespace standardout
 
     void putchar(char c)
     {
-        static bool is_back = false;
+        static bool is_back = false, bruh = false;
+
+        if(end_of_terminal()) {
+            vesa_scroll(8, terminal_bg);
+            terminal_column -= 8;
+        }
+
         switch(c) {
             case '\n':
                 reference_column[terminal_row] = terminal_column;
@@ -129,8 +137,6 @@ namespace standardout
                 }
                 break;
         }
-        if(end_of_terminal())
-            clear_promnt();
     }
 
     void t_print(const char str[256], ...)
@@ -141,7 +147,7 @@ namespace standardout
         va_list arg;
         va_start(arg, str);
 
-        for(int i = 0; i < strlen(str); i++) {
+        for(uint64_t i = 0; i < strlen(str); i++) {
             if(str[i] != '%')
                 serial_write(str[i]);
             else {
@@ -192,7 +198,7 @@ namespace standardout
         va_list args;
         va_start(args, str);
 
-        for(int i = 0; i < strlen(str); i++) {
+        for(uint64_t i = 0; i < strlen(str); i++) {
             if(str[i] != '%')
                 putchar(str[i]);
             else {
@@ -247,10 +253,7 @@ namespace standardout
     {
         terminal_column = 0;
         terminal_row = 0;
-        for(int i = 0; i < 1024; i++) {
-            for(int j = 0; j < 768; j++)
-                render_char(i, j, terminal_fg, terminal_bg, ' ');
-        }
+        set_screen(terminal_bg);
     }
 
     int count_digits(int num) {

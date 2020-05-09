@@ -3,7 +3,8 @@
 #include <paging.h>
 #include <shitio.h>
 #include <memory.h>
-#include <interrupt.h>
+#include <alloc.h>
+#include <pic.h>
 
 #define bitmap_begin 0x80173000
 

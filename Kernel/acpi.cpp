@@ -3,7 +3,7 @@
 #include <string.h>
 #include <shitio.h>
 #include <alloc.h>
-#include <interrupt.h>
+#include <pic.h>
 
 using namespace standardout;
 
@@ -15,9 +15,6 @@ madt_t *madt;
 madt_info_t madt_info;
 
 void *find_sdt(const char *signature);
-extern "C" void spin_lock(volatile uint64_t *lock) asm ("spin_lock");
-extern "C" void spin_unlock(volatile uint64_t *lock) asm ("spin_unlock");
-extern "C" bool spin_try_lock(volatile uint64_t *lock) asm ("spin_try_lock");
 
 madt_info_t::madt_info_t()
 {
@@ -62,7 +59,7 @@ void madt_info_t::new_iso(madt2_t *iso_t)
 void madt_info_t::cpu_info()
 {
     k_print("\nCore count: %d\n", core_count);
-    for(int i = 0; i < core_count; i++) {
+    for(uint64_t i = 0; i < core_count; i++) {
         t_print("Core %d\n", i + 1);
         t_print("\tprocessor id: %d", cores[i].processor_id);
         t_print("\tcore id: %d", cores[i].core_id);
@@ -72,7 +69,7 @@ void madt_info_t::cpu_info()
 
 void madt_info_t::iso_info()
 {
-    for(int i = 0; i < iso_count; i++) {
+    for(uint64_t i = 0; i < iso_count; i++) {
         t_print("ISO:\n");
         t_print("\tbus: %d", (uint32_t)iso[i].bus_src);
         t_print("\tIRQ: %d", (uint32_t)iso[i].irq_src);
@@ -100,11 +97,11 @@ void init_acpi()
             uint8_t sum = checksum();
 
             if(rsdp->xsdtAddr) { // only on real hardware or a virtualizer that supports ACPI 2.0
-                xsdt = (xsdt_t*)((uint32_t)rsdp->xsdtAddr);
+                xsdt = (xsdt_t*)((uint64_t)rsdp->xsdtAddr);
                 k_print("\tACPI: XSDT found at %x\n", xsdt);
             }
             else {
-                rsdt = (rsdt_t*)((uint32_t)rsdp->rsdtAddr);
+                rsdt = (rsdt_t*)((uint64_t)rsdp->rsdtAddr);
                 k_print("\tACPI: RSDP found at %x\n", rsdt);
             }
             found_something = true;
@@ -150,7 +147,7 @@ void init_madt()
     madt_info.lapic = (uint64_t)madt->lapic_addr;
     k_print("lapic base addr: %x\n", madt_info.lapic);
     uint64_t entry_byte_size = madt->ACPI_header.length - (sizeof(madt->ACPI_header) + sizeof(madt->lapic_addr) + sizeof(madt->flags));
-    for(int i = 0; i < entry_byte_size; i++) {
+    for(uint64_t i = 0; i < entry_byte_size; i++) {
         uint8_t entry_type = madt->entries[i++];
         uint8_t entry_size = madt->entries[i++];
 

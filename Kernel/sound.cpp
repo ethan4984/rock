@@ -2,7 +2,7 @@
 #include <port.h>
 #include <stdint.h>
 #include <shitio.h>
-#include <interrupt.h>
+#include <pic.h>
 #include <scheduler.h>
 
 using namespace standardout;

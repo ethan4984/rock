@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 class pci_device_t
 {
@@ -61,3 +62,14 @@ uint32_t pci_get_mmio_bar(pci_device_id_t device, uint8_t bar);
 uint32_t pci_get_mmio_bar_size(pci_device_id_t device, uint8_t bar);
 
 void pci_init();
+
+
+struct pci_bar_t {
+    uintptr_t base;
+    size_t size;
+
+    int is_mmio;
+    int is_prefetchable;
+};
+
+int pci_read_bar(pci_device_id_t device, int bar, pci_bar_t *out);

@@ -21,6 +21,8 @@ void render_char(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c);
 
 void show_vesa_state();
 
+void set_screen(uint32_t colour);
+
 class window
 {
     public:
@@ -53,7 +55,13 @@ class widget
         uint32_t colour, border_colour;
 
         uint32_t *background_colour;
+
+        void set_background_colour(uint16_t x, uint16_t y, uint32_t colour);
+
+        uint32_t grab_background_colour(uint16_t x, uint16_t y);
 };
+
+void vesa_scroll(uint64_t rows_shift, uint32_t bg);
 
 const uint8_t font[128][8] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0000 (nul)

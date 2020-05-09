@@ -4,9 +4,9 @@
 
 void request_new_process(uint64_t range, void (*entry_function)());
 
-void nanosleep(volatile uint32_t offset);
+void nanosleep(volatile uint64_t offset);
 
-void sleep(volatile int offset);
+void sleep(volatile uint64_t offset);
 
 void test_sleep();
 

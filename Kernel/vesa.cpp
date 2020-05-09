@@ -8,10 +8,12 @@ using namespace standardout;
 
 uint16_t framebuffer_height, framebuffer_width, framebuffer_pitch, framebuffer_bpp;
 uint32_t *framebuffer;
+uint64_t *background_framebuffer;
 
 void init_graphics(stivale_info_t *boot_info)
 {
     framebuffer = (uint32_t*)boot_info->framebuffer_addr;
+    background_framebuffer = (uint64_t*)malloc(8);
     framebuffer_height = boot_info->framebuffer_height;
     framebuffer_width = boot_info->framebuffer_width;
     framebuffer_pitch = boot_info->framebuffer_pitch;
@@ -45,9 +47,19 @@ uint32_t grab_colour(uint16_t x, uint16_t y)
     return *(volatile uint32_t*)((uint64_t)framebuffer + ((y * framebuffer_pitch) + (x * framebuffer_bpp / 8)));
 }
 
+void set_background_colour(uint16_t x, uint16_t y, uint32_t colour)
+{
+    *(volatile uint32_t*)((uint64_t)background_framebuffer + ((y * framebuffer_pitch) + (x * framebuffer_bpp / 8))) = colour; // bpp / 8 = bytes per pixel
+}
+
 volatile uint32_t *grab_framebuffer_addr(uint16_t x, uint16_t y)
 {
     return (volatile uint32_t*)((uint64_t)framebuffer + ((y * framebuffer_pitch) + (x * framebuffer_bpp / 8)));
+}
+
+uint32_t grab_backgroud_colour(uint16_t x, uint16_t y)
+{
+    return *(volatile uint32_t*)((uint64_t)background_framebuffer + ((y * framebuffer_pitch) + (x * framebuffer_bpp / 8)));
 }
 
 void draw_hline(uint16_t x, uint16_t x1, uint16_t y, uint32_t colour)
@@ -75,6 +87,7 @@ window::window(vec2 vec, uint32_t colour, uint32_t border_colour)
             window_borders[i][j] = vec[i][j];
 
     draw_rechtangle(vec, colour);
+
 }
 
 void window::fill_window(uint32_t colour, uint32_t border_colour)
@@ -92,8 +105,8 @@ widget::widget(uint32_t vert[][2], uint32_t rows, uint32_t colour_t, uint32_t bo
 
 void widget::draw_widget(uint32_t vect[][2], uint32_t rows)
 {
-    for(int i = vect[0][1]; i < vect[3][1] + 1; i++) {
-        for(int j = vect[0][0]; j < vect[3][0] + 1; j++) {
+    for(uint32_t i = vect[0][1]; i < vect[3][1] + 1; i++) {
+        for(uint32_t j = vect[0][0]; j < vect[3][0] + 1; j++) {
             set_pixel(j, i, colour);
         }
     }
@@ -103,7 +116,7 @@ void widget::move_right(uint32_t vect[][2], uint32_t rows)
 {
     for(uint32_t i = 0; i < rows; i++) {
         vect[i][0] += 1;
-        set_pixel(vect[i][0] - 1, vect[i][1], background_colour[i]);
+        //set_pixel(vect[i][0] - 1, vect[i][1], background_colour[i]);
     }
 
     draw_widget(vect, rows);
@@ -113,7 +126,7 @@ void widget::move_left(uint32_t vect[][2], uint32_t rows)
 {
     for(uint32_t i = 0; i < rows; i++) {
         vect[i][0] -= 1;
-        set_pixel(vect[i][0] + 1, vect[i][1], background_colour[i]);
+        //set_pixel(vect[i][0] + 1, vect[i][1], background_colour[i]);
     }
 
     draw_widget(vect, rows);
@@ -123,7 +136,7 @@ void widget::move_down(uint32_t vect[][2], uint32_t rows)
 {
     for(uint32_t i = 0; i < rows; i++) {
         vect[i][1] += 1;
-        set_pixel(vect[i][0], vect[i][1] - 1, background_colour[i]);
+        //set_pixel(vect[i][0], vect[i][1] - 1, background_colour[i]);
     }
 
     draw_widget(vect, rows);
@@ -133,7 +146,7 @@ void widget::move_up(uint32_t  vect[][2], uint32_t rows)
 {
     for(uint32_t i = 0; i < rows; i++) {
         vect[i][1] -= 1;
-        set_pixel(vect[i][0], vect[i][1] + 1, background_colour[i]);
+        //set_pixel(vect[i][0], vect[i][1] + 1, background_colour[i]);
     }
 
     draw_widget(vect, rows);
@@ -155,7 +168,8 @@ void widget::move(uint32_t vect[][2], uint32_t rows, uint64_t x, uint64_t y)
     draw_widget(vect, 4);
 }
 
-void render_char(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c) {
+void render_char(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c)
+{
     for (uint8_t i = 0; i < 8; i++) {
         for (uint8_t j = 0; j < 8; j++) {
             if ((font[(uint8_t)c][i] >> j) & 1) {
@@ -168,4 +182,16 @@ void render_char(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c) {
             }
         }
     }
+}
+
+void vesa_scroll(uint64_t rows_shift, uint32_t bg) {
+    uint32_t color_dat = bg;
+    uint64_t buf_pos = (uint64_t)framebuffer;
+    memset32(framebuffer, bg, (framebuffer_width * rows_shift));
+    memcpy(framebuffer, framebuffer + (framebuffer_width * rows_shift), ((framebuffer_width * framebuffer_height) * 4));
+}
+
+void set_screen(uint32_t colour)
+{
+    memset32(framebuffer, colour, (framebuffer_height * framebuffer_width) * 4);
 }

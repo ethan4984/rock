@@ -8,10 +8,10 @@
 using namespace standardout;
 using namespace MM;
 
-volatile int timer_ticks = 0;
+volatile uint64_t timer_ticks = 0;
 uint64_t total_tasks = 0;
 
-volatile uint32_t seconds = 0;
+volatile uint64_t seconds = 0;
 
 static volatile int current_task;
 task *tasks;
@@ -25,7 +25,7 @@ void init_scheduler()
 
 void add_task(uint8_t *stack, void *main)
 {
-    static int max_tasks = 10;
+    static uint64_t max_tasks = 10;
 	task task_entry;
 	task_entry.status = WAITING_TO_START;
 	task_entry.rbp = (uint64_t)stack; //creates a new stack
@@ -79,7 +79,7 @@ extern "C" void PITI(uint64_t last_rbp, uint64_t last_rsp)
 
 void create_task(void *main) // by default stack = 8kb
 {
-    static uint64_t stack = 0xF4240;
+    static uint64_t stack = 0xFFFFFF;
     stack += 8000; // stack size of 8kb
     add_task((uint8_t*)stack, main);
     t_print("New task created: On stack: %x: On method: %x", stack, main);
@@ -87,21 +87,21 @@ void create_task(void *main) // by default stack = 8kb
 
 void end_task(void *main_method)
 {
-    for(int i = 0; i < total_tasks; i++) {
-        if(tasks[i].task = main_method) {
+    for(uint64_t i = 0; i < total_tasks; i++) {
+        if(tasks[i].task == main_method) {
             tasks[i].status = DEAD;
             total_tasks--;
         }
     }
 }
 
-void sleep(volatile int ticks)
+void sleep(volatile uint64_t ticks)
 {
     seconds = 0;
     while(seconds < ticks);
 }
 
-void nanosleep(volatile uint32_t offset)
+void nanosleep(volatile uint64_t offset)
 {
     timer_ticks = 0;
     while(timer_ticks < offset);

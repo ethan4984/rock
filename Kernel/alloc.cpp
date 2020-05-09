@@ -1,8 +1,8 @@
 #include <shitio.h>
 #include <alloc.h>
 #include <paging.h>
-#include <interrupt.h>
 #include <memory.h>
+#include <pic.h>
 
 using namespace standardout;
 using namespace MM;
@@ -36,7 +36,7 @@ void reserve(uint64_t location)
 
 void sell(uint64_t location)
 {
-    bitmap_i[location / 64] = bitmap_i[location / 64] & (~(1 << (location % 64)));
+    bitmap_i[location / 8] = bitmap_i[location / 8] & (~(1 << (location % 8)));
 }
 
 bool is_reserved(uint64_t location)
@@ -53,7 +53,7 @@ void blocks_init()
 
     bitmap_size = 0x20000;
 
-    memset(bitmap_b, 0, bitmap_size / 8);
+    memset(bitmap_b, 0, bitmap_size);
 }
 
 uint64_t first_bfree(uint64_t start)
@@ -69,7 +69,6 @@ uint64_t first_bfree(uint64_t start)
 uint64_t allocate_bblock(uint64_t start)
 {
     uint64_t new_block = first_bfree(start);
-    //t_print("\tAllocated block: %d\n", new_block);
     set(new_block);
     return new_block;
 }
@@ -86,10 +85,10 @@ void *malloc(uint64_t size)
     uint64_t freed = first_bfree(0), offset = 0;
 
     //t_print("\tStatus: Multi-block\n\tBlocks required: %d\n", size);
-    int error_check = 0;
+    uint64_t error_check = 0;
     while(1) {
         uint64_t check_size = 0;
-        for(int i = freed; i < freed + size; i++) {
+        for(uint64_t i = freed; i < freed + size; i++) {
             if(!isset(i))
                 check_size++;
         }
@@ -115,7 +114,7 @@ void *malloc(uint64_t size)
         }
     }
 
-    reserve(first_bfree(offset));
+    reserve(first_bfree(offset) + 1);
 
     uint64_t return_address = (uint64_t)block_start_b + freed;
 
