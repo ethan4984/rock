@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STIVALE_H
+#define STIVALE_H
 
 #include <stdint.h>
 
@@ -8,7 +9,7 @@
 #define STIVALE_MEMORY_NVS                    4
 #define STIVALE_MEMORY_BADRAM                 5
 
-struct stivale_module {
+struct stivaleModule {
     uint64_t begin;
     uint64_t end;
     char string[128];
@@ -19,18 +20,20 @@ typedef struct {
     uint64_t len;
     uint32_t type;
     uint32_t unused;
-} __attribute__((packed)) e820_entry_t;
+} __attribute__((packed)) E820Entry_t;
 
-typedef struct stivale_struct {
+typedef struct stivaleStruct {
     char *cmdline;
-    uint64_t memory_map_addr;
-    uint64_t memory_map_entries;
-    uint64_t framebuffer_addr;
-    uint16_t framebuffer_pitch;
-    uint16_t framebuffer_width;
-    uint16_t framebuffer_height;
-    uint16_t framebuffer_bpp;
+    uint64_t memoryMapAddr;
+    uint64_t memoryMapEntries;
+    uint64_t framebufferAddr;
+    uint16_t framebufferPitch;
+    uint16_t framebufferWidth;
+    uint16_t framebufferHeight;
+    uint16_t framebufferBpp;
     uint64_t rsdp;
-    uint64_t module_count;
-    struct stivale_module modules[];
-} __attribute__((packed)) stivale_info_t;
+    uint64_t moduleCount;
+    struct stivaleModule modules[];
+} __attribute__((packed)) stivaleInfo_t;
+
+#endif

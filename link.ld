@@ -31,5 +31,5 @@ SECTIONS
         *(COMMON)
     }
 
-    kernel_end = ALIGN(4K);
+    kernelEnd = ALIGN(4K);
 }
