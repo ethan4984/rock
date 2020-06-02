@@ -11,7 +11,7 @@ SRCA = $(shell find . -type f -name '*.asm')
 SRCS = $(shell find . -type f -name '*.s')
 OBJ = ../Bin/kernelMain.o ../Bin/ports.o ../Bin/videoIO.o ../Bin/boot.o ../Bin/stringUtils.o ../Bin/memoryUtils.o ../Bin/memoryParse.o ../Bin/physicalPageHandler.o ../Bin/pic.o ../Bin/scheduler.o ../Bin/acpiUtils.o ../Bin/memHandler.o ../Bin/madt.o ../Bin/pci.o ../Bin/vesa.o ../Bin/task.o ../Bin/thread.o ../Bin/keyboard.o ../Bin/mouse.o ../Bin/isr.o  ../Bin/assemblyISR.o
 OBJQ = kernelMain.o memoryParse.o physicalPageHandler.o pic.o scheduler.o acpiUtils.o memHandler.o madt.o pci.o vesa.o task.o thread.o keyboard.o mouse.o isr.o
-QEMUFLAGS = -smp cpus=4 -m 4G -vga vmware -serial file:serial.log -soundhw pcspk -machine q35
+QEMUFLAGS = -m 4G -vga vmware -serial file:serial.log -soundhw pcspk -machine q35
 
 
 CRTI_OBJ=crti.o

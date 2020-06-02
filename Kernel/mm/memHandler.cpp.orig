@@ -27,19 +27,19 @@ void memInit(stivaleInfo_t *bootInfo)
 
 uint64_t firstFreeBlock(uint64_t start = 0)
 {
-    for(uint64_t i = start; i < numOfBlocks; i++) {
-        if(!isset(blockBitmap, i))
-            return i;
-    }
-    return numOfBlocks + 1;
+	for(uint64_t i = start; i < numOfBlocks; i++) {
+		if(!isset(blockBitmap, i))
+			return i;
+	}
+	return numOfBlocks + 1;
 }
 
 void *malloc(uint64_t size) 
 {
     if(size == 0)
-        size = 1;
-    
-    bool finished = 0;
+		size = 1;
+	
+	bool finished = 0;
     uint64_t realSize;
 
     if(size % 32 == size) 
@@ -48,30 +48,30 @@ void *malloc(uint64_t size)
         realSize = size / 32 + 1;
 
     uint64_t currentStartingAddress = firstFreeBlock();
-    
-    while(1) { /* this loop makes sure we have a continus stream of free blocks ready to allocate */
+	
+	while(1) { /* this loop makes sure we have a continus stream of free blocks ready to allocate */
         if(currentStartingAddress == numOfBlocks) {
             blockBitmap = (uint8_t*)physicalPageRealloc(blockBitmap, 1);
             numOfBlocks += 0x200000 / 32;
             cPrint("here");
         }
 
-        for(uint64_t i = currentStartingAddress; i < currentStartingAddress + realSize; i++) {
-            if(isset(blockBitmap, i)) {
-                currentStartingAddress = firstFreeBlock(i);
-                break;        
+		for(uint64_t i = currentStartingAddress; i < currentStartingAddress + realSize; i++) {
+			if(isset(blockBitmap, i)) {
+				currentStartingAddress = firstFreeBlock(i);
+	            break;		
             }
-            
-            if(i == currentStartingAddress + realSize - 1) {
+			
+			if(i == currentStartingAddress + realSize - 1) {
                 finished = true;
                 break;
             }
-        }
-        
-        if(finished)
-            break;
-    }
-    
+		}
+		
+		if(finished)
+			break;
+	}
+	
     allocationIndexs_t entry;
     entry.address = (uint8_t*)(currentStartingAddress * 32 + (uint64_t)blockBitmap);
     entry.sizeOfAllocation = realSize;
@@ -105,9 +105,9 @@ void free(void *address)
 
 void *realloc(void *oldAddress, uint64_t size)
 {
-    asm volatile ("cli"); // disable interrupts becuase when we free we dont want the int handler to allocate anything
-    
-    uint64_t sizeOfAllocation = 0;
+	asm volatile ("cli"); // disable interrupts becuase when we free we dont want the int handler to allocate anything
+	
+	uint64_t sizeOfAllocation = 0;
 
     for(uint64_t i = 0; i < numOfBlockAllocations; i++) {
         if(allocationIndexs[i].address == (uint8_t*)oldAddress) {
@@ -117,10 +117,10 @@ void *realloc(void *oldAddress, uint64_t size)
     }
     
     free(oldAddress);
-    void *newAddress = malloc(sizeOfAllocation + size);
-    memcpy(newAddress, oldAddress, sizeOfAllocation * 32);
-    
-    asm volatile ("sti");
-    
-    return newAddress;
+	void *newAddress = malloc(sizeOfAllocation + size);
+	memcpy(newAddress, oldAddress, sizeOfAllocation * 32);
+	
+	asm volatile ("sti");
+	
+	return newAddress;
 }

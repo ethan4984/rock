@@ -10,29 +10,11 @@ Total memory detected 4563369984 bytes
 
 IDT intialized at 0x8
 
-MADT address found at 0x7FFE1E80
+MADT address found at 0x7FFE2002
 Core 1
 
 	processor id: 0
 	core id: 0
-	flags: 1
-
-Core 2
-
-	processor id: 1
-	core id: 1
-	flags: 1
-
-Core 3
-
-	processor id: 2
-	core id: 2
-	flags: 1
-
-Core 4
-
-	processor id: 3
-	core id: 3
 	flags: 1
 
 ISO:

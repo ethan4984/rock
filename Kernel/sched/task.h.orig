@@ -30,7 +30,7 @@ class task_t
 
         uint8_t *threadBitmap; /* this bitmap keeps track of all the threads */
         
-        uint64_t bitmapSize = 0, totalThreads = 0;
+		uint64_t bitmapSize = 0, totalThreads = 0;
         
         void addThread(void *stack, void *main);
         

@@ -103,86 +103,86 @@ void madtInfo_t::newMadt0Entry(madt0_t *entry)
 
 void madtInfo_t::newMadt1Entry(madt1_t *entry)
 {
-    madt1_t newEntry(entry);
+	madt1_t newEntry(entry);
     static uint64_t maxMadt1 = 1;
     if(numOfmadt1Entries == maxMadt1) {
         madt1 = (madt1_t*)realloc(madt1, sizeof(madt1_t));
         maxMadt1 += 1;
     }
 
-    madt1[numOfmadt1Entries++] = newEntry;
+	madt1[numOfmadt1Entries++] = newEntry;
 }
 
 void madtInfo_t::newMadt2Entry(madt2_t *entry)
 {
-    madt2_t newEntry(entry);
+	madt2_t newEntry(entry);
     static uint64_t maxMadt2 = 5;
     if(numOfmadt2Entries == maxMadt2) {
         madt2 = (madt2_t*)realloc(madt2, sizeof(madt2_t));
         maxMadt2 += 1;
     }
 
-    madt2[numOfmadt2Entries++] = newEntry;
+	madt2[numOfmadt2Entries++] = newEntry;
 }
 
 void madtInfo_t::newMadt4Entry(madt4_t *entry)
 {
-    madt4_t newEntry(entry);
+	madt4_t newEntry(entry);
     static uint64_t maxMadt4 = 5;
     if(numOfmadt4Entries == maxMadt4) {
         madt4 = (madt4_t*)realloc(madt0, sizeof(madt0_t));
         maxMadt4 += 1;
     }
 
-    madt4[numOfmadt4Entries++] = entry;
+	madt4[numOfmadt4Entries++] = entry;
 }
 
 void madtInfo_t::newMadt5Entry(madt5_t *entry)
 {
-    madt5_t newEntry(entry);
+	madt5_t newEntry(entry);
     static uint64_t maxMadt5 = 1;
     if(numOfmadt5Entries == maxMadt5) {
         madt5 = (madt5_t*)realloc(madt0, sizeof(madt5_t));
         maxMadt5 += 1;
     }
 
-    madt5[numOfmadt5Entries++] = newEntry;
+	madt5[numOfmadt5Entries++] = newEntry;
 }
 
 madt0_t::madt0_t(madt0_t *objPtr) 
 {
-    this->ACPIprocessorID = objPtr->ACPIprocessorID;
-    this->APICid = objPtr->APICid;
-    this->flags = objPtr->flags;
+	this->ACPIprocessorID = objPtr->ACPIprocessorID;
+	this->APICid = objPtr->APICid;
+	this->flags = objPtr->flags;
 }
 
 madt1_t::madt1_t(madt1_t *objPtr)
 {
-    this->ioapicID = objPtr->ioapicID;
-    this->reserved = objPtr->reserved;
-    this->ioapicAddr = objPtr->ioapicAddr;
-    this->GSIBase = objPtr->GSIBase;
+	this->ioapicID = objPtr->ioapicID;
+	this->reserved = objPtr->reserved;
+	this->ioapicAddr = objPtr->ioapicAddr;
+	this->GSIBase = objPtr->GSIBase;
 }
 
 madt2_t::madt2_t(madt2_t *objPtr)
 {
-    this->busSource = objPtr->busSource;
-    this->irqSource = objPtr->irqSource;
-    this->GSI = objPtr->GSI;
-    this->flags = objPtr->flags;
+	this->busSource = objPtr->busSource;
+	this->irqSource = objPtr->irqSource;
+	this->GSI = objPtr->GSI;
+	this->flags = objPtr->flags;
 } 
 
 madt4_t::madt4_t(madt4_t *objPtr)
 {
-    this->ACPIprocessorID = objPtr->ACPIprocessorID;
-    this->flags = objPtr->flags;
-    this->lint = objPtr->lint;
+	this->ACPIprocessorID = objPtr->ACPIprocessorID;
+	this->flags = objPtr->flags;
+	this->lint = objPtr->lint;
 } 
 
 madt5_t::madt5_t(madt5_t *objPtr)
 {
-    this->reserved = objPtr->reserved;
-    this->lapicBaseAddr = objPtr->lapicBaseAddr;
+	this->reserved = objPtr->reserved;
+	this->lapicBaseAddr = objPtr->lapicBaseAddr;
 }
 
 madtInfo_t *getMadtInfo()

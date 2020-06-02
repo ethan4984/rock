@@ -28,7 +28,7 @@ class madt0_t /* Processor Local APIC table */
 class madt1_t /* I/O APIC */
 {
     public:
-        madt1_t(madt1_t *objPtr);
+		madt1_t(madt1_t *objPtr);
     
         uint8_t ioapicID;
         uint8_t reserved;
@@ -39,8 +39,8 @@ class madt1_t /* I/O APIC */
 class madt2_t /* ISO / Interrupt Source Override */
 {
     public:
-        madt2_t(madt2_t *objPtr);
-        
+		madt2_t(madt2_t *objPtr);
+		
         uint8_t busSource;
         uint8_t irqSource;
         uint32_t GSI;
@@ -50,8 +50,8 @@ class madt2_t /* ISO / Interrupt Source Override */
 class madt4_t /* NMI / non-maskable interupts */
 {
     public:
-        madt4_t(madt4_t *objPtr);
-        
+		madt4_t(madt4_t *objPtr);
+		
         uint8_t ACPIprocessorID;
         uint16_t flags;
         uint8_t lint;
@@ -60,8 +60,8 @@ class madt4_t /* NMI / non-maskable interupts */
 class madt5_t /* lapic address override */
 {
     public:
-        madt5_t(madt5_t *objPtr);
-        
+		madt5_t(madt5_t *objPtr);
+		
         uint16_t reserved;
         uint64_t lapicBaseAddr;
 } __attribute__((packed));

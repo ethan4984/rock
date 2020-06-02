@@ -67,7 +67,7 @@ void pciScanBus(uint8_t bus)
             if((uint8_t)(pciRead(bus, device, 0, 0xC) >> 16) & (1 << 7)) { /* is this a multifunction device ? */
                 for(uint8_t function = 1; function < 8; function++) {
                     if((uint16_t)pciRead(bus, device, function, 0) != 0xffff) /* vaild device? */
-                        checkDevice(bus, device, function);
+                        checkDevice(bus, device, 0);
                 }
             }
         }

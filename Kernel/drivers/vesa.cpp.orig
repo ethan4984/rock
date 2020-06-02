@@ -50,12 +50,12 @@ widget::widget(int x_t, int y_t, int height_t, int width_t, uint32_t colour_t) :
 {
     backgroundFB = (uint32_t*)malloc(width_t * height_t * 4);
 
-    for(int i = x_t; i < x_t + height_t; i++) {
-        for(int j = y_t; j < y_t + width_t; j++) {
+	for(int i = x_t; i < x_t + height_t; i++) {
+		for(int j = y_t; j < y_t + width_t; j++) {
             backgroundFB[backgroundFBsize++] = GRABCOLOUR(i, j);
-            SETPIXEL(i, j, colour_t);
+			SETPIXEL(i, j, colour_t);
         }
-    }
+	}
 }
 
 void widget::moveRight() 
@@ -78,11 +78,11 @@ void widget::moveUp() /* works */
 void widget::moveDown() /* works */
 {
 
-    //    y++;
+    //	y++;
 }
 
 void testBruh() {
-    SETPIXEL(20, 20, 0xfffffff);
+	SETPIXEL(20, 20, 0xfffffff);
 }
 
 void renderChar(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c)
