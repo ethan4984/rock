@@ -15,7 +15,7 @@ class E820map {
     public:
         E820map(stivaleInfo_t *bootInfo);
 
-        void getNextUseableMem(memoryRegion *memRegion);
+        bool getNextUseableMem(memoryRegion *memRegion);
 
         void getNthMmap(memoryRegion *memRegion, uint64_t num);
 

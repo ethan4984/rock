@@ -93,6 +93,7 @@ void initTask(task_t newTask)
 
 void initScheduler() 
 {
+    kPrint("\nInitalizing Scheduler: %d CS/S\n", PITfrequency);
     Tasks = (task_t*)malloc(sizeof(task_t) * 5); 
     taskBitmap = (uint8_t*)malloc(32); 
     memset(taskBitmap, 0, 32);

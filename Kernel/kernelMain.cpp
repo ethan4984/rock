@@ -6,13 +6,17 @@
 #include <Kernel/sched/scheduler.h>
 #include <Kernel/acpiUtils.h> 
 #include <Kernel/drivers/vesa.h>
+#include <Kernel/drivers/keyboard.h>
+#include <Kernel/drivers/mouse.h>
 #include <Kernel/pci.h>
 #include <Slib/videoIO.h>
 #include <Slib/memoryUtils.h>
+#include <Slib/stringUtils.h>
 
 using namespace out;
 
 extern void _init() asm("_init");
+extern void testDiv() asm("testDiv");
 
 void pmmTest();
 void allocTest();
@@ -26,7 +30,7 @@ void testTask6();
 
 void kernelTask()
 {
-    task_t task1((void*)testTask1, malloc(0x400), 0x400, WAITING2START);
+/*    task_t task1((void*)testTask1, malloc(0x400), 0x400, WAITING2START);
     task_t task2((void*)testTask2, malloc(0x400), 0x400, WAITING2START);
     task_t task3((void*)testTask3, malloc(0x400), 0x400, WAITING2START);
     task_t task4((void*)testTask4, malloc(0x400), 0x400, WAITING2START);
@@ -38,7 +42,12 @@ void kernelTask()
     initTask(task3); 
     initTask(task4);
     initTask(task5);
-    initTask(task6);
+    initTask(task6);*/
+
+//    testBruh();
+    widget bruh(400, 400, 10, 10, 0xFF0000);
+
+    testDiv();
     
     for(;;);
 }
@@ -46,6 +55,10 @@ void kernelTask()
 extern "C" void kernelMain(stivaleInfo_t *bootInfo) 
 {
     _init(); /* reqiured for global constructors. PS, be careful about calling shit before this */
+
+    initVesa(bootInfo);
+
+    initalizeVESA(0xffffffff, 0, 1024, 786);
 
     memInit(bootInfo);
 
@@ -57,11 +70,11 @@ extern "C" void kernelMain(stivaleInfo_t *bootInfo)
 
     pciInit();
 
-    initScheduler();
-
     asm volatile ("sti");
 
     startCounter(1000, 0, 6);
+
+    initScheduler();
 
     task_t mainKernelTask((void*)kernelTask, malloc(0x400), 0x400, WAITING2START);
 
@@ -187,7 +200,7 @@ void testTask6()
     uint64_t cnt = 0;
     while(1) {
         cnt += 69;
-        cPrint("Task5 %d", cnt);
+        cPrint("Task6 %d", cnt);
         for(int i = 0; i < 10000; i++) {
             asm volatile ("NOP");
         }

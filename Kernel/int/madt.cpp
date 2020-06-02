@@ -47,7 +47,7 @@ void madtParse()
         i += entry_size - 3;
     }
 
-    cPrint("\nCore count: %d\n", madtInfo.numOfmadt0Entries);
+    kPrint("\nCore count: %d\n", madtInfo.numOfmadt0Entries);
     for(uint64_t i = 0; i < madtInfo.numOfmadt0Entries; i++) {
         cPrint("Core %d\n", i + 1);
         cPrint("\tprocessor id: %d", madtInfo.madt0[i].ACPIprocessorID);
@@ -56,9 +56,9 @@ void madtParse()
     }
 
     for(uint64_t i = 0; i < madtInfo.numOfmadt1Entries; i++) {
-        cPrint("IOAPIC id: %d", madtInfo.madt1[i].ioapicID);
-        cPrint("IOAPIC addr: %x", madtInfo.madt1[i].ioapicAddr);
-        cPrint("GSI base %x\n", madtInfo.madt1[i].GSIBase);
+        kPrint("\nIOAPIC id: %d\n", madtInfo.madt1[i].ioapicID);
+        kPrint("IOAPIC addr: %x\n", madtInfo.madt1[i].ioapicAddr);
+        kPrint("GSI base %x\n", madtInfo.madt1[i].GSIBase);
     }
 
     for(uint64_t i = 0; i < madtInfo.numOfmadt2Entries; i++) {
@@ -76,7 +76,7 @@ void madtParse()
     }
 
     for(uint64_t i = 0; i < madtInfo.numOfmadt5Entries; i++) {
-        cPrint("new lapic base address: %x", madtInfo.madt5[i].lapicBaseAddr);
+        kPrint("\nnew lapic base address: %x\n", madtInfo.madt5[i].lapicBaseAddr);
     }
 }
 

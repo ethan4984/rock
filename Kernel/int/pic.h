@@ -27,7 +27,7 @@ void callHandlers(uint8_t IRQnum);
 
 void maskGate(uint8_t vectorNum);
 
-void maskClear(uint8_t vectorNum);
+void clearGate(uint8_t vectorNum);
 
 void idtInit();
 
@@ -47,3 +47,25 @@ extern uint64_t irq12() asm("irq12");
 extern uint64_t irq13() asm("irq13");
 extern uint64_t irq14() asm("irq14");
 extern uint64_t irq15() asm("irq15");
+
+extern void isr0() asm("isr0");
+extern void isr1() asm("isr1");
+extern void isr2() asm("isr2");
+extern void isr3() asm("isr3");
+extern void isr4() asm("isr4");
+extern void isr5() asm("isr5");
+extern void isr6() asm("isr6");
+extern void isr7() asm("isr7");
+extern void isr8() asm("isr8");
+extern void isr9() asm("isr9");
+extern void isr10() asm("isr10");
+extern void isr11() asm("isr11");
+extern void isr12() asm("isr12");
+extern void isr13() asm("isr13");
+extern void isr14() asm("isr14");
+extern void isr15() asm("isr15");
+extern void isr16() asm("isr16");
+extern void isr17() asm("isr17");
+extern void isr18() asm("isr18");
+extern void isr19() asm("isr19");
+extern void isr20() asm("isr20");

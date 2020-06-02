@@ -22,27 +22,26 @@ extern uint64_t kernelEnd;
 
 void initPageHandler(stivaleInfo_t *bootInfo) 
 {
+    kPrint("Parsing %d E820 modules \n\n", bootInfo->memoryMapEntries);
+
     E820map e820(bootInfo);
 
-    while(1) {     
+    for(uint64_t i = 0; i < bootInfo->memoryMapEntries; i++) { 
         memoryRegion currentRegion;
-        e820.getNextUseableMem(&currentRegion);
-
-        cPrint("\n\nMemory Region found at phsyical address %x", currentRegion.base);
-        cPrint("Goes until %x", currentRegion.limit);
-        uint64_t entrySize = currentRegion.limit - currentRegion.base;
-        cPrint("Total size: %d btytes", entrySize);
-        totalUseableMemory += entrySize;
-
-        if(currentRegion.mmapEntryNum == 8) 
-            break;
+        if(e820.getNextUseableMem(&currentRegion)) {
+            kPrint("Memory Region found at phsyical address %x [Limit] %x [size] %d\n", currentRegion.base, currentRegion.limit, currentRegion.limit - currentRegion.base);
+            //kPrint("Goes until %x\n", currentRegion.limit);
+            uint64_t entrySize = currentRegion.limit - currentRegion.base;
+            //kPrint("Total size: %d btytes\n", entrySize);
+            totalUseableMemory += entrySize;
+        }
     }
 
     totalNumOfPages = roundUp(e820.totalMem, 0x200000);
     
-    cPrint("\n\nTotal memory: %d bytes", e820.totalMem);
-    cPrint("Total useable memory: %d bytes", totalUseableMemory);
-    cPrint("Total number of pages %d", totalNumOfPages);
+    kPrint("\nTotal memory: %d bytes\n", e820.totalMem);
+    kPrint("Total useable memory: %d bytes\n", totalUseableMemory);
+    kPrint("Total number of pages %d\n", totalNumOfPages);
 
     bitmap = (uint8_t*)(kernelEnd - 0x200000);
     pageAllocationInfo = (pageAllocationInfo_t*)(kernelEnd - 0x400000);

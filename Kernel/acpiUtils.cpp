@@ -20,16 +20,16 @@ void initAcpi()
 
             if(rsdp->xsdtAddr) { /* if xsdt exists */
                 xsdt = (xsdt_t*)((uint64_t)rsdp->xsdtAddr);
-                cPrint("XSDT found at %x", xsdt);
+                kPrint("\nXSDT found at %x\n", xsdt);
                 break;
             } 
             
             if(rsdp->rsdtAddr) { /* acpi 1.0 only */
                 rsdt = (rsdt_t*)((uint64_t)rsdp->rsdtAddr);
-                cPrint("RSDT found at %x", rsdt);
+                kPrint("\nRSDT found at %x\n", rsdt);
                 break;
             } else { 
-                cPrint("We got a problem, RSDT nor XSDT were found");
+                kPrint("\nWe got a problem, RSDT nor XSDT were found");
                 return;
             }
         }
@@ -42,7 +42,7 @@ void *findSDT(const char *signature)
         for(uint64_t i = 0; i < (rsdt->ACPIheader.length - sizeof(ACPIheader_t)) / 4; i++) {
             ACPIheader_t *header = (ACPIheader_t*)xsdt->ACPIptr[i];
             if(!strncmp(header->signature, signature, 4)) {
-                cPrint("%s found at %x\n", signature, header);
+                kPrint("%s found at %x\n", signature, header);
                 return (void*)header;
             }
         }
@@ -52,12 +52,12 @@ void *findSDT(const char *signature)
         for(uint64_t i = 0; i < (rsdt->ACPIheader.length - sizeof(ACPIheader_t)) / 4; i++) {
             ACPIheader_t *header = (ACPIheader_t*)rsdt->ACPIptr[i];
             if(!strncmp(header->signature, signature, 4)) {
-                cPrint("%s found at %x\n", signature, header);
+                kPrint("%s found at %x\n", signature, header);
                 return (void*)header;
             }
         }
     }
 
-    cPrint("%s not found", signature);
+    kPrint("%s not found\n", signature);
     return NULL;
 }

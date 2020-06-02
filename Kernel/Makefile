@@ -9,8 +9,8 @@ CFLAGS = $(NORMAL_CFLAGS) $(KERNEL_CRAP)
 SCRC = $(shell find . -type f -name '*.cpp')
 SRCA = $(shell find . -type f -name '*.asm')
 SRCS = $(shell find . -type f -name '*.s')
-OBJ = ../Bin/kernelMain.o ../Bin/ports.o ../Bin/videoIO.o ../Bin/boot.o ../Bin/stringUtils.o ../Bin/memoryUtils.o ../Bin/memoryParse.o ../Bin/physicalPageHandler.o ../Bin/pic.o ../Bin/isr.o ../Bin/scheduler.o ../Bin/acpiUtils.o ../Bin/memHandler.o ../Bin/madt.o ../Bin/pci.o ../Bin/vesa.o ../Bin/task.o ../Bin/thread.o
-OBJQ = kernelMain.o memoryParse.o physicalPageHandler.o pic.o scheduler.o acpiUtils.o memHandler.o madt.o pci.o vesa.o task.o thread.o
+OBJ = ../Bin/kernelMain.o ../Bin/ports.o ../Bin/videoIO.o ../Bin/boot.o ../Bin/stringUtils.o ../Bin/memoryUtils.o ../Bin/memoryParse.o ../Bin/physicalPageHandler.o ../Bin/pic.o ../Bin/scheduler.o ../Bin/acpiUtils.o ../Bin/memHandler.o ../Bin/madt.o ../Bin/pci.o ../Bin/vesa.o ../Bin/task.o ../Bin/thread.o ../Bin/keyboard.o ../Bin/mouse.o ../Bin/isr.o  ../Bin/assemblyISR.o
+OBJQ = kernelMain.o memoryParse.o physicalPageHandler.o pic.o scheduler.o acpiUtils.o memHandler.o madt.o pci.o vesa.o task.o thread.o keyboard.o mouse.o isr.o
 QEMUFLAGS = -smp cpus=4 -m 4G -vga vmware -serial file:serial.log -soundhw pcspk -machine q35
 
 
@@ -38,14 +38,14 @@ kernel: compile
 compile:
 	$(CC) $(SCRC) $(CFLAGS) -c
 	$(NASM) boot.asm -o ../Bin/boot.o
-	$(NASM) int/isr.asm -o ../Bin/isr.o
+	$(NASM) int/isr.asm -o ../Bin/assemblyISR.o
 	$(AS) crtn.s -o crtn.o
 	$(AS) crti.s -o crti.o
 	cd ../Slib && make all
 
 qemu: kernel
 	touch serial.log
-	qemu-system-x86_64 $(QEMUFLAGS) -hda ../crepOS.img &
+	qemu-system-x86_64 $(QEMUFLAGS) -hda ../crepOS.img -enable-kvm &
 	tail -n0 -f serial.log
 
 qemuinfo: kernel

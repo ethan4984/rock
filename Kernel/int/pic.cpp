@@ -83,6 +83,28 @@ void idtInit()
     outb(0x21, 0x0);
     outb(0xA1, 0x0);
 
+    setIDTgate(0, 0x8f, (uint64_t)isr0);
+    setIDTgate(1, 0x8f, (uint64_t)isr1);
+    setIDTgate(2, 0x8f, (uint64_t)isr2);
+    setIDTgate(3, 0x8f, (uint64_t)isr3);
+    setIDTgate(4, 0x8f, (uint64_t)isr4);
+    setIDTgate(5, 0x8f, (uint64_t)isr5);
+    setIDTgate(6, 0x8f, (uint64_t)isr6);
+    setIDTgate(7, 0x8f, (uint64_t)isr7);
+    setIDTgate(8, 0x8f, (uint64_t)isr8);
+    setIDTgate(9, 0x8f, (uint64_t)isr9);
+    setIDTgate(10, 0x8f, (uint64_t)isr10);
+    setIDTgate(11, 0x8f, (uint64_t)isr11);
+    setIDTgate(12, 0x8f, (uint64_t)isr12);
+    setIDTgate(13, 0x8f, (uint64_t)isr13);
+    setIDTgate(14, 0x8f, (uint64_t)isr14);
+    setIDTgate(15, 0x8f, (uint64_t)isr15);
+    setIDTgate(16, 0x8f, (uint64_t)isr16);
+    setIDTgate(17, 0x8f, (uint64_t)isr17);
+    setIDTgate(18, 0x8f, (uint64_t)isr18);
+    setIDTgate(19, 0x8f, (uint64_t)isr19);
+    setIDTgate(20, 0x8f, (uint64_t)isr20);
+
     setIDTgate(32, 0x8e, (uint64_t)irq0);
     setIDTgate(33, 0x8e, (uint64_t)irq1);
     setIDTgate(34, 0x8e, (uint64_t)irq2);

@@ -84,11 +84,11 @@ void pciInit()
 
     pciScanBus(0);
     for(uint64_t device = 0; device < totalDevices; device++) {
-        cPrint("PCI Device %d: ", device);
-        cPrint("\tVendor: %x on [bus] %d [device] %d [function] %d", pciDevices[device].vendorID, pciDevices[device].bus, pciDevices[device].device, pciDevices[device].function);
-        cPrint("\tDevice type: [class] %d [subclass] %d [progIF] %d [Device ID] %x\n", pciDevices[device].classCode, pciDevices[device].subclass, pciDevices[device].progIF, pciDevices[device].deviceID);
+        kPrint("\nPCI Device %d: \n", device);
+        kPrint("\tVendor: %x on [bus] %d [device] %d [function] %d\n", pciDevices[device].vendorID, pciDevices[device].bus, pciDevices[device].device, pciDevices[device].function);
+        kPrint("\tDevice type: [class] %d [subclass] %d [progIF] %d [Device ID] %x\n", pciDevices[device].classCode, pciDevices[device].subclass, pciDevices[device].progIF, pciDevices[device].deviceID);
     }
-    cPrint("PCI: Total Devices: %d\n", totalDevices);    
+    kPrint("\nPCI: Total Devices: %d\n", totalDevices);
 }
 
 pciDevice *grabPCIdevices() 

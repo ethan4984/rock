@@ -1,6 +1,8 @@
 #include <Kernel/mm/memoryParse.h>
 #include <Slib/videoIO.h>
 
+#include <stddef.h>
+
 using namespace out;
 
 E820map::E820map(stivaleInfo_t *bootInfo) : stivaleInfo(bootInfo) {
@@ -12,7 +14,7 @@ E820map::E820map(stivaleInfo_t *bootInfo) : stivaleInfo(bootInfo) {
     cPrint("Total memory detected %d bytes", totalMem);
 }
 
-void E820map::getNextUseableMem(memoryRegion *memRegion) {
+bool E820map::getNextUseableMem(memoryRegion *memRegion) {
     static uint64_t lastRegion = 0;
     for(uint64_t i = lastRegion; i < stivaleInfo->memoryMapEntries; i++) {
         if(mmap[i].type == 1) { /* tpye = 1 : useable ram, type != 1 : reserved or bad */
@@ -21,9 +23,10 @@ void E820map::getNextUseableMem(memoryRegion *memRegion) {
             memRegion->mmapEntryNum = i;
             memRegion->base = mmap[i].addr;
             memRegion->limit = mmap[i].len + mmap[i].addr;
-            return;
+            return true;
         }
     }
+    return false;
 }
 
 void E820map::getNthMmap(memoryRegion *memRegion, uint64_t num) {
