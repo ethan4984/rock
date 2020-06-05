@@ -5,7 +5,7 @@ This is a simple x86_64 operating system made for fun and learning.
   - E820 PMM
   - A basic standard library
   - Task/thread process management (Round robin, 1000 context switches per second)
-  - External Interrupt and excpetion handlers
+  - External interrupt and exception handlers
   - Basic driver support (Eg.. Keyboard, mouse, vesa, serial)
 
 # Goals
@@ -13,5 +13,5 @@ This is a simple x86_64 operating system made for fun and learning.
 
   - VMM 
   - APIC/SMP
-  - ACHI driver
+  - AHCI driver
   - GUI
