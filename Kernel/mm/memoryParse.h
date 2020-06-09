@@ -4,16 +4,20 @@
 #include <stdint.h>
 
 /* contains the addressing spec for usable ram */
-typedef struct {
+typedef struct 
+{
     uint64_t type;
     uint64_t mmapEntryNum; 
     uint64_t base; /* base address */
     uint64_t limit; /* size in bytes of the regin */
 } memoryRegion;
 
-class E820map {
+class E820map 
+{
     public:
         E820map(stivaleInfo_t *bootInfo);
+
+        E820map() { }
 
         bool getNextUseableMem(memoryRegion *memRegion);
 
@@ -25,3 +29,5 @@ class E820map {
 
         stivaleInfo_t *stivaleInfo;
 };
+
+const char *mmapEntryType(uint64_t type);

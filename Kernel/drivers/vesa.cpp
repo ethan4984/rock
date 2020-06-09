@@ -9,8 +9,13 @@ using namespace out;
 #define SETPIXEL(X, Y, COLOUR) *(volatile uint32_t*)((uint64_t)framebuffer + (((Y) * fbPitch) + ((X) * fbBpp / 8))) = (COLOUR)
 #define GRABCOLOUR(X, Y)  *(volatile uint32_t*)((uint64_t)framebuffer + (((Y) * fbPitch) + ((X) * fbBpp / 8)))
     
-uint32_t fbHeight, fbWidth, fbPitch, fbBpp;
+uint32_t fbHeight, fbWidth, fbPitch, fbBpp, fbSize, fbPixels;
 uint32_t *framebuffer;
+
+void memcpy32(uint32_t *src, uint32_t *dst, uint64_t count) {
+    for (uint64_t i = 0; i<count; i++)
+        *dst++ = *src++;
+}
 
 void initVesa(stivaleInfo_t *bootInfo)
 {
@@ -19,6 +24,8 @@ void initVesa(stivaleInfo_t *bootInfo)
     fbWidth = bootInfo->framebufferWidth;
     fbPitch = bootInfo->framebufferPitch;
     fbBpp = bootInfo->framebufferBpp;
+    fbPixels = fbHeight * fbWidth;
+    fbSize =  fbHeight * fbPitch;
 
     cPrint("Framebuffer address: %x",  framebuffer);
     cPrint("Framebuffer Height: %d",  fbHeight);
@@ -60,13 +67,11 @@ widget::widget(int x_t, int y_t, int height_t, int width_t, uint32_t colour_t) :
 
 void widget::moveRight() 
 {
- //   x++;
-
+    //   x++;
 }
 
 void widget::moveLeft() 
 {
-
     //    x--;
 }
 
@@ -77,7 +82,6 @@ void widget::moveUp() /* works */
 
 void widget::moveDown() /* works */
 {
-
     //    y++;
 }
 
@@ -87,21 +91,28 @@ void testBruh() {
 
 void renderChar(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c)
 {
-    for (uint8_t i = 0; i < 8; i++) {
-        for (uint8_t j = 0; j < 8; j++) {
-            if ((font[(uint8_t)c][i] >> j) & 1) {
+    for(uint8_t i = 0; i < 8; i++) {
+        for(uint8_t j = 0; j < 8; j++) {
+            if((font[(uint8_t)c][i] >> j) & 1) {
                 uint64_t offset = ((i + y) * fbPitch) + ((j + x) * 4);
                 *(uint32_t*)((uint64_t)framebuffer + offset) = fg;
             }
             else {
                 uint64_t offset = ((i + y) * fbPitch) + ((j + x) * 4);
-                *(uint32_t *)((uint64_t)framebuffer + offset) = bg;
+                *(uint32_t*)((uint64_t)framebuffer + offset) = bg;
             }
         }
     }
 }
 
-void vesaScroll(uint64_t rows_shift, uint32_t bg) {
-    memset32(framebuffer, bg, (fbWidth * rows_shift));
-    memcpy(framebuffer, framebuffer + (fbWidth * rows_shift), ((fbWidth * fbHeight) * 4));
+void vesaScroll(uint64_t rows_shift, uint32_t bg) 
+{
+    uint32_t color_dat = bg;
+    uint64_t buf_pos = (uint64_t)framebuffer;
+    /* Do the copy */
+    memcpy32((uint32_t*) (buf_pos + (fbPitch * rows_shift)), (uint32_t *) (buf_pos), 
+        fbPixels - ((fbPitch * rows_shift) / 4));
+    /* Do the clear */
+    memset32((uint32_t*) (buf_pos + fbSize - (fbPitch * rows_shift)),
+        bg, (fbPitch * rows_shift) / 4); 
 }

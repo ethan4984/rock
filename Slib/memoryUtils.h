@@ -30,6 +30,10 @@ void memset64(uint64_t *src, uint64_t data, uint64_t count);
 
 void memcpy(void *src, const void *tar, int how_many);
 
+void memcpy64(uint64_t *dest, const uint64_t *src, uint64_t n);
+
+void memmove(uint64_t *dest, const uint64_t *src, uint64_t n);
+
 void set(uint8_t *bitmap, uint64_t location);
 
 void clear(uint8_t *bitmap, uint64_t location);

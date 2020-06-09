@@ -1,12 +1,12 @@
 Framebuffer address: 0xFD000000
-Framebuffer Height: 768
-Framebuffer Width: 1024
-Framebuffer pitch: 4096
+Framebuffer Height: 480
+Framebuffer Width: 640
+Framebuffer pitch: 2560
 Framebuffer BPP: 32
 
 E820 parsing
 
-Total memory detected 4563369984 bytes
+Total memory detected 4562712292 bytes
 
 IDT intialized at 0x8
 
@@ -56,3 +56,4 @@ ACPIprocessorID: 255
 flags: 0x0
 lint: 1
 Task slot 0
+Task slot 1

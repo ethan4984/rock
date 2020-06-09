@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+char *grabWord(const char *line, int wordNumber);
+
+char *getInput();
+
 char *strcpy(char *dest, const char *src);
 
 int strcmp(const char *a, const char *b);

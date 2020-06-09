@@ -58,6 +58,7 @@ void initPageHandler(stivaleInfo_t *bootInfo)
             allocateRegion(bitmapStartingBit, totalOccupiedPages);
         }
     }
+
     physicalPageAlloc(1); // allocate bios memory
 }
 

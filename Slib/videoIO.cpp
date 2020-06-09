@@ -95,11 +95,11 @@ namespace out
     void putchar(char c)
     {
         static bool isBack = false;
-
+        static int cnt = 0;
         if(endOfScreenV()) {
             vesaScroll(8, terminalBG);
             terminalColumn -= 8;
-        }
+        } 
 
         switch(c) {
             case '\n':
@@ -144,6 +144,7 @@ namespace out
     void kPrint(const char *str, ...)
     {
         char *string;
+        char character;
         uint64_t number;
 
         va_list args;
@@ -164,6 +165,10 @@ namespace out
                         string = va_arg(args, char *);
                         for(size_t i = 0; i < strlen(string); i++)
                             putchar(string[i]);
+                        break;
+                    case 'c':
+                        character = (char)va_arg(args, int);
+                        putchar(character); 
                         break;
                     case 'x':
                         number = va_arg(args, uint64_t);

@@ -38,19 +38,44 @@ void memcpy(void *src, const void *tar, int how_many)
         Rsrc[i] = Rtar[i];
 }
 
+void memcpy64(uint64_t *dest, const uint64_t *src, uint64_t n)
+{
+    uint64_t *pdest = dest;
+    const uint64_t *psrc = src;
+
+    for (uint64_t i = 0; i < (n / sizeof(uint64_t)); i++) {
+        pdest[i] = psrc[i];
+    }
+}
+
+void memmove(uint64_t *dest, const uint64_t *src, uint64_t n) {
+    uint64_t *pdest = dest;
+    const uint64_t *psrc = src;
+
+    if (src > dest) {
+        for (uint64_t i = 0; i < n; i++) {
+            pdest[i] = psrc[i];
+        }
+    } else if (src < dest) {
+        for (uint64_t i = n; i > 0; i--) {
+            pdest[i-1] = psrc[i-1];
+        }
+    }
+}
+
 void set(uint8_t *bitmap, uint64_t location)
 {
-	bitmap[location / 8] = bitmap[location / 8] | (1 << (location % 8));
+    bitmap[location / 8] = bitmap[location / 8] | (1 << (location % 8));
 }
 
 void clear(uint8_t *bitmap, uint64_t location)
 {
-	bitmap[location / 8] = bitmap[location / 8] & (~(1 << (location % 8)));
+    bitmap[location / 8] = bitmap[location / 8] & (~(1 << (location % 8)));
 } 
 
 bool isset(uint8_t *bitmap, uint64_t location)
 {
-	return (bitmap[location / 8] >> (location % 8)) & 0x1;
+    return (bitmap[location / 8] >> (location % 8)) & 0x1;
 }
 
 uint64_t *getPageDirectory() 

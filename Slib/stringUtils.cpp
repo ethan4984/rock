@@ -1,5 +1,49 @@
+#include <Kernel/mm/memHandler.h>
+#include <Kernel/drivers/keyboard.h>
 #include <stringUtils.h>
 #include <stddef.h>
+
+char *grabWord(const char *line, int wordNumber) 
+{
+    char *word = (char*)malloc(32);
+    int lastSpace = 0, forwardSpace = 0, numberOfWords = 0;
+    for(uint64_t i = 0; i < strlen(line); i++) {
+        if(numberOfWords == wordNumber) {
+            if(line[i] == ' ') {
+                forwardSpace = i;
+                break;
+            }
+
+            if(i == strlen(line) - 1) 
+                forwardSpace = strlen(line);
+        } else if(line[i] == ' ') {
+            lastSpace = i;
+            numberOfWords++;
+        }
+    }
+
+    int cnt = 0;
+    for(int i = lastSpace; i < forwardSpace; i++) {
+        if(line[i] != ' ')
+            word[cnt++] = line[i];
+    }
+
+    return word;
+}
+
+char *getInput() 
+{
+    grabKeys();
+
+    while(1) {
+        if(isDone())
+            break;
+    }
+   
+    char *keys = getKeys();
+
+    return keys;
+}
 
 char *itob(uint64_t num, int base)
 {
@@ -41,7 +85,7 @@ int strncmp(const char* str1, const char* str2, uint64_t n) {
         if (str1[i] != str2[i]) 
             return 1;
     }
-	return 0;
+    return 0;
 }
 
 char *strcpy(char *dest, const char *src)

@@ -1,4 +1,5 @@
 #include <Kernel/int/pic.h>
+#include <Kernel/drivers/keyboard.h>
 #include <Slib/ports.h>
 #include <Slib/videoIO.h>
 
@@ -12,7 +13,7 @@ IDTregister IDTr;
 
 typedef void (*eventHandlers)();
 
-eventHandlers irqHandler[15] = {    NULL, NULL, NULL, NULL, NULL,
+eventHandlers irqHandler[15] = {    NULL, keyboardHandler, NULL, NULL, NULL,
                                     NULL, NULL, NULL, NULL, NULL, 
                                     NULL, NULL, NULL, NULL, NULL, 
                                 };

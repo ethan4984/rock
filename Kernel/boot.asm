@@ -5,8 +5,8 @@ section .stivalehdr ; stivale
 stivalehdr: 
     dq stack.top
     dw 1 
-    dw 1024 ; framebuffer height
-    dw 768 ; frame buffer width
+    dw 640 ; framebuffer height
+    dw 480 ; frame buffer width
     dw 32 ; bits per pixel / bpp
     dq _start
 

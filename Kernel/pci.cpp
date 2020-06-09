@@ -83,10 +83,15 @@ void pciInit()
     }
 
     pciScanBus(0);
+//    showDevices();
+}
+
+void showDevices() 
+{
     for(uint64_t device = 0; device < totalDevices; device++) {
-        kPrint("\nPCI Device %d: \n", device);
+        kPrint("PCI Device %d: \n", device);
         kPrint("\tVendor: %x on [bus] %d [device] %d [function] %d\n", pciDevices[device].vendorID, pciDevices[device].bus, pciDevices[device].device, pciDevices[device].function);
-        kPrint("\tDevice type: [class] %d [subclass] %d [progIF] %d [Device ID] %x\n", pciDevices[device].classCode, pciDevices[device].subclass, pciDevices[device].progIF, pciDevices[device].deviceID);
+        kPrint("\tDevice type: [class] %d [subclass] %d [progIF] %d [Device ID] %x\n\n", pciDevices[device].classCode, pciDevices[device].subclass, pciDevices[device].progIF, pciDevices[device].deviceID);
     }
     kPrint("\nPCI: Total Devices: %d\n", totalDevices);
 }

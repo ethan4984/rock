@@ -26,3 +26,5 @@ void pciScanBus(uint8_t bus);
 void pciInit();
 
 pciDevice *grabPCIdevices();
+
+void showDevices();

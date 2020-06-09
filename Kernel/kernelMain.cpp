@@ -12,6 +12,7 @@
 #include <Slib/videoIO.h>
 #include <Slib/memoryUtils.h>
 #include <Slib/stringUtils.h>
+#include <Apps/prompt.h>
 
 using namespace out;
 
@@ -27,6 +28,8 @@ void testTask3();
 void testTask4();
 void testTask5();
 void testTask6();
+
+
 
 void kernelTask()
 {
@@ -44,13 +47,18 @@ void kernelTask()
     initTask(task5);
     initTask(task6);*/
 
-//    testBruh();
-    widget bruh(400, 400, 10, 10, 0xFF0000);
-
-    testDiv();
+    //widget bruh(400, 400, 10, 10, 0xFF0000);
     
+    task_t prompt((void*)promptMain, malloc(0x400), 0x400, WAITING2START);
+
+    initTask(prompt);
+
+    putchar('\n');
+   
     for(;;);
 }
+
+stivaleInfo_t *stivaleInfo;
 
 extern "C" void kernelMain(stivaleInfo_t *bootInfo) 
 {
@@ -58,7 +66,7 @@ extern "C" void kernelMain(stivaleInfo_t *bootInfo)
 
     initVesa(bootInfo);
 
-    initalizeVESA(0xffffffff, 0, 1024, 786);
+    initalizeVESA(0xffffffff, 0, bootInfo->framebufferWidth, bootInfo->framebufferHeight);
 
     memInit(bootInfo);
 
@@ -70,9 +78,9 @@ extern "C" void kernelMain(stivaleInfo_t *bootInfo)
 
     pciInit();
 
-    asm volatile ("sti");
-
     startCounter(1000, 0, 6);
+
+    asm volatile ("sti");
 
     initScheduler();
 
@@ -80,7 +88,14 @@ extern "C" void kernelMain(stivaleInfo_t *bootInfo)
 
     initTask(mainKernelTask);
 
+    stivaleInfo = bootInfo;
+
     for(;;);
+}
+
+stivaleInfo_t *getstivale()
+{
+    return stivaleInfo;
 }
 
 void pmmTest() 

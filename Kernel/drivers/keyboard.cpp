@@ -1,4 +1,5 @@
 #include <Kernel/drivers/keyboard.h>
+#include <Kernel/drivers/vesa.h>
 #include <Kernel/mm/memHandler.h>
 #include <Kernel/int/pic.h>
 #include <Slib/ports.h>
@@ -27,15 +28,16 @@ char capKeyMap[] =  {
 
 char *keyBuffer;
 uint32_t bufferSize = 0, bufferIndex = 0;
+char key;
 
-bool upKey = false;
+bool upKey = false, done = false, found = false;
 
-void grabKeys(char *newBuffer) 
+void grabKeys() 
 {
-    clearGate(33); // unmask irq1
-    newBuffer = (char*)malloc(32); 
-    keyBuffer = newBuffer;
+    keyBuffer = (char*)malloc(32); 
     bufferSize = 32;
+    bufferIndex = 0;
+    done = false;
 }
 
 void addCharacter(char character) 
@@ -44,25 +46,25 @@ void addCharacter(char character)
         keyBuffer = (char*)realloc(keyBuffer, 32);
         bufferSize += 32;
     }
-    keyBuffer[bufferIndex] = character;
+    keyBuffer[bufferIndex++] = character;
 }
 
 void keyboardHandler()
 {
-    cPrint("bruh");
-    clearGate(33); // unmask irq1
+    uint8_t keycode = inb(0x60); // grab keycode through ps2 port 0x60
 
     if(bufferSize != 0) {
-        uint8_t keycode = inb(0x60); // grab keycode through ps2 port 0x60
-
         switch(keycode) {
             case 0x1c:  // enter
                 bufferSize = 0;
-                maskGate(33); // mask irq1 
+                done = true;
                 break;
             case 0xe:  // backspace
-                if(bufferIndex != 0) 
-                    keyBuffer[bufferIndex--] = 0; 
+                if(bufferIndex != 0) {
+                    keyBuffer[bufferIndex++] = '\b'; 
+                    key = '\b';
+                    found = true;
+                }
                 break;
             case 0xf: // tab
                 break;
@@ -76,15 +78,43 @@ void keyboardHandler()
                 if(keycode <= 128) {
                     if(upKey) {
                         addCharacter(capKeyMap[keycode]);
-                        cPrint("%c", capKeyMap[keycode]);
-                        bufferIndex++;
+ //                       cPrint("%c", capKeyMap[keycode]);
+                        key = capKeyMap[keycode];
+                        found = true;
                         break;
                     }
 
-                    cPrint("%c", keyMap[keycode]);
+                    //kPrint("%c", keyMap[keycode]);
+                    
                     addCharacter(keyMap[keycode]);
-                    bufferIndex++;
+                    key = keyMap[keycode];
+                    found = true;
                 }
         }
     }
 }
+
+bool isDone()
+{
+    return done;
+}
+
+char *getKeys()
+{
+    return keyBuffer;
+}
+
+bool oneChar()
+{
+    return found;
+}
+
+void falseFound()
+{
+    found = false;
+}
+
+char grabKey()
+{
+    return key;
+} 

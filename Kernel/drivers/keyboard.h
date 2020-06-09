@@ -1,5 +1,15 @@
 #pragma once
 
-void grabKeys(char *output);
+void grabKeys();
 
 void keyboardHandler();
+
+bool isDone();
+
+bool oneChar();
+
+void falseFound();
+
+char *getKeys();
+
+char grabKey();
