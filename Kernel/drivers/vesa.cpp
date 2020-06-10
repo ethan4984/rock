@@ -107,12 +107,8 @@ void renderChar(uint64_t x, uint64_t y, uint32_t fg, uint32_t bg, char c)
 
 void vesaScroll(uint64_t rows_shift, uint32_t bg) 
 {
-    uint32_t color_dat = bg;
-    uint64_t buf_pos = (uint64_t)framebuffer;
-    /* Do the copy */
-    memcpy32((uint32_t*) (buf_pos + (fbPitch * rows_shift)), (uint32_t *) (buf_pos), 
-        fbPixels - ((fbPitch * rows_shift) / 4));
-    /* Do the clear */
-    memset32((uint32_t*) (buf_pos + fbSize - (fbPitch * rows_shift)),
-        bg, (fbPitch * rows_shift) / 4); 
+    uint64_t framebufferPhys = (uint64_t)framebuffer;
+    memcpy32((uint32_t*)(framebufferPhys + (fbPitch * rows_shift)), (uint32_t *)(framebufferPhys), fbPixels - ((fbPitch * rows_shift) / 4));
+    memset32((uint32_t*)(framebufferPhys + fbSize - (fbPitch * rows_shift)),
+        bg, (fbPitch * rows_shift) / 4);
 }
