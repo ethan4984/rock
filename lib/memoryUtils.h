@@ -6,6 +6,8 @@
 
 namespace kernel {
 
+template <typename F, typename ...args> using function = F(*)(args...);
+
 void memset(void *src, int64_t data, uint64_t count);
 
 void memset8(uint8_t *src, uint8_t data, uint64_t count);

@@ -31,10 +31,19 @@ build:
 	dd if=/dev/zero bs=1M count=0 seek=64 of=rock.img
 	parted -s rock.img mklabel msdos
 	parted -s rock.img mkpart primary 1 100%
-	echfs-utils -m -p0 rock.img quick-format 32768
-	echfs-utils -m -p0 rock.img import kernel/qloader2.cfg qloader2.cfg
-	echfs-utils -m -p0 rock.img import Bin/rock.elf rock.elf
-	echfs-utils -m -p0 rock.img import Bin/rock.elf rock.img
+	rm -rf diskImage/
+	mkdir diskImage
+	sudo losetup -Pf --show rock.img > loopback_dev
+	sudo partprobe `cat loopback_dev`
+	sudo mkfs.ext2 `cat loopback_dev`p1
+	sudo mount `cat loopback_dev`p1 diskImage
+	sudo mkdir diskImage/boot
+	sudo cp Bin/rock.elf diskImage/boot/
+	sudo cp kernel/qloader2.cfg diskImage/
+	sync
+	sudo umount diskImage/
+	sudo losetup -d `cat loopback_dev`
+	rm -rf diskImage loopback_dev
 	cd qloader2 && ./qloader2-install qloader2.bin ../rock.img
 	rm kernel/*.o
 

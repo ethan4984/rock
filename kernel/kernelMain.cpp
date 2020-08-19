@@ -1,5 +1,6 @@
 #include <kernel/mm/physicalPageManager.h>
 #include <kernel/mm/virtualPageManager.h>
+#include <kernel/fs/ext2/ext2Main.h>
 #include <kernel/drivers/ahci.h>
 #include <kernel/drivers/pci.h>
 #include <kernel/sched/hpet.h>
@@ -12,6 +13,8 @@
 #include <kernel/int/tss.h>
 #include <kernel/stivale.h>
 #include <lib/output.h>
+
+#include <stddef.h>
 
 extern "C" void _init();
 
