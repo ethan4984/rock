@@ -51,6 +51,12 @@ void virtualPageManager_t::newUserMap(uint64_t pageCnt) {
     pdEntry_t newEntry((uint64_t)pml4 - HIGH_VMA, USR_PT_FLAGS, USR_PD_FLAGS, 1);
 }
 
+uint64_t virtualPageManager_t::grabPML4() {
+    uint64_t pml4;
+    asm volatile ("movq %%cr3, %0" : "=r"(pml4));
+    return pml4;
+}
+
 uint64_t pdEntry_t::findPageMap(uint64_t identifier) {
     for(uint64_t i = 0; i < hashSize; i++) {
         if(hash[i] == identifier)

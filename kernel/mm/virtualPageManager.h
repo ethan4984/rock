@@ -41,6 +41,8 @@ public:
 
     void fork(uint64_t pageMapIndex);
 
+    uint64_t grabPML4();
+
 private:
     static pdEntry_t *pdEntries;
 };

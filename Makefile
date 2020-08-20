@@ -27,6 +27,8 @@ build:
 	$(NASM) kernel/crti.asm -o kernel/crti.o
 	$(NASM) kernel/int/isr.asm -o Bin/isr.o
 	$(NASM) kernel/int/gdt.asm -o Bin/gdtAsm.o
+	nasm -fbin kernel/sched/smp.asm -o Bin/smpASM.bin
+	$(NASM) kernel/real.asm -o Bin/real.o
 	$(CXX) -lgcc -no-pie -nodefaultlibs -nostartfiles -n -T linker.ld -o Bin/rock.elf $(OBJ_LINK_LIST)
 	dd if=/dev/zero bs=1M count=0 seek=64 of=rock.img
 	parted -s rock.img mklabel msdos

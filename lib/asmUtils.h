@@ -9,6 +9,8 @@
 
 namespace kernel {
 
+typedef void *symbol[];
+
 struct regs_t {
     uint64_t r15;
     uint64_t r14;
