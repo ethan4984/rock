@@ -13,6 +13,10 @@ struct cpuInfo_t {
 
 void initSMP();
 
+void spinLock(char *ptr);
+
+void spinRelease(char *ptr);
+
 inline cpuInfo_t *cpuInfo;
 
 }

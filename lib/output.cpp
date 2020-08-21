@@ -1,3 +1,4 @@
+#include <kernel/sched/smp.h>
 #include <lib/stringUtils.h>
 #include <lib/asmUtils.h>
 #include <lib/output.h>
@@ -48,6 +49,8 @@ coutBase &coutBase::operator<<(uint64_t number) {
 }
 
 coutBase &coutBase::operator+(const char *str) {
+    static char lock = 0;
+    spinLock(&lock);
     for(uint64_t i = 0; i < sizeof(prefixList) / sizeof(prefixList_t); i++) {
         if(strcmp(str, prefixList[i].prefix) == 0) {
             serialWriteString(bashColours[prefixList[i].prefixColour]);
@@ -56,6 +59,7 @@ coutBase &coutBase::operator+(const char *str) {
             serialWrite(' ');
         }
     }
+    spinRelease(&lock);
     return *this;
 }
 

@@ -8,6 +8,8 @@ void madtInfo_t::madtInit() {
 
     lapicAddr = madt->lapicAddr;
 
+    cout + "[APIC]" << lapicAddr << "\n";
+
     madtEntry0 = new madtEntry0_t[50];
     madtEntry1 = new madtEntry1_t[50];
     madtEntry2 = new madtEntry2_t[50];

@@ -8,7 +8,7 @@ CXXFLAGS = $(NORMAL_CXXFLAGS) $(KERNEL_CXXFLAGS)
 
 CXX_SRC = $(shell find . -type f -name '*.cpp')
 
-QEMUFLAGS = -m 4G -vga vmware -serial file:serial.log -soundhw pcspk -machine q35 -smp 4
+QEMUFLAGS = -m 4G -vga vmware -serial file:serial.log -smp 4 -netdev user,id=n1 -device e1000,netdev=n1 
 
 CRTI_OBJ=kernel/crti.o
 CRTBEGIN_OBJ:=$(shell $(CXX) $(CXXFLAGS) -print-file-name=crtbegin.o)
@@ -55,7 +55,7 @@ qemu: build
 	tail -n0 -f serial.log
 
 info: build
-	qemu-system-x86_64 -smp cpus=4 rock.img -m 4G -no-reboot -monitor stdio -d int -D qemu.log -no-shutdown -vga vmware 
+	qemu-system-x86_64 -drive id=disk,file=rock.img,if=none -device ahci,id=ahci -device ide-hd,drive=disk,bus=ahci.0 $(QEMUFLAGS) -no-reboot -monitor stdio -d int -D qemu.log -no-shutdown -vga vmware 
 
 debug: build
 	qemu-system-x86_64 rock.img $(QEMUFLAGS) -no-reboot -monitor stdio -d int -no-shutdown

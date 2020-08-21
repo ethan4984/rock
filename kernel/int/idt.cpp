@@ -1,10 +1,23 @@
+#include <kernel/int/apic.h>
 #include <kernel/int/idt.h>
 #include <lib/asmUtils.h>
+#include <lib/output.h>
 
 namespace kernel {
 
-extern "C" void isrHandlerMain(regs_t *reg) {
+idtEntry_t entries[256];
+idtr_t idtr;
 
+extern "C" void isrHandlerMain(regs_t *reg) {
+    cout + "[KDEBUG]" << "Hello\n";
+    if(reg->isrNumber > 32) {
+        uint64_t cr2;
+        asm volatile ("cli\n" "mov %%cr2, %0" : "=a"(cr2));
+        cout + "[KDEBUG]" << "Congrats: you fucked up with a nice <" << exceptionMessages[reg->isrNumber] << "\n";
+        for(;;); 
+    }
+
+    apic.lapicWrite(LAPIC_EOI, 0);
 }
 
 void idt_t::setIDTentry(uint16_t selector, uint8_t ist, uint8_t attributes, uint64_t offset, uint8_t index) {
@@ -280,6 +293,6 @@ void idt_t::initIDT() {
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr253, 253);
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr254, 254);
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr255, 255);
-} 
+}
 
 }

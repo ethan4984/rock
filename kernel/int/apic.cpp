@@ -126,10 +126,10 @@ void apic_t::initAPIC() {
     for(uint64_t i = 0; i < 16; i++) {
         writeRedirectionTable(i, i + 32);
     }
-    
+
     lapicWrite(LAPIC_SINT, lapicRead(LAPIC_SINT) | 0x1ff); // enavle spurious interrupts
 
-    asm volatile("mov %0, %%cr8\n" :: "r"((uint64_t)0)); // set the TPR and also sti
+    asm volatile("mov %0, %%cr8" :: "r"((uint64_t)0)); // set the TPR and also sti
 }
 
 }

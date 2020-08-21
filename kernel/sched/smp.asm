@@ -1,5 +1,4 @@
 org 0x1000
-
 bits 16
 
 coreBootstrap:

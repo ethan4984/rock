@@ -26,11 +26,6 @@ public:
     void initIDT();
 
     void setIDTR();
-
-private:
-    idtEntry_t entries[256];
-
-    idtr_t idtr;
 };
 
 extern "C" void isr0();
@@ -292,4 +287,40 @@ extern "C" void isr255();
 
 inline idt_t idt;
 
+inline const char *exceptionMessages[] = { "Divide by zero",
+                                    "Debug",
+                                    "NMI",
+                                    "Breakpoint",
+                                    "Overflow",
+                                    "Bound Range Exceeded",
+                                    "Invaild Opcode",
+                                    "Device Not Available", 
+                                    "Double fault", 
+                                    "Co-processor Segment Overrun",
+                                    "Invaild TSS",
+                                    "Segment not present",
+                                    "Stack-Segment Fault",
+                                    "GPF",
+                                    "Page Fault",
+                                    "Reserved",
+                                    "x87 Floating Point Exception",
+                                    "allignement check",
+                                    "Machine check",
+                                    "SIMD floating-point exception",
+                                    "Virtualization Excpetion",
+                                    "Deadlock",
+                                    "Reserved",
+                                    "Reserved",
+                                    "Reserved",
+                                    "Reserved",
+                                    "Reserved",
+                                    "Reserved",
+                                    "Reserved",
+                                    "Reserved",
+                                    "Reserved",
+                                    "Security Exception",
+                                    "Reserved",
+                                    "Triple Fault", 
+                                    "FPU error"
+                                  };
 }
