@@ -27,6 +27,7 @@ build:
 	$(NASM) kernel/crti.asm -o kernel/crti.o
 	$(NASM) kernel/int/isr.asm -o Bin/isr.o
 	$(NASM) kernel/int/gdt.asm -o Bin/gdtAsm.o
+	$(NASM) kernel/sched/scheduler.asm -o Bin/schedulerASM.o
 	nasm -fbin kernel/sched/smp.asm -o Bin/smpASM.bin
 	$(NASM) kernel/real.asm -o Bin/real.o
 	$(CXX) -lgcc -no-pie -nodefaultlibs -nostartfiles -n -T linker.ld -o Bin/rock.elf $(OBJ_LINK_LIST)
@@ -51,11 +52,11 @@ build:
 
 qemu: build
 	touch serial.log
-	qemu-system-x86_64 $(QEMUFLAGS) -drive id=disk,file=rock.img,if=none -device ahci,id=ahci -device ide-drive,drive=disk,bus=ahci.0 -enable-kvm &
+	qemu-system-x86_64 $(QEMUFLAGS) -drive id=disk,file=rock.img,if=none -device ahci,id=ahci -device ide-hd,drive=disk,bus=ahci.0 -enable-kvm &
 	tail -n0 -f serial.log
 
 info: build
-	qemu-system-x86_64 -drive id=disk,file=rock.img,if=none -device ahci,id=ahci -device ide-hd,drive=disk,bus=ahci.0 $(QEMUFLAGS) -no-reboot -monitor stdio -d int -D qemu.log -no-shutdown -vga vmware 
+	qemu-system-x86_64 -drive id=disk,file=rock.img,if=none -device ahci,id=ahci -device ide-hd,drive=disk,bus=ahci.0 $(QEMUFLAGS) -no-reboot -monitor stdio -d int -D qemu.log -no-shutdown -vga vmware -enable-kvm
 
 debug: build
-	qemu-system-x86_64 rock.img $(QEMUFLAGS) -no-reboot -monitor stdio -d int -no-shutdown
+	qemu-system-x86_64 -drive id=disk,file=rock.img,if=none -device ahci,id=ahci -device ide-hd,drive=disk,bus=ahci.0 $(QEMUFLAGS) -no-reboot -monitor stdio -d int -no-shutdown

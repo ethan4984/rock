@@ -9,27 +9,15 @@ namespace kernel {
 uint64_t kpml3;
 uint64_t kpml3HH;
 
-uint32_t *pdEntry_t::hash = NULL;
 pdEntry_t *virtualPageManager_t::pdEntries = NULL;
-uint32_t pdEntry_t::hashSize = 0x1000;
 
 pdEntry_t::pdEntry_t(uint64_t pml4, uint64_t pdFlags, uint64_t ptFlags, uint64_t hashIdentifier) : 
     pml4(pml4), pdFlags(pdFlags), ptFlags(ptFlags) 
 {
-    for(uint64_t i = 0; i < hashSize; i++) {
-        if(hash[i] == 0) {
-            hash[i] = hashIdentifier;
-            return;
-        }
-    }
 
-    hash = (uint32_t*)kheap.krealloc(hash, uint32_t(0x1000));
-    memset32(hash + uint32_t(hashSize), 0, 0x1000);
-
-    pdEntry_t newEntry(pml4, pdFlags, ptFlags, hashIdentifier);
 }
 
-void virtualPageManager_t::newUserMap(uint64_t pageCnt) {
+uint64_t virtualPageManager_t::newUserMap(uint64_t pageCnt) {
     uint64_t *pml4 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
     uint64_t *pml3 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
     uint64_t *pml2 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
@@ -49,7 +37,20 @@ void virtualPageManager_t::newUserMap(uint64_t pageCnt) {
     }
  
     pdEntry_t newEntry((uint64_t)pml4 - HIGH_VMA, USR_PT_FLAGS, USR_PD_FLAGS, 1);
+
+    int64_t index = firstFreeSlot();
+    if(index == -1) {
+        entryCnt += 10;
+        pdEntries = (pdEntry_t*)kheap.krealloc(pdEntries, sizeof(pdEntry_t) * 0x1000);
+    }
+
+    pdEntries[index] = newEntry;
+    return index;
 }
+
+void pdEntry_t::initPageMap() {
+    asm volatile("movq %0, %%cr3" :: "r" (pml4) : "memory");
+} 
 
 uint64_t virtualPageManager_t::grabPML4() {
     uint64_t pml4;
@@ -57,17 +58,21 @@ uint64_t virtualPageManager_t::grabPML4() {
     return pml4;
 }
 
-uint64_t pdEntry_t::findPageMap(uint64_t identifier) {
-    for(uint64_t i = 0; i < hashSize; i++) {
-        if(hash[i] == identifier)
-            return i;
+uint64_t virtualPageManager_t::firstFreeSlot() {
+    for(uint64_t i = 0; i < entryCnt; i++) {
+        if(pdEntries[i].pml4 == 0) {
+            return i; 
+        }
     }
-    return ERROR;
+    return -1;
+}
+
+void virtualPageManager_t::initAddressSpace(uint64_t index) {
+    pdEntries[index].initPageMap();
 }
 
 void virtualPageManager_t::init() {
     pdEntries = new pdEntry_t[0x1000];
-    pdEntry_t::hash = new uint32_t[0x1000];
 
     uint64_t pdFlags = (1 << 2) | 0x3; /* set superuser/present/read/write bits */
     uint64_t ptFlags = (1 << 2) | (1 << 7) | 0x3; /* set superuser/size/present/read/write bits */

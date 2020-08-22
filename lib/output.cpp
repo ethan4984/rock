@@ -2,6 +2,7 @@
 #include <lib/stringUtils.h>
 #include <lib/asmUtils.h>
 #include <lib/output.h>
+#include <stdarg.h>
 
 namespace kernel {
 
@@ -61,6 +62,78 @@ coutBase &coutBase::operator+(const char *str) {
     }
     spinRelease(&lock);
     return *this;
+}
+
+
+void kprintDS(const char *prefix, const char *str, ...) { // debug serial
+    static char lock = 0;
+    spinLock(&lock);
+
+    uint64_t hold = 0;
+    char *string;
+    char character;
+
+    va_list arg;
+    va_start(arg, str);
+
+    for(uint64_t i = 0; i < sizeof(prefixList) / sizeof(prefixList_t); i++) {
+        if(strcmp(prefixList[i].prefix, prefix) == 0) {
+            serialWriteString(bashColours[prefixList[i].prefixColour]);
+            serialWriteString(prefix);
+            serialWriteString(bashColours[prefixList[i].textColour]);
+            serialWrite(' ');
+            break;
+        }
+
+        if(i == sizeof(prefixList) / sizeof(prefixList_t) - 1) {
+            serialWriteString(bashColours[DEFAULT]);
+        }
+    }
+
+
+    for(uint64_t i = 0; i < strlen(str); i++) {
+        if(str[i] != '%')
+            serialWrite(str[i]);
+        else {
+            i++;
+            switch(str[i]) {
+                case 'd':
+                    hold = va_arg(arg, long);
+                    string = itob(hold, 10);
+                    for(uint64_t i = 0; i < strlen(string); i++)
+                        serialWrite(string[i]);
+                    break;
+                case 's':
+                    string = va_arg(arg, char*);
+                    for(uint64_t i = 0; i < strlen(string); i++)
+                        serialWrite(string[i]);
+                    break;
+                case 'c':
+                    character = va_arg(arg, int);
+                    serialWrite(character);
+                    break; 
+                case 'x':
+                    hold = va_arg(arg, uint64_t);
+                    string = itob(hold, 16);
+                    for(uint64_t i = 0; i < strlen(string); i++)
+                        serialWrite(string[i]);
+                    break;
+                case 'a':
+                    hold = va_arg(arg, uint64_t);
+                    string = itob(hold, 16);
+                    int offset_zeros = 16 - strlen(string);
+                    for(int i = 0; i < offset_zeros; i++)
+                        serialWrite('0');
+                    for(uint64_t i = 0; i < strlen(string); i++)
+                        serialWrite(string[i]);
+                    break;
+            }
+        }
+    }
+    va_end(arg);
+    serialWrite('\n'); 
+    
+    spinRelease(&lock);
 }
 
 }

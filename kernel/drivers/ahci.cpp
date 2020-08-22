@@ -40,11 +40,11 @@ void ahci_t::initAHCI() {
 
     cout + "[AHCI]" << "BAR5 base " << bar.base << " | size " <<  bar.size << "\n";
     
-    volatile GHC_t *GHC = (volatile GHC_t*)((uint64_t)bar.base + HIGH_VMA - 0x1000);
+    volatile GHC_t *GHC = (volatile GHC_t*)((uint64_t)bar.base + HIGH_VMA);
 
     for(uint64_t i = 0; i < 32; i++) {
         if(GHC->pi & (1 << i)) {
-            volatile hbaPorts_t *hbaPorts = &GHC->hbaPorts[i];
+            volatile hbaPorts_t *hbaPorts = (hbaPorts_t*)&GHC->hbaPorts[i];
 
             switch(hbaPorts->sig) {
                 case SATA_ATA:

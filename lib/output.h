@@ -33,4 +33,6 @@ public:
 
 inline coutBase cout;
 
+void kprintDS(const char *prefix, const char *str, ...);
+
 }

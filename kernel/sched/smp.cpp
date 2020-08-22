@@ -7,6 +7,8 @@
 #include <kernel/mm/kHeap.h>
 #include <lib/memoryUtils.h>
 #include <kernel/int/idt.h>
+#include <kernel/int/gdt.h>
+#include <kernel/int/tss.h>
 #include <lib/asmUtils.h>
 #include <lib/output.h>
 
@@ -18,6 +20,7 @@ extern "C" symbol smpBegin;
 extern "C" symbol smpEnd;
 
 uint8_t cpuInfo_t::numberOfCores = 1;
+uint8_t dynCnt = 1;
 
 void prepTrampoline(uint64_t stack, uint64_t pml4, uint64_t entryPoint, uint64_t idt) {
     uint64_t *arguments = (uint64_t*)(0x500 + HIGH_VMA);
@@ -29,7 +32,20 @@ void prepTrampoline(uint64_t stack, uint64_t pml4, uint64_t entryPoint, uint64_t
 }
 
 void bootstrapCoreMain() {
-    cout + "[APIC]" << "Lel\n"; 
+    apic.lapicWrite(LAPIC_SINT, apic.lapicRead(LAPIC_SINT) | 0x1ff); 
+
+    cpuInfo[dynCnt].coreID = apic.lapicRead(LAPIC_ID_REG);
+    cpuInfo[dynCnt].currentTask = -1;
+
+    tssMain.newTss(physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA);
+    gdt.initCore(cpuInfo_t::numberOfCores, (uint64_t)&tssMain.tss[dynCnt]);
+
+    apic.lapicTimerInit(100);
+
+    asm volatile ("sti");
+
+    cout + "[SMP]" << "Core " << dynCnt++ << " full initalized\n";
+
     for(;;);
 }
 
@@ -37,17 +53,12 @@ void initSMP() {
     cpuInfo = new cpuInfo_t[madtInfo.madtEntry0Count * sizeof(cpuInfo_t)];
     memcpy8((uint8_t*)(0x1000), (uint8_t*)smpBegin, (uint64_t)smpEnd - (uint64_t)smpBegin);
 
-    uint8_t *bruh = (uint8_t*)0x1000;
-    cout + "[APIC]" << bruh[0] << "\n";
     cpuInfo[0].currentTask = -1;
     asm volatile ("sidt %0" :: "m"(idtr));
-
-    cout + "[KDEBUG]" << (uint64_t)smpBegin << " and " << (uint64_t)smpEnd << "\n";
 
     for(uint64_t i = 1; i < madtInfo.madtEntry0Count; i++) {
         uint64_t coreID = madtInfo.madtEntry0[i].apicID;
         if(madtInfo.madtEntry0[i].flags == 1) {
-            cout + "[APIC]" << "bruh\n";
             prepTrampoline(physicalPageManager.alloc(4) + 0x4000 + HIGH_VMA, virtualPageManager.grabPML4(), (uint64_t)&bootstrapCoreMain, (uint64_t)&idtr);
             apic.sendIPI(coreID, 0x500);
             apic.sendIPI(coreID, 0x600 | (uint32_t)((uint64_t)0x1000 / 0x1000)); 

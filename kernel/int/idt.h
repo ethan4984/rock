@@ -1,8 +1,13 @@
 #pragma once
 
+#include <kernel/sched/scheduler.h>
+
 #include <stdint.h>
+#include <stddef.h>
 
 namespace kernel {
+
+typedef void (*eventHandlers_t)(regs_t*);
 
 struct idtEntry_t {
     uint16_t offsetLow;
@@ -323,4 +328,39 @@ inline const char *exceptionMessages[] = { "Divide by zero",
                                     "Triple Fault", 
                                     "FPU error"
                                   };
+
+inline eventHandlers_t eventHandlers[] =   {
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+                                    };
 }
