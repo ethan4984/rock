@@ -9,7 +9,6 @@ idtEntry_t entries[256];
 idtr_t idtr;
 
 extern "C" void isrHandlerMain(regs_t *stack) {
-    kprintDS("[KDEBUG]", "Bruh");
     if(stack->isrNumber > 32) {
         uint64_t cr2;
         asm volatile ("cli\n" "mov %%cr2, %0" : "=a"(cr2));

@@ -22,11 +22,13 @@ extern "C" void _init();
 
 namespace kernel {
 
+void task1();
 void task2();
 void task3();
 void task4();
 void task5();
 void task6();
+void task7();
 
 extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     _init(); /* calls all global constructors, dont put anything before here */
@@ -62,20 +64,33 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     initSMP();
 
+    apic.lapicTimerInit(100);
+
     asm volatile(  "xor %ax, %ax\n"
-                    "mov %ax, %fs"
+                   "mov %ax, %fs"
                 );
 
     tasks = (task_t*)kheap.kmalloc(sizeof(task_t) * 0x1000);
 
-    /*createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
+/*    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task1, 2);
+    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task3, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task4, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task5, 2);
-    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task6, 2);*/
+    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task6, 2);
+    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task7, 2);*/
 
     for(;;);
 }
+
+void task1() {
+    uint64_t bruh = 0;
+    while(1) {
+        for(uint64_t i = 0; i < 100000000; i++);
+        kprintDS("[KDEBUG]", "hi from task0 %d", bruh++);
+    }
+}
+
 
 void task2() {
     uint64_t bruh = 0;
@@ -89,7 +104,7 @@ void task3() {
     uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-        kprintDS("[KDEBUG]", "hi from task1 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task2 %d", bruh++);
     }
 }
 
@@ -97,7 +112,7 @@ void task4() {
     uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-        kprintDS("[KDEBUG]", "hi from task1 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task3 %d", bruh++);
     }
 }
 
@@ -105,7 +120,7 @@ void task5() {
     uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-        kprintDS("[KDEBUG]", "hi from task1 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task4 %d", bruh++);
     }
 }
 
@@ -113,7 +128,15 @@ void task6() {
     uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-        kprintDS("[KDEBUG]", "hi from task1 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task5 %d", bruh++);
+    }
+}
+
+void task7() {
+    uint64_t bruh = 0;
+    while(1) {
+        for(uint64_t i = 0; i < 100000000; i++);
+        kprintDS("[KDEBUG]", "hi from task6 %d", bruh++);
     }
 }
 

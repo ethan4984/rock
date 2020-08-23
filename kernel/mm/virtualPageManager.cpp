@@ -23,8 +23,13 @@ uint64_t virtualPageManager_t::newUserMap(uint64_t pageCnt) {
     uint64_t *pml2 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
     uint64_t *pml1 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
 
-    pml4[256] = kpml3 | USR_PD_FLAGS;
-    pml4[511] = kpml3HH | USR_PD_FLAGS;
+    memset(pml4, 0, 0x1000);
+    memset(pml3, 0, 0x1000);
+    memset(pml2, 0, 0x1000);
+    memset(pml1, 0, 0x1000);
+
+    pml4[256] = kpml3 | 0x3;
+    pml4[511] = kpml3HH | 0x3;
 
     pml4[0] = ((uint64_t)&pml3 - HIGH_VMA) | USR_PD_FLAGS;
     pml3[0] = ((uint64_t)&pml2 - HIGH_VMA) | USR_PD_FLAGS;
@@ -118,8 +123,8 @@ void virtualPageManager_t::init() {
     pdEntry_t kernelEntry((uint64_t)pml4 - HIGH_VMA, pdFlags, pdFlags | (1 << 7), 1);
     pdEntries[0] = kernelEntry;
 
-    kpml3 = (uint64_t)kpml3 - HIGH_VMA;
-    kpml3HH = (uint64_t)kpml3HH - HIGH_VMA;
+    kpml3 = (uint64_t)pml3 - HIGH_VMA;
+    kpml3HH = (uint64_t)pml3_HH - HIGH_VMA;
 }
 
 }

@@ -15,11 +15,8 @@ void schedulerMain(regs_t *regs) {
     int64_t nextTask = -1, lastTask = cpuInfo[regs->core].currentTask;
     uint64_t cnt = 0;
 
-    kprintDS("[KDEBUG]", "Hello");
-
     if(numberOfTasks == 0)
         goto end;
-    kprintDS("[KDEBUG]", "bruh");
 
     for(uint64_t i = 0; i < numberOfTasks; i++) { /* find the next task to run */
         if(tasks[i].status == WAITING) {
@@ -38,7 +35,7 @@ void schedulerMain(regs_t *regs) {
     if(nextTask == -1) 
         goto end;
 
-    if(lastTask != -1) { // potental bug
+    if(lastTask != -1) {
         tasks[lastTask].regs = *regs;
         tasks[lastTask].status = WAITING;
     }
