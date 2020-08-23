@@ -14,6 +14,7 @@
 #include <kernel/int/gdt.h>
 #include <kernel/int/tss.h>
 #include <kernel/stivale.h>
+#include <kernel/fs/vfs.h>
 #include <lib/output.h>
 
 #include <stddef.h>
@@ -71,6 +72,10 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
                 );
 
     tasks = (task_t*)kheap.kmalloc(sizeof(task_t) * 0x1000);
+
+    readPartitions(); 
+
+    ext2.init();
 
 /*    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task1, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);

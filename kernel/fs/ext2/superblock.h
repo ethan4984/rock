@@ -45,9 +45,9 @@ struct superBlockData_t {
 
 class superblock_t {
 public:
-    void writeBack();
+    void writeBack(uint8_t partitionIndex);
 
-    void read();
+    void read(uint8_t partitionIndex);
 
     superBlockData_t data;
 };
