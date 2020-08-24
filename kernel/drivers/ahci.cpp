@@ -87,6 +87,15 @@ void ahci_t::sendCommand(volatile hbaPorts_t *hbaPort, uint32_t CMDslot) {
     hbaPort->cmd &= ~HBA_CMD_FRE;
 }
 
+void ahci_t::read(drive_t *drive, uint64_t addr, uint32_t cnt, void *buffer) {
+    uint64_t startingSector = addr / 512, count = ROUNDUP(cnt, 512);
+
+    uint8_t *diskBuffer = new uint8_t[count * 512];
+    sataRW(drive, startingSector, count, diskBuffer, 0);
+
+    memcpy8((uint8_t*)buffer, (uint8_t*)((uint64_t)diskBuffer + (addr % 512)), cnt); 
+}
+
 uint32_t ahci_t::findCMD(volatile hbaPorts_t *hbaPort) {
     for(int i = 0; i < 32; i++) {
         if(((hbaPort->sact | hbaPort->ci) & (1 << i)) == 0)
@@ -171,4 +180,3 @@ void ahci_t::sataRW(drive_t *drive, uint64_t start, uint32_t count, void *buffer
 }
 
 }
-

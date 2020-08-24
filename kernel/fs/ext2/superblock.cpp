@@ -17,6 +17,8 @@ void superblock_t::read(uint8_t partitionIndex) {
     superBlockData_t *superBlockData = new superBlockData_t;
     ahci.sataRW(&ahci.drives[0], partitions[partitionIndex].mbr.startingSector + 2, 1, superBlockData, 0);
     data = *superBlockData;
+    blockSize = 1024 << data.blockSize;
+    inodeSize = 1024 << data.inodeSize;
     delete superBlockData;
 }
 

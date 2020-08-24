@@ -1,5 +1,7 @@
 #pragma once
 
+#include <lib/memoryUtils.h>
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -24,8 +26,17 @@ enum {
     EXT2
 };
 
+class fs {
+public:
+    function<int, int, void *, uint64_t> read; 
+    function<int, int, const void *, uint64_t> write;
+    function<int, int> close;
+};
+
 void readPartitions();
 
 inline partition *partitions = NULL;
+
+inline fs *fsFunctions;
 
 }

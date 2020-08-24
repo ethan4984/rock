@@ -164,7 +164,10 @@ public:
 
     void sataRW(drive_t *drive, uint64_t lbaStart, uint32_t cnt, void *buffer, bool w); 
 
+    void read(drive_t *drive, uint64_t addr, uint32_t cnt, void *buffer);
+
     uint64_t driveCnt;
+
     drive_t *drives; 
 private:
     void initSATAdevice(volatile hbaPorts_t *hbaPort);
