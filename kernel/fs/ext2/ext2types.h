@@ -36,7 +36,7 @@ struct directoryEntry_t {
     char name[];
 } __attribute__((packed));
 
-struct blockGroupDescriptor {
+struct blockGroupDescriptor_t {
     uint32_t blockAddressBitmap;
     uint32_t blockAddressInodeBitmap;
     uint32_t startingBlock;
