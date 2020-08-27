@@ -91,10 +91,13 @@ void ahci_t::read(drive_t *drive, partition_t partition, uint64_t addr, uint32_t
     uint64_t startingSector = addr / 512, count = ROUNDUP(cnt, 512);
 
     uint8_t *diskBuffer = new uint8_t[count * 512];
+    kprintDS("[KDEBUG]", "lel");
 
     sataRW(drive, partition.mbr.startingSector + startingSector, count, diskBuffer, 0);
 
     memcpy8((uint8_t*)buffer, (uint8_t*)((uint64_t)diskBuffer + (addr % 512)), cnt); 
+
+    delete diskBuffer;
 }
 
 uint32_t ahci_t::findCMD(volatile hbaPorts_t *hbaPort) {

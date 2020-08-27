@@ -10,9 +10,11 @@ public:
 
     inode_t getInode(uint64_t index);
 
-    void readInode(inode_t inode, uint64_t addr, uint64_t cnt, void *buffer);
+    void readInode(inode_t inode, uint64_t block, uint64_t cnt, void *buffer);
 
     directoryEntry_t grabDirectoryEntry(const char *path);
+
+    inode_t rootInode;
 private:
     blockGroupDescriptor_t readBGD(uint64_t index);
 };

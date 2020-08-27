@@ -12,15 +12,15 @@ void physicalPageManager_t::init(stivaleInfo_t *stivaleInfo) {
         cout + "[KMM]" << "[" << stivaleMMAPentry[i].addr << " -> " << stivaleMMAPentry[i].addr + stivaleMMAPentry[i].len << "] : length " << stivaleMMAPentry[i].len << " type " << stivaleMMAPentry[i].type << "\n";
 
     for(uint64_t i = 0; i < stivaleInfo->memoryMapEntries; i++) { /* find a location for the bitmap */
-        if((stivaleMMAPentry[i].type == 1) && stivaleMMAPentry[i].len >= 32 * 0x1000) {
+        totalDetectedMemory += stivaleMMAPentry[i].len;
+        if((stivaleMMAPentry[i].type == 1) && stivaleMMAPentry[i].len >= 96 * 0x1000) {
             bitmap = (uint8_t*)(stivaleMMAPentry[i].addr + HIGH_VMA);
-            allocateRegion(stivaleMMAPentry[i].addr, 32 * 0x1000); /* mark bitmap memory as alloacted */
+            allocateRegion(stivaleMMAPentry[i].addr, 96 * 0x1000); /* mark bitmap memory as alloacted */
             break;
         }
     }
 
     for(uint64_t i = 0; i < stivaleInfo->memoryMapEntries; i++) {
-        totalDetectedMemory += stivaleMMAPentry[i].len;
         if(stivaleMMAPentry[i].type != 1) { /* 1 is the only useable type */ 
             allocateRegion(stivaleMMAPentry[i].addr, stivaleMMAPentry[i].len);
         }

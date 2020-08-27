@@ -37,6 +37,11 @@ void kheap_t::init() {
 }
 
 void *kheap_t::kmalloc(uint64_t size) {
+    if(size == 0) {
+        cout + "[KMM]" << "stop trying to allocate zero bytes retard\n";
+        return NULL;
+    }
+
     int64_t cnt = 0, blockCount = ROUNDUP(size, BLOCKSIZE);
     void *base = (void*)(firstFreeSlot() * BLOCKSIZE); 
 

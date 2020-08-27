@@ -33,6 +33,40 @@ inode_t ext2_t::getInode(uint64_t index) {
     return inode;
 }
 
+void ext2_t::readInode(inode_t inode, uint64_t addr, uint64_t cnt, void *buffer) {
+    uint32_t block = addr / superblock.blockSize;
+    uint32_t blockOffset = addr % superblock.blockSize;
+
+    if(block < 12) { // is direct block
+        kprintDS("[KDEBUG]", "directly reading from block %d", inode.blocks[block]);
+        ahci.read(&ahci.drives[0], partitions[0], inode.blocks[block] * superblock.blockSize + blockOffset, cnt, buffer);
+        return;
+    }
+
+    if(block >= superblock.blockSize / 4) { // doubly indirect block
+        block -= superblock.blockSize / 4;
+        uint32_t doubleIndirectBlockIndex = block / (superblock.blockSize / 4);
+        if(doubleIndirectBlockIndex >= superblock.blockSize / 4) { // triply indirect block
+            return;
+        }
+
+        uint32_t indirectBlockIndex;
+        uint32_t blockIndex;
+
+        ahci.read(&ahci.drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + doubleIndirectBlockIndex, sizeof(uint32_t), &indirectBlockIndex); // get the indirect block index
+        ahci.read(&ahci.drives[0], partitions[0], indirectBlockIndex * superblock.blockSize, sizeof(uint32_t), &blockIndex); // get the block index
+    
+        kprintDS("[KDEBUG]", "doubly indirect reading from block %d", blockIndex);
+
+        ahci.read(&ahci.drives[0], partitions[0], blockIndex * superblock.blockSize + blockOffset, cnt, buffer); // read that block
+    } else { // singly indirect block
+        uint32_t blockIndex;
+        ahci.read(&ahci.drives[0], partitions[0], inode.blocks[12] * superblock.blockSize + block, sizeof(uint32_t), &blockIndex); // block index
+        kprintDS("[KDEBUG]", "singly indirect reading from block %d", blockIndex);
+        ahci.read(&ahci.drives[0], partitions[0], blockIndex * superblock.blockSize + blockOffset, cnt, buffer); // read that block
+    }
+}
+
 static void printInode(inode_t inode) {
     kprintDS("[KDEBUG]", "permissions %x", inode.permissions);
     kprintDS("[KDEBUG]", "userID %x", inode.userID);
@@ -57,6 +91,13 @@ static void printBGD(blockGroupDescriptor_t bgd) {
     kprintDS("[KDEBUG]", "unalloactedblocks %x", bgd.unallocatedBlocks);
     kprintDS("[KDEBUG]", "unallocatedInodes %x", bgd.unallocatedInodes);
     kprintDS("[KDEBUG]", "directory count %x", bgd.directoryCnt);
+}
+
+static void printDirEntry(directoryEntry_t dir) {
+    kprintDS("[KDEBUG]", "inode: %d ", dir.inode);
+    kprintDS("[KDEBUG]", "size: %d ", dir.sizeofEntry);
+    kprintDS("[KDEBUG]", "name length: %d ", dir.nameLength);
+    kprintDS("[KDEBUG]", "type: %d ", dir.typeIndicator);
 }
 
 void ext2_t::init() {
@@ -87,7 +128,7 @@ void ext2_t::init() {
         return;
     }
 
-    inode_t rootInode = getInode(2);
+    rootInode = getInode(2);
     printInode(rootInode);
 }
 
