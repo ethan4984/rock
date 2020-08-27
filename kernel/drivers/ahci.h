@@ -14,10 +14,12 @@
 #define SATA_SEMB 0xc33C0101
 #define SATA_PM 0x96690101
 
-#define HBA_CMD_ST    0x0001
-#define HBA_CMD_FRE   0x0010
-#define HBA_CMD_FR    0x4000
-#define HBA_CMD_CR    0x8000
+#define HBA_CMD_ST 0x0001
+#define HBA_CMD_FRE 0x0010
+#define HBA_CMD_FR 0x4000
+#define HBA_CMD_CR 0x8000
+
+#include <kernel/fs/vfs.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -164,7 +166,7 @@ public:
 
     void sataRW(drive_t *drive, uint64_t lbaStart, uint32_t cnt, void *buffer, bool w); 
 
-    void read(drive_t *drive, uint64_t addr, uint32_t cnt, void *buffer);
+    void read(drive_t *drive, partition_t partition, uint64_t addr, uint32_t cnt, void *buffer);
 
     uint64_t driveCnt;
 

@@ -15,7 +15,8 @@ public:
     superBlockData_t data;
 
     uint32_t blockSize;
-    uint32_t inodeSize;
+
+    uint32_t fragmentSize;
 };
 
 inline superblock_t superblock;

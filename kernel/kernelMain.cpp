@@ -1,6 +1,6 @@
 #include <kernel/mm/physicalPageManager.h>
 #include <kernel/mm/virtualPageManager.h>
-#include <kernel/fs/ext2/ext2Main.h>
+#include <kernel/fs/ext2/ext2.h>
 #include <kernel/drivers/ahci.h>
 #include <kernel/drivers/pci.h>
 #include <kernel/sched/task.h>

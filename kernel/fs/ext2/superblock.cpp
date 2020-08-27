@@ -15,10 +15,10 @@ void superblock_t::writeBack(uint8_t partitionIndex) {
 
 void superblock_t::read(uint8_t partitionIndex) {
     superBlockData_t *superBlockData = new superBlockData_t;
-    ahci.sataRW(&ahci.drives[0], partitions[partitionIndex].mbr.startingSector + 2, 1, superBlockData, 0);
+    ahci.read(&ahci.drives[0], partitions[partitionIndex], 0x400, sizeof(superBlockData_t), superBlockData);
     data = *superBlockData;
     blockSize = 1024 << data.blockSize;
-    inodeSize = 1024 << data.inodeSize;
+    fragmentSize = 1024 << data.fragSize;
     delete superBlockData;
 }
 

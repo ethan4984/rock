@@ -8,7 +8,7 @@ namespace kernel {
 
 void readPartitions() {
     if(partitions == NULL) {
-        partitions = new partition[4];
+        partitions = new partition_t[4];
     }
 
     void *sector0 = new uint8_t[0x200];
@@ -16,7 +16,7 @@ void readPartitions() {
 
     mbrPartitionEntry *mbrEntries = (mbrPartitionEntry*)((uint64_t)sector0 + 0x1BE);
 
-    partitions[0] = (partition) { EXT2, mbrEntries[0] };
+    partitions[0] = (partition_t) { EXT2, *mbrEntries };
 }
 
 }

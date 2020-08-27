@@ -6,44 +6,67 @@
 
 namespace kernel {
 
-struct inodeDescriptor_t {
+struct inode_t {
     uint16_t permissions;
     uint16_t userID;
-    uint32_t size32Low;
+
+    uint32_t size32l;
     uint32_t accessTime;
     uint32_t creationTime;
     uint32_t modificationTime;
     uint32_t deletionTime;
+    
     uint16_t groupID;
-    uint16_t hardLinks;
+    uint16_t hardLinkCnt;
+
     uint32_t sectorCnt;
     uint32_t flags;
-    uint32_t osID;
+    uint32_t oss1;
 
-    uint32_t directBlockPointer[15];
+    uint32_t blocks[15];
 
+    uint32_t generationNumber;
     uint32_t eab;
-    uint32_t size32High;
-    uint32_t fragmentAddress;
-    uint32_t osSigatureID[3];
+    uint32_t size32h;
+
+    uint32_t blockAddrFragment;
+
+    /* ext2 linux */
+
+    uint8_t fragNum;
+    uint8_t fragSize;
+    
+    uint16_t reserved16;
+    uint16_t userIDhigh;
+    uint16_t groupIDhigh;
+
+    uint32_t reserved32;
 } __attribute__((packed));
 
-struct directoryEntry_t {
-    uint32_t inode;
-    uint16_t size;
-    uint8_t nameLength;
-    uint8_t typeIndicator;
-    char name[];
-} __attribute__((packed));
+struct fileEntry_t {
+    int size;
+    inode_t rootInode;
+    inode_t inode;
+};
 
 struct blockGroupDescriptor_t {
     uint32_t blockAddressBitmap;
     uint32_t blockAddressInodeBitmap;
     uint32_t startingBlock;
+
     uint16_t unallocatedBlocks;
     uint16_t unallocatedInodes;
     uint16_t directoryCnt;
+
     uint16_t reserved[7];
+} __attribute__((packed));
+
+struct directoryEntry_t {
+    uint32_t inode;
+    uint16_t sizeofEntry;
+    uint8_t nameLength;
+    uint8_t typeIndicator;
+    char name[];
 } __attribute__((packed));
 
 struct superBlockData_t {

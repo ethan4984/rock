@@ -16,7 +16,7 @@ struct mbrPartitionEntry {
     uint32_t totalSize;
 } __attribute__((packed));
 
-struct partition {
+struct partition_t {
     uint8_t fsType;
     mbrPartitionEntry mbr;
 };
@@ -35,7 +35,7 @@ public:
 
 void readPartitions();
 
-inline partition *partitions = NULL;
+inline partition_t *partitions = NULL;
 
 inline fs *fsFunctions;
 
