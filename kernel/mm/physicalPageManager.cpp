@@ -20,9 +20,11 @@ void physicalPageManager_t::init(stivaleInfo_t *stivaleInfo) {
         }
     }
 
+    memset32((uint32_t*)bitmap, 0, (96 * 0x1000) / 4);
+
     for(uint64_t i = 0; i < stivaleInfo->memoryMapEntries; i++) {
-        if(stivaleMMAPentry[i].type != 1) { /* 1 is the only useable type */ 
-            allocateRegion(stivaleMMAPentry[i].addr, stivaleMMAPentry[i].len);
+        if(stivaleMMAPentry[i].type == 1) { /* 1 is the only useable type */ 
+            freeRegion(stivaleMMAPentry[i].addr, stivaleMMAPentry[i].len);
         }
     }
 
@@ -35,6 +37,12 @@ void physicalPageManager_t::init(stivaleInfo_t *stivaleInfo) {
 void physicalPageManager_t::allocateRegion(uint64_t start, uint64_t limit) {
     for(uint64_t i = start / PAGESIZE; i < (start / PAGESIZE) + ROUNDUP(limit, PAGESIZE); i++) {
         set(bitmap, i);
+    }
+}
+
+void physicalPageManager_t::freeRegion(uint64_t start, uint64_t limit) {
+    for(uint64_t i = start / PAGESIZE; i < (start / PAGESIZE) + ROUNDUP(limit, PAGESIZE); i++) {
+        clear(bitmap, i);
     }
 }
 

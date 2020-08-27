@@ -15,11 +15,14 @@ public:
 
 private:
     uint8_t *bitmap; 
+
     uint64_t totalDetectedMemory = 0;
 
     void allocateRegion(uint64_t start, uint64_t length);
-    int64_t firstFreePage();
 
+    void freeRegion(uint64_t start, uint64_t length);
+
+    int64_t firstFreePage();
 };
 
 inline physicalPageManager_t physicalPageManager;
