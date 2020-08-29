@@ -8,26 +8,29 @@ namespace kernel {
 
 void physicalPageManager_t::init(stivaleInfo_t *stivaleInfo) {
     stivaleMMAPentry_t *stivaleMMAPentry = (stivaleMMAPentry_t*)stivaleInfo->memoryMapAddr;
-    for(uint64_t i = 0; i < stivaleInfo->memoryMapEntries; i++) 
+    for(uint64_t i = 0; i < stivaleInfo->memoryMapEntries; i++) {
+        totalDetectedMemory += stivaleMMAPentry[i].len;
         cout + "[KMM]" << "[" << stivaleMMAPentry[i].addr << " -> " << stivaleMMAPentry[i].addr + stivaleMMAPentry[i].len << "] : length " << stivaleMMAPentry[i].len << " type " << stivaleMMAPentry[i].type << "\n";
+    }
+
+    uint64_t bitmapBegin = 0, size = 0x1000 * 96;
 
     for(uint64_t i = 0; i < stivaleInfo->memoryMapEntries; i++) { /* find a location for the bitmap */
-        totalDetectedMemory += stivaleMMAPentry[i].len;
-        if((stivaleMMAPentry[i].type == 1) && stivaleMMAPentry[i].len >= 96 * 0x1000) {
+        if((stivaleMMAPentry[i].type == 1) && stivaleMMAPentry[i].len >= size) {
             bitmap = (uint8_t*)(stivaleMMAPentry[i].addr + HIGH_VMA);
-            allocateRegion(stivaleMMAPentry[i].addr, 96 * 0x1000); /* mark bitmap memory as alloacted */
+            bitmapBegin = stivaleMMAPentry[i].addr;
+            memset32((uint32_t*)bitmap, 0xffffffff, size / 4);
             break;
         }
     }
-
-    memset32((uint32_t*)bitmap, 0, (96 * 0x1000) / 4);
-
+    
     for(uint64_t i = 0; i < stivaleInfo->memoryMapEntries; i++) {
         if(stivaleMMAPentry[i].type == 1) { /* 1 is the only useable type */ 
             freeRegion(stivaleMMAPentry[i].addr, stivaleMMAPentry[i].len);
         }
     }
-
+    
+    allocateRegion(bitmapBegin, size);
     allocateRegion(0, 0x100000); /* mark everything below 1mb cuz its hell down there */
 
     cout + "[KMM]" << "Physical Memory Manager initalized\n";
