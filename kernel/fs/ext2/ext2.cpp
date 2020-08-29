@@ -33,6 +33,24 @@ inode_t ext2_t::getInode(uint64_t index) {
     return inode;
 }
 
+directoryEntry_t ext2_t::getDirEntry(const char *path) {
+    char *buffer = new char[0x400];
+    readInode(rootInode, 0, 0x400, buffer);
+
+    directoryEntry_t *dir = new directoryEntry_t;
+
+    for(int i = 0; i < rootInode.size32l; i++) {     
+        dir = (directoryEntry_t*)((uint64_t)buffer + i);
+
+        if(strncmp(dir->name, path, strlen(path) - 1) == 0) {
+            return *dir;
+        }
+
+        if(dir->sizeofEntry != 0)
+            i += dir->sizeofEntry - 1;
+    }
+}
+
 void ext2_t::readInode(inode_t inode, uint64_t addr, uint64_t cnt, void *buffer) {
     uint32_t block = addr / superblock.blockSize;
     uint32_t blockOffset = addr % superblock.blockSize;
@@ -130,6 +148,13 @@ void ext2_t::init() {
 
     rootInode = getInode(2);
     printInode(rootInode);
+
+    char *buffer = new char[0x200];
+    readInode(rootInode, 0, 0x200, buffer);
+
+    directoryEntry_t bruh = getDirEntry("boot");
+
+    kprintDS("[KDEBUG]", "found it gamer with inode %d sizeofEntry %d nameLength %d", bruh.inode, bruh.sizeofEntry, bruh.nameLength);
 }
 
 }

@@ -66,7 +66,7 @@ struct directoryEntry_t {
     uint16_t sizeofEntry;
     uint8_t nameLength;
     uint8_t typeIndicator;
-//    char name[];
+    char name[];
 } __attribute__((packed));
 
 struct superBlockData_t {
