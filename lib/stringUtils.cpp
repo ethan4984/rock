@@ -20,6 +20,26 @@ char *itob(uint64_t num, uint64_t base) {
     return str;
 }
 
+uint64_t splitString(char **subs, const char *str, const char *delimiter) {
+    uint64_t subCnt = 0, last = 0;
+
+    for(uint64_t i = 0; i < strlen(str); i++) {
+        if(i == strlen(str) - 1) {
+            subs[subCnt] = new char[i - last];
+            strncpy(subs[subCnt++], str + last, i - last + 1);
+            break;
+        }
+
+        if(strncmp(delimiter, str + i, strlen(delimiter)) == 0) {
+            subs[subCnt] = new char[i - last];
+            strncpy(subs[subCnt++], str + last, i - last);
+            last = i + 1;
+        }
+    }
+
+    return subCnt;
+}
+
 uint64_t strlen(const char *str) {
     uint64_t len = 0;
     while (str[len])

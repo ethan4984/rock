@@ -10,19 +10,51 @@ namespace kernel {
 
 template <typename T>
 class unique_ptr {
+public:
     unique_ptr(uint64_t size) {
-        ptr = new uint8_t[size];
+        ptr = (T*)new uint8_t[size];
     }
 
     ~unique_ptr() {
         delete ptr;
     }
 
+    explicit operator bool() {
+        return ptr;
+    }
+
+    T operator[](uint64_t index) {
+        return ptr[index];
+    }
+
+    T operator*(void) {
+        return *ptr; 
+    }
+
+    T *operator+(uint64_t num) {
+        return ptr + num;
+    }
+
+    T *operator-(uint64_t num) {
+       return  ptr - num;
+    }
+
+    void operator++(void) {
+        ptr++;
+    }
+
+    void operator--(void) {
+        ptr--;
+    }
+
+    void operator=(uint64_t addr) {
+        ptr = (T*)addr;
+    }
+
     unique_ptr(const unique_ptr &) = delete;
-    
-    unique_ptr &operator=(const unique_ptr &) = delete;
+
 private:
-    T *ptr; 
+    T *ptr;
 };
 
 template <typename F, typename ...args> using function = F(*)(args...);

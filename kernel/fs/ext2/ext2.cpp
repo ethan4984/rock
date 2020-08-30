@@ -9,6 +9,7 @@ namespace kernel {
 
 static void printInode(inode_t inode);
 static void printBGD(blockGroupDescriptor_t bgd);
+static void printDirEntry(directoryEntry_t dir);
 
 blockGroupDescriptor_t ext2_t::readBGD(uint64_t index) {
     blockGroupDescriptor_t bgd;
@@ -32,26 +33,6 @@ inode_t ext2_t::getInode(uint64_t index) {
     
     ahci.read(&ahci.drives[0], partitions[0], (bgd.startingBlock * superblock.blockSize) + (superblock.data.inodeSize * inodeTableIndex), sizeof(inode_t), &inode);
     return inode;
-}
-
-uint64_t splitString(char **subs, const char *str, const char *delimiter) {
-    uint64_t subCnt = 0, last = 0;
-
-    for(uint64_t i = 0; i < strlen(str); i++) {
-        if(i == strlen(str) - 1) {
-            subs[subCnt] = new char[i - last];
-            strncpy(subs[subCnt++], str + last, i - last + 1);
-            break;
-        }
-
-        if(strncmp(delimiter, str + i, strlen(delimiter)) == 0) {
-            subs[subCnt] = new char[i - last];
-            strncpy(subs[subCnt++], str + last, i - last);
-            last = i + 1;
-        }
-    }
-
-    return subCnt;
 }
 
 directoryEntry_t ext2_t::getDirEntry(inode_t inode, const char *path) {
@@ -133,40 +114,6 @@ void ext2_t::readInode(inode_t inode, uint64_t addr, uint64_t cnt, void *buffer)
     }
 }
 
-static void printInode(inode_t inode) {
-    kprintDS("[KDEBUG]", "permissions %x", inode.permissions);
-    kprintDS("[KDEBUG]", "userID %x", inode.userID);
-    kprintDS("[KDEBUG]", "size %x", inode.size32l);
-    kprintDS("[KDEBUG]", "access time %x", inode.accessTime);
-    kprintDS("[KDEBUG]", "creation time %x", inode.creationTime);
-    kprintDS("[KDEBUG]", "modicication time %x", inode.modificationTime);
-    kprintDS("[KDEBUG]", "deletion time %x", inode.deletionTime);
-    kprintDS("[KDEBUG]", "group id %x", inode.groupID);
-    kprintDS("[KDEBUG]", "hard link cnt %x", inode.hardLinkCnt);
-    kprintDS("[KDEBUG]", "sector cnt %x", inode.sectorCnt);
-    kprintDS("[KDEBUG]", "flags %x", inode.flags);
-    kprintDS("[KDEBUG]", "oss1 %x", inode.oss1);
-    kprintDS("[KDEBUG]", "generationNumber %x", inode.generationNumber);
-    kprintDS("[KDEBUG]", "eab %x", inode.eab);
-}
-
-static void printBGD(blockGroupDescriptor_t bgd) {
-    kprintDS("[KDEBUG]", "block address bitmap %x", bgd.blockAddressBitmap);
-    kprintDS("[KDEBUG]", "blockAddressInodeBitmap %x", bgd.blockAddressInodeBitmap);
-    kprintDS("[KDEBUG]", "startingBlock %x", bgd.startingBlock);
-    kprintDS("[KDEBUG]", "unalloactedblocks %x", bgd.unallocatedBlocks);
-    kprintDS("[KDEBUG]", "unallocatedInodes %x", bgd.unallocatedInodes);
-    kprintDS("[KDEBUG]", "directory count %x", bgd.directoryCnt);
-}
-
-__attribute__((unused))
-static void printDirEntry(directoryEntry_t dir) {
-    kprintDS("[KDEBUG]", "inode: %d ", dir.inode);
-    kprintDS("[KDEBUG]", "size: %d ", dir.sizeofEntry);
-    kprintDS("[KDEBUG]", "name length: %d ", dir.nameLength);
-    kprintDS("[KDEBUG]", "type: %d ", dir.typeIndicator);
-}
-
 void ext2_t::init() {
     superblock.read(0);
 
@@ -201,6 +148,42 @@ void ext2_t::init() {
     directoryEntry_t bruh = getDirEntry(rootInode, "boot/rock.elf");
 
     kprintDS("[KDEBUG]", "found it gamer with inode %d sizeofEntry %d nameLength %d", bruh.inode, bruh.sizeofEntry, bruh.nameLength);
+}
+
+__attribute__((unused))
+static void printInode(inode_t inode) {
+    kprintDS("[KDEBUG]", "permissions %x", inode.permissions);
+    kprintDS("[KDEBUG]", "userID %x", inode.userID);
+    kprintDS("[KDEBUG]", "size %x", inode.size32l);
+    kprintDS("[KDEBUG]", "access time %x", inode.accessTime);
+    kprintDS("[KDEBUG]", "creation time %x", inode.creationTime);
+    kprintDS("[KDEBUG]", "modicication time %x", inode.modificationTime);
+    kprintDS("[KDEBUG]", "deletion time %x", inode.deletionTime);
+    kprintDS("[KDEBUG]", "group id %x", inode.groupID);
+    kprintDS("[KDEBUG]", "hard link cnt %x", inode.hardLinkCnt);
+    kprintDS("[KDEBUG]", "sector cnt %x", inode.sectorCnt);
+    kprintDS("[KDEBUG]", "flags %x", inode.flags);
+    kprintDS("[KDEBUG]", "oss1 %x", inode.oss1);
+    kprintDS("[KDEBUG]", "generationNumber %x", inode.generationNumber);
+    kprintDS("[KDEBUG]", "eab %x", inode.eab);
+}
+
+__attribute__((unused))
+static void printBGD(blockGroupDescriptor_t bgd) {
+    kprintDS("[KDEBUG]", "block address bitmap %x", bgd.blockAddressBitmap);
+    kprintDS("[KDEBUG]", "blockAddressInodeBitmap %x", bgd.blockAddressInodeBitmap);
+    kprintDS("[KDEBUG]", "startingBlock %x", bgd.startingBlock);
+    kprintDS("[KDEBUG]", "unalloactedblocks %x", bgd.unallocatedBlocks);
+    kprintDS("[KDEBUG]", "unallocatedInodes %x", bgd.unallocatedInodes);
+    kprintDS("[KDEBUG]", "directory count %x", bgd.directoryCnt);
+}
+
+__attribute__((unused))
+static void printDirEntry(directoryEntry_t dir) {
+    kprintDS("[KDEBUG]", "inode: %d ", dir.inode);
+    kprintDS("[KDEBUG]", "size: %d ", dir.sizeofEntry);
+    kprintDS("[KDEBUG]", "name length: %d ", dir.nameLength);
+    kprintDS("[KDEBUG]", "type: %d ", dir.typeIndicator);
 }
 
 }

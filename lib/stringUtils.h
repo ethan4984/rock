@@ -16,4 +16,6 @@ char *strncpy(char *dest, const char *src, uint64_t n);
 
 char *itob(uint64_t num, uint64_t base);
 
+uint64_t splitString(char **subs, const char *str, const char *delimiter);
+
 }
