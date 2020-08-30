@@ -28,9 +28,8 @@ enum {
 
 class fs {
 public:
-    function<int, int, void *, uint64_t> read; 
-    function<int, int, const void *, uint64_t> write;
-    function<int, int> close;
+    function<const char *, uint64_t, uint64_t, void *> read; 
+    function<const char *, uint64_t, uint64_t, void *> write; 
 };
 
 void readPartitions();

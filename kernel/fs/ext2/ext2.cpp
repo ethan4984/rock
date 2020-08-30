@@ -1,6 +1,7 @@
 #include <kernel/fs/ext2/superblock.h>
 #include <kernel/fs/ext2/ext2.h>
 #include <kernel/drivers/ahci.h>
+#include <kernel/mm/kHeap.h>
 #include <lib/memoryUtils.h>
 #include <lib/stringUtils.h>
 #include <lib/output.h>
@@ -24,8 +25,6 @@ blockGroupDescriptor_t ext2_t::readBGD(uint64_t index) {
 
 inode_t ext2_t::getInode(uint64_t index) {
     blockGroupDescriptor_t bgd = readBGD(index);
-
-    printBGD(bgd);
 
     inode_t inode;
 
@@ -80,6 +79,37 @@ end: // todo: get smart pointers setup so we dont have to deal with this mess
     return ret; 
 }
 
+directory_t ext2_t::getDir(inode_t inode) {
+    directoryEntry_t *dir = new directoryEntry_t;
+
+    char *buffer = new char[0x400];
+    readInode(inode, 0, 0x400, buffer);
+
+    char **names = new char*[256];
+
+    directoryEntry_t *dirBuffer = new directoryEntry_t[10];
+
+    uint64_t cnt = 0;
+
+    for(uint32_t i = 0; i < inode.size32l;) {
+        dir = (directoryEntry_t*)((uint64_t)buffer + i);
+
+        dirBuffer[cnt] = *dir;
+    
+        names[cnt] = new char[dir->nameLength];
+        strncpy(names[cnt], dir->name, dir->nameLength);
+
+        names[cnt][dir->nameLength] = '\0';
+
+        i += dir->sizeofEntry;
+        cnt++;
+    }
+
+    delete buffer;
+    
+    return (directory_t) { dirBuffer, names, cnt }; // its up to the caller to free dirBuffer/names when theyre done with it
+}
+
 void ext2_t::readInode(inode_t inode, uint64_t addr, uint64_t cnt, void *buffer) {
     uint32_t block = addr / superblock.blockSize;
     uint32_t blockOffset = addr % superblock.blockSize;
@@ -114,6 +144,14 @@ void ext2_t::readInode(inode_t inode, uint64_t addr, uint64_t cnt, void *buffer)
     }
 }
 
+void ext2_t::read(const char *path, uint64_t start, uint64_t cnt, void *buffer) {
+    directoryEntry_t dirEntry = getDirEntry(rootInode, path);     
+
+    inode_t inode = getInode(dirEntry.inode);
+
+    readInode(inode, start, cnt, buffer);
+}
+
 void ext2_t::init() {
     superblock.read(0);
 
@@ -145,9 +183,11 @@ void ext2_t::init() {
     rootInode = getInode(2);
     printInode(rootInode);
 
-    directoryEntry_t bruh = getDirEntry(rootInode, "boot/rock.elf");
+    directory_t dir = getDir(rootInode);
 
-    kprintDS("[KDEBUG]", "found it gamer with inode %d sizeofEntry %d nameLength %d", bruh.inode, bruh.sizeofEntry, bruh.nameLength);
+    for(uint64_t i = 0; i < dir.dirCnt; i++) {
+        kprintDS("[FS]", "%s", dir.names[i]);
+    }
 }
 
 __attribute__((unused))
