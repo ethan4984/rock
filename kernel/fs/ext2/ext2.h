@@ -12,7 +12,7 @@ public:
 
     void readInode(inode_t inode, uint64_t block, uint64_t cnt, void *buffer);
 
-    directoryEntry_t getDirEntry(const char *path);
+    directoryEntry_t getDirEntry(inode_t inode, const char *path);
 
     inode_t rootInode;
 private:

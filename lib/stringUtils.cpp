@@ -36,7 +36,7 @@ int strcmp(const char *str0, const char *str1) {
     return (int)(*str0) - (int)(*str1);
 }
 
-int strncmp(const char* str0, const char* str1, uint64_t n) {
+int strncmp(const char *str0, const char *str1, uint64_t n) {
     for(uint64_t i = 0; i < n; i++) {
         if (str0[i] != str1[i]) 
             return 1;
@@ -45,20 +45,25 @@ int strncmp(const char* str0, const char* str1, uint64_t n) {
 }
 
 char *strcpy(char *dest, const char *src) {
-    if(dest == NULL)
-        return NULL;
+    uint64_t i;
 
-    char *new_dest = dest;
+    for(i = 0; src[i]; i++)
+        dest[i] = src[i];
 
-    while (*src != '\0') {
-        *dest = *src;
-        dest++;
-        src++;
-    }
+    dest[i] = 0;
 
-    *dest = '\0';
+    return dest;
+}
 
-    return new_dest;
+char *strncpy(char *dest, const char *src, uint64_t n) {
+    uint64_t i;
+
+    for(i = 0; i < n && src[i]; i++)
+        dest[i] = src[i];
+    for(; i < n; i++)
+        dest[i] = 0;
+
+    return dest;
 }
 
 }

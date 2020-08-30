@@ -1,10 +1,29 @@
 #pragma once 
 
+#include <kernel/mm/kHeap.h>
+
 #include <stdint.h>
 
 #define ROUNDUP(a, b) (((a) + ((b) - 1)) / (b))
 
 namespace kernel {
+
+template <typename T>
+class unique_ptr {
+    unique_ptr(uint64_t size) {
+        ptr = new uint8_t[size];
+    }
+
+    ~unique_ptr() {
+        delete ptr;
+    }
+
+    unique_ptr(const unique_ptr &) = delete;
+    
+    unique_ptr &operator=(const unique_ptr &) = delete;
+private:
+    T *ptr; 
+};
 
 template <typename F, typename ...args> using function = F(*)(args...);
 

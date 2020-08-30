@@ -1,6 +1,7 @@
 #include <kernel/fs/ext2/superblock.h>
 #include <kernel/fs/ext2/ext2.h>
 #include <kernel/drivers/ahci.h>
+#include <lib/memoryUtils.h>
 #include <lib/stringUtils.h>
 #include <lib/output.h>
 
@@ -33,22 +34,69 @@ inode_t ext2_t::getInode(uint64_t index) {
     return inode;
 }
 
-directoryEntry_t ext2_t::getDirEntry(const char *path) {
-    char *buffer = new char[0x400];
-    readInode(rootInode, 0, 0x400, buffer);
+uint64_t splitString(char **subs, const char *str, const char *delimiter) {
+    uint64_t subCnt = 0, last = 0;
 
-    directoryEntry_t *dir = new directoryEntry_t;
-
-    for(int i = 0; i < rootInode.size32l; i++) {     
-        dir = (directoryEntry_t*)((uint64_t)buffer + i);
-
-        if(strncmp(dir->name, path, strlen(path) - 1) == 0) {
-            return *dir;
+    for(uint64_t i = 0; i < strlen(str); i++) {
+        if(i == strlen(str) - 1) {
+            subs[subCnt] = new char[i - last];
+            strncpy(subs[subCnt++], str + last, i - last + 1);
+            break;
         }
 
-        if(dir->sizeofEntry != 0)
-            i += dir->sizeofEntry - 1;
+        if(strncmp(delimiter, str + i, strlen(delimiter)) == 0) {
+            subs[subCnt] = new char[i - last];
+            strncpy(subs[subCnt++], str + last, i - last);
+            last = i + 1;
+        }
     }
+
+    return subCnt;
+}
+
+directoryEntry_t ext2_t::getDirEntry(inode_t inode, const char *path) {
+    char *buffer = new char[0x400];
+    readInode(inode, 0, 0x400, buffer);
+
+    directoryEntry_t *dir = new directoryEntry_t;
+    directoryEntry_t ret;
+
+    char **paths = new char*[256];
+
+    uint64_t cnt = splitString(paths, path, "/");
+
+    for(uint64_t j = 0; j < cnt; j++) {
+        for(uint32_t i = 0; i < rootInode.size32l; i++) {     
+            dir = (directoryEntry_t*)((uint64_t)buffer + i);
+
+            if(strncmp(dir->name, paths[j], strlen(paths[j]) - 1) == 0 && j == cnt - 1) {
+                ret = *dir;
+                goto end;
+            }
+
+            if(strncmp(dir->name, paths[j], strlen(paths[j]) - 1) == 0) {
+                inode = getInode(dir->inode);
+                if(!(inode.permissions & 0x4000)) {
+                    kprintDS("[KDEBUG]", "%s is not a directory", paths[j]); 
+                }
+                readInode(inode, 0, 0x400, buffer);
+                continue;
+            }
+
+            if(dir->sizeofEntry != 0)
+                i += dir->sizeofEntry - 1;
+        }
+    }
+    
+    kprintDS("[KDEBUG]", "%s not found", path);
+
+end: // todo: get smart pointers setup so we dont have to deal with this mess
+    for(uint64_t i = 0; i < cnt; i++)
+        delete paths[i];
+    delete paths;
+    delete buffer;
+    delete dir;
+    return ret; 
 }
 
 void ext2_t::readInode(inode_t inode, uint64_t addr, uint64_t cnt, void *buffer) {
@@ -111,6 +159,7 @@ static void printBGD(blockGroupDescriptor_t bgd) {
     kprintDS("[KDEBUG]", "directory count %x", bgd.directoryCnt);
 }
 
+__attribute__((unused))
 static void printDirEntry(directoryEntry_t dir) {
     kprintDS("[KDEBUG]", "inode: %d ", dir.inode);
     kprintDS("[KDEBUG]", "size: %d ", dir.sizeofEntry);
@@ -149,10 +198,7 @@ void ext2_t::init() {
     rootInode = getInode(2);
     printInode(rootInode);
 
-    char *buffer = new char[0x200];
-    readInode(rootInode, 0, 0x200, buffer);
-
-    directoryEntry_t bruh = getDirEntry("boot");
+    directoryEntry_t bruh = getDirEntry(rootInode, "boot/rock.elf");
 
     kprintDS("[KDEBUG]", "found it gamer with inode %d sizeofEntry %d nameLength %d", bruh.inode, bruh.sizeofEntry, bruh.nameLength);
 }
