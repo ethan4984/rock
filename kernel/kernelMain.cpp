@@ -20,6 +20,8 @@
 #include <stddef.h>
 
 extern "C" void _init();
+extern "C" void userspace() asm("userspace");
+extern "C" void testDiv();
 
 namespace kernel {
 

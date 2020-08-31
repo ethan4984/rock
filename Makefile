@@ -28,6 +28,7 @@ build:
 	$(NASM) kernel/int/isr.asm -o Bin/isr.o
 	$(NASM) kernel/int/gdt.asm -o Bin/gdtAsm.o
 	$(NASM) kernel/sched/scheduler.asm -o Bin/schedulerASM.o
+	$(NASM) kernel/userspace.asm -o Bin/userspace.o
 	nasm -fbin kernel/sched/smp.asm -o Bin/smpASM.bin
 	$(NASM) kernel/real.asm -o Bin/real.o
 	$(CXX) -lgcc -no-pie -nodefaultlibs -nostartfiles -n -T linker.ld -o Bin/rock.elf $(OBJ_LINK_LIST)

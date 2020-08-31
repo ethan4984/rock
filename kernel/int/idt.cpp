@@ -9,7 +9,7 @@ idtEntry_t entries[256];
 idtr_t idtr;
 
 extern "C" void isrHandlerMain(regs_t *stack) {
-    if(stack->isrNumber > 32) {
+    if(stack->isrNumber < 32) {
         uint64_t cr2;
         asm volatile ("cli\n" "mov %%cr2, %0" : "=a"(cr2));
         kprintDS("[KDEBUG]", "Congrats: you fucked up with a nice <%s> on core %d and error code %x, have fun debugging this", exceptionMessages[stack->isrNumber], stack->core, stack->errorCode);
@@ -39,7 +39,7 @@ void idt_t::setIDTentry(uint16_t selector, uint8_t ist, uint8_t attributes, uint
 
 void idt_t::setIDTR() {
     idtr.limit = 256 * sizeof(idtEntry_t) - 1;
-    idtr.offset = (uint64_t)&idtr;
+    idtr.offset = (uint64_t)&entries;
     asm volatile ("lidtq %0" : "=m"(idtr));
 }
 
