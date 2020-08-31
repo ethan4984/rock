@@ -42,12 +42,12 @@ build:
 	sudo mount `cat loopback_dev`p1 diskImage
 	sudo mkdir diskImage/boot
 	sudo cp Bin/rock.elf diskImage/boot/
-	sudo cp kernel/qloader2.cfg diskImage/
+	sudo cp kernel/limine.cfg diskImage/
 	sync
 	sudo umount diskImage/
 	sudo losetup -d `cat loopback_dev`
 	rm -rf diskImage loopback_dev
-	cd qloader2 && ./qloader2-install qloader2.bin ../rock.img
+	cd limine && ./limine-install limine.bin ../rock.img
 	rm kernel/*.o
 
 qemu: build
