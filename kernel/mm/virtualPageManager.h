@@ -11,14 +11,19 @@
 #define KERNEL_PT_FLAGS (1 << 2) | (1 << 7) | 0x3
 #define KERNEL_PD_FLAGS (1 << 2) | 0x3
 
-
-
 #define KERNEL_HIGH_VMA 0xffffffff80000000
 #define HIGH_VMA 0xffff800000000000
 
 #define ERROR 0xffffffffffffffff
 
 namespace kernel {
+
+struct pageMap_t {
+    int64_t pml4Index; 
+    int64_t pml3Index;
+    int64_t pml2Index;
+    int64_t pml1Index;
+};
 
 class pdEntry_t {
 public:
@@ -43,6 +48,10 @@ public:
 
     void fork(uint64_t pageMapIndex);
 
+    void map(uint64_t base, uint64_t physicalBase, uint64_t cnt, uint64_t flags);
+
+    void unmap(uint64_t base, uint64_t cnt, uint64_t flags);
+
     uint64_t grabPML4();
 
     uint64_t firstFreeSlot();
@@ -50,6 +59,10 @@ public:
     void initAddressSpace(uint64_t index);
 
 private:
+    pageMap_t getIndexes(uint64_t base, uint64_t flags);
+
+    void tlbFlush();
+
     uint64_t entryCnt = 0x1000;
 
     static pdEntry_t *pdEntries;

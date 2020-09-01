@@ -24,11 +24,6 @@ extern "C" void syscallMain(regs_t *regs) {
                 }
             }
             break;
-        case 2:
-            switch(regs->r14) {
-
-            }
-            break;
     }
 }
 

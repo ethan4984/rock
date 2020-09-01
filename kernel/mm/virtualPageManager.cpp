@@ -17,6 +17,69 @@ pdEntry_t::pdEntry_t(uint64_t pml4, uint64_t pdFlags, uint64_t ptFlags, uint64_t
 
 }
 
+void virtualPageManager_t::unmap(uint64_t base, uint64_t cnt, uint64_t flags) {
+    uint64_t *pml4, *pml3, *pml2, *pml1 = NULL;
+
+    pageMap_t pm = getIndexes(base, flags);
+
+    pml4 = (uint64_t*)(grabPML4() + HIGH_VMA);
+    pml3 = (uint64_t*)(pml4[pm.pml4Index] + HIGH_VMA); 
+    pml2 = (uint64_t*)(pml3[pm.pml3Index] + HIGH_VMA); 
+
+    if(pm.pml1Index == -1) {
+        pml1 = (uint64_t*)(pml2[pm.pml2Index] + HIGH_VMA);       
+        memset64(pml1 + pm.pml1Index, 0, cnt);
+        return;
+    }
+
+    memset64(pml2 + pm.pml2Index, 0, cnt);
+
+    tlbFlush();
+}
+
+void virtualPageManager_t::map(uint64_t base, uint64_t physicalBase, uint64_t cnt, uint64_t flags) {
+    uint64_t *pml4, *pml3, *pml2, *pml1 = NULL, *pt;
+
+    uint64_t pageSize = (flags & (1 << 7)) ? 0x200000 : 0x1000;
+
+    pageMap_t pm = getIndexes(base, flags);
+
+    pml4 = (uint64_t*)(grabPML4() + HIGH_VMA);
+    pml3 = (uint64_t*)(pml4[pm.pml4Index] + HIGH_VMA); 
+    pml2 = (uint64_t*)(pml3[pm.pml3Index] + HIGH_VMA); 
+
+    if(pageSize == 0x1000) {
+        pt = pml1;
+    } else {
+        pt = pml2;
+    } 
+
+    for(int i = pm.pml1Index; i < pm.pml1Index + cnt; i++) {
+        pt[i] = physicalBase | flags; 
+        physicalBase += pageSize;  
+    }
+
+    tlbFlush(); 
+} 
+
+pageMap_t virtualPageManager_t::getIndexes(uint64_t base, uint64_t flags) {
+    int64_t pml4Index = -1, pml3Index = -1, pml2Index = -1, pml1Index = -1;
+
+    pml4Index = base / (0x1000000000000 * 256);
+    base %= (0x1000000000000 * 256);
+    pml3Index = base / 0x8000000000;
+    base %= 0x8000000000;
+    pml2Index = base / 0x40000000;
+    
+
+    if((flags & (1 << 7)) == 0) { 
+        base %= 0x40000000;
+        pml1Index = base / 0x1000;
+    }
+    
+    return pageMap_t { pml4Index, pml4Index, pml2Index, pml1Index };
+}
+
 uint64_t virtualPageManager_t::newUserMap(uint64_t pageCnt) {
     uint64_t *pml4 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
     uint64_t *pml3 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
@@ -122,6 +185,11 @@ void virtualPageManager_t::init() {
 
     kpml3 = (uint64_t)pml3 - HIGH_VMA;
     kpml3HH = (uint64_t)pml3_HH - HIGH_VMA;
+}
+
+
+void virtualPageManager_t::tlbFlush() {
+    asm volatile ("movq %0, %%cr3" :: "r" (grabPML4()) : "memory");
 }
 
 }
