@@ -1,5 +1,0 @@
-global userspace
-
-userspace:
-    
-    jmp $

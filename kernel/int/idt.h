@@ -1,6 +1,7 @@
 #pragma once
 
 #include <kernel/sched/scheduler.h>
+#include <kernel/int/syscall.h>
 
 #include <stdint.h>
 #include <stddef.h>
@@ -330,20 +331,20 @@ inline const char *exceptionMessages[] = { "Divide by zero",
                                   };
 
 inline eventHandlers_t eventHandlers[] =   {
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 8
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 16
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 24
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 32
+                                        schedulerMain, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 40
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 48
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 56
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 64
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 72
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 80
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 88
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 96
+                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 104
+                                        NULL, syscallMain, NULL, NULL, NULL, NULL, NULL, NULL, // 112
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,

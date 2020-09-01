@@ -4,8 +4,14 @@
 #include <stddef.h>
 
 #define PAGESIZE 0x1000
-#define USR_PT_FLAGS (1 << 2) | 0x3 
+
+#define USR_PT_FLAGS (1 << 2) | (1 << 7) | 0x3 
 #define USR_PD_FLAGS (1 << 2) | 0x3
+
+#define KERNEL_PT_FLAGS (1 << 2) | (1 << 7) | 0x3
+#define KERNEL_PD_FLAGS (1 << 2) | 0x3
+
+
 
 #define KERNEL_HIGH_VMA 0xffffffff80000000
 #define HIGH_VMA 0xffff800000000000

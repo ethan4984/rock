@@ -24,11 +24,11 @@ public:
 
     void write(const char *path, uint64_t start, uint64_t cnt, void *buffer);
 
+    void getDir(inode_t *inode, directory_t *ret);
+
     inode_t rootInode;
 private:
     blockGroupDescriptor_t readBGD(uint64_t index);
-
-    directory_t getDir(inode_t inode);
 };
 
 inline ext2_t ext2;

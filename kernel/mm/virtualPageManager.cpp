@@ -28,8 +28,8 @@ uint64_t virtualPageManager_t::newUserMap(uint64_t pageCnt) {
     memset(pml2, 0, 0x1000);
     memset(pml1, 0, 0x1000);
 
-    pml4[256] = kpml3 | 0x3;
-    pml4[511] = kpml3HH | 0x3;
+    pml4[256] = kpml3 | KERNEL_PD_FLAGS;
+    pml4[511] = kpml3HH | KERNEL_PD_FLAGS;
 
     pml4[0] = ((uint64_t)&pml3 - HIGH_VMA) | USR_PD_FLAGS;
     pml3[0] = ((uint64_t)&pml2 - HIGH_VMA) | USR_PD_FLAGS;
@@ -79,9 +79,6 @@ void virtualPageManager_t::initAddressSpace(uint64_t index) {
 void virtualPageManager_t::init() {
     pdEntries = new pdEntry_t[0x1000];
 
-    uint64_t pdFlags = (1 << 2) | 0x3; /* set superuser/present/read/write bits */
-    uint64_t ptFlags = (1 << 2) | (1 << 7) | 0x3; /* set superuser/size/present/read/write bits */
-
     uint64_t *pml4 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
     uint64_t *pml3 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
 
@@ -95,32 +92,32 @@ void virtualPageManager_t::init() {
 
     memset(pml4, 0, 0x8000);
 
-    pml4[256] = ((uint64_t)&pml3[0] - HIGH_VMA) | pdFlags;
-    pml4[0] = ((uint64_t)&pml3[0] - HIGH_VMA) | pdFlags;
+    pml4[256] = ((uint64_t)&pml3[0] - HIGH_VMA) | KERNEL_PD_FLAGS;
+    pml4[0] = ((uint64_t)&pml3[0] - HIGH_VMA) | KERNEL_PD_FLAGS;
 
-    pml4[511] = ((uint64_t)&pml3_HH[0] - HIGH_VMA) | pdFlags;
-    pml3_HH[510] = ((uint64_t)&pml2_HH[0] - HIGH_VMA) | pdFlags;
+    pml4[511] = ((uint64_t)&pml3_HH[0] - HIGH_VMA) | KERNEL_PD_FLAGS;
+    pml3_HH[510] = ((uint64_t)&pml2_HH[0] - HIGH_VMA) | KERNEL_PD_FLAGS;
 
-    pml3[0] = ((uint64_t)&pml2_1G[0] - HIGH_VMA) | pdFlags;
-    pml3[1] = ((uint64_t)&pml2_2G[0] - HIGH_VMA) | pdFlags;
-    pml3[2] = ((uint64_t)&pml2_3G[0] - HIGH_VMA) | pdFlags;
-    pml3[3] = ((uint64_t)&pml2_4G[0] - HIGH_VMA) | pdFlags;
+    pml3[0] = ((uint64_t)&pml2_1G[0] - HIGH_VMA) | KERNEL_PD_FLAGS;
+    pml3[1] = ((uint64_t)&pml2_2G[0] - HIGH_VMA) | KERNEL_PD_FLAGS;
+    pml3[2] = ((uint64_t)&pml2_3G[0] - HIGH_VMA) | KERNEL_PD_FLAGS;
+    pml3[3] = ((uint64_t)&pml2_4G[0] - HIGH_VMA) | KERNEL_PD_FLAGS;
 
     uint64_t physical = 0;
     for(int i = 0; i < 512; i++) {
-        pml2_1G[i] = physical | ptFlags | (1 << 7);
-        pml2_2G[i] = (physical + 0x40000000) | ptFlags | (1 << 7);
-        pml2_3G[i] = (physical + 0x80000000ull) | ptFlags | (1 << 7);
-        pml2_4G[i] = (physical + 0xc0000000ull) | ptFlags | (1 << 7);
+        pml2_1G[i] = physical | KERNEL_PT_FLAGS;
+        pml2_2G[i] = (physical + 0x40000000) | KERNEL_PT_FLAGS;
+        pml2_3G[i] = (physical + 0x80000000ull) | KERNEL_PT_FLAGS;
+        pml2_4G[i] = (physical + 0xc0000000ull) | KERNEL_PT_FLAGS;
 
-        pml2_HH[i] = physical | ptFlags | (1 << 7);
+        pml2_HH[i] = physical | KERNEL_PT_FLAGS;
 
         physical += 0x200000;
     }
 
     asm volatile ("movq %0, %%cr3" :: "r" ((uint64_t)pml4 - HIGH_VMA) : "memory");
 
-    pdEntry_t kernelEntry((uint64_t)pml4 - HIGH_VMA, pdFlags, pdFlags | (1 << 7), 1);
+    pdEntry_t kernelEntry((uint64_t)pml4 - HIGH_VMA, KERNEL_PD_FLAGS, KERNEL_PT_FLAGS, 1);
     pdEntries[0] = kernelEntry;
 
     kpml3 = (uint64_t)pml3 - HIGH_VMA;

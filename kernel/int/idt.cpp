@@ -1,3 +1,4 @@
+#include <kernel/int/syscall.h>
 #include <kernel/int/apic.h>
 #include <kernel/int/idt.h>
 #include <lib/asmUtils.h>
@@ -44,7 +45,6 @@ void idt_t::setIDTR() {
 }
 
 void idt_t::initIDT() {
-    eventHandlers[30] = schedulerMain;
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr0, 0);
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr1, 1);
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr2, 2);
@@ -150,7 +150,7 @@ void idt_t::initIDT() {
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr102, 102);
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr103, 103);
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr104, 104);
-    setIDTentry(0x8, 0, 0x8e, (uint64_t)isr105, 105);
+    setIDTentry(0x8, 0, 0xee, (uint64_t)isr105, 105);
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr106, 106);
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr107, 107);
     setIDTentry(0x8, 0, 0x8e, (uint64_t)isr108, 108);

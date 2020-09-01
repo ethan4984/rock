@@ -79,11 +79,11 @@ end: // todo: get smart pointers setup so we dont have to deal with this mess
     return ret; 
 }
 
-directory_t ext2_t::getDir(inode_t inode) {
+void ext2_t::getDir(inode_t *inode, directory_t *ret) {
     directoryEntry_t *dir = new directoryEntry_t;
 
     char *buffer = new char[0x400];
-    readInode(inode, 0, 0x400, buffer);
+    readInode(*inode, 0, 0x400, buffer);
 
     char **names = new char*[256];
 
@@ -91,7 +91,7 @@ directory_t ext2_t::getDir(inode_t inode) {
 
     uint64_t cnt = 0;
 
-    for(uint32_t i = 0; i < inode.size32l;) {
+    for(uint32_t i = 0; i < inode->size32l;) {
         dir = (directoryEntry_t*)((uint64_t)buffer + i);
 
         dirBuffer[cnt] = *dir;
@@ -106,8 +106,8 @@ directory_t ext2_t::getDir(inode_t inode) {
     }
 
     delete buffer;
-    
-    return (directory_t) { dirBuffer, names, cnt }; // its up to the caller to free dirBuffer/names when theyre done with it
+
+    *ret = (directory_t) { dirBuffer, names, cnt }; // its up to the caller to free dirBuffer/names when theyre done with it
 }
 
 void ext2_t::readInode(inode_t inode, uint64_t addr, uint64_t cnt, void *buffer) {
@@ -183,11 +183,15 @@ void ext2_t::init() {
     rootInode = getInode(2);
     printInode(rootInode);
 
-    directory_t dir = getDir(rootInode);
+    directory_t *dir = new directory_t;
 
-    for(uint64_t i = 0; i < dir.dirCnt; i++) {
-        kprintDS("[FS]", "%s", dir.names[i]);
+    getDir(&rootInode, dir);
+
+    for(uint64_t i = 0; i < dir->dirCnt; i++) {
+        kprintDS("[FS]", "%s", dir->names[i]);
     }
+
+    delete dir;
 }
 
 __attribute__((unused))
