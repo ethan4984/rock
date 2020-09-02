@@ -26,13 +26,15 @@ void virtualPageManager_t::unmap(uint64_t base, uint64_t cnt, uint64_t flags) {
     pml3 = (uint64_t*)(pml4[pm.pml4Index] + HIGH_VMA); 
     pml2 = (uint64_t*)(pml3[pm.pml3Index] + HIGH_VMA); 
 
-    if(pm.pml1Index == -1) {
+    kprintDS("[KDEBUG]", "%d %d %d %d", pm.pml4Index, pm.pml3Index, pm.pml2Index, pm.pml1Index);
+
+    if(pm.pml1Index != -1) {
         pml1 = (uint64_t*)(pml2[pm.pml2Index] + HIGH_VMA);       
         memset64(pml1 + pm.pml1Index, 0, cnt);
         return;
     }
 
-    memset64(pml2 + pm.pml2Index, 0, cnt);
+    memset64((uint64_t*)((uint64_t)pml2 + (pm.pml2Index * 8)), 0, cnt);
 
     tlbFlush();
 }
@@ -54,7 +56,7 @@ void virtualPageManager_t::map(uint64_t base, uint64_t physicalBase, uint64_t cn
         pt = pml2;
     } 
 
-    for(int i = pm.pml1Index; i < pm.pml1Index + cnt; i++) {
+    for(uint64_t i = pm.pml1Index; i < pm.pml1Index + cnt; i++) {
         pt[i] = physicalBase | flags; 
         physicalBase += pageSize;  
     }
@@ -70,14 +72,15 @@ pageMap_t virtualPageManager_t::getIndexes(uint64_t base, uint64_t flags) {
     pml3Index = base / 0x8000000000;
     base %= 0x8000000000;
     pml2Index = base / 0x40000000;
-    
+    base %= 0x40000000;
 
     if((flags & (1 << 7)) == 0) { 
-        base %= 0x40000000;
         pml1Index = base / 0x1000;
+    } else {
+        pml2Index = base / 0x200000;
     }
     
-    return pageMap_t { pml4Index, pml4Index, pml2Index, pml1Index };
+    return pageMap_t { pml4Index, pml3Index, pml2Index, pml1Index };
 }
 
 uint64_t virtualPageManager_t::newUserMap(uint64_t pageCnt) {
