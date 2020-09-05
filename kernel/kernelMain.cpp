@@ -2,6 +2,7 @@
 #include <kernel/mm/virtualPageManager.h>
 #include <kernel/fs/ext2/ext2.h>
 #include <kernel/drivers/ahci.h>
+#include <kernel/drivers/vesa.h>
 #include <kernel/drivers/pci.h>
 #include <kernel/int/syscall.h>
 #include <kernel/sched/task.h>
@@ -79,6 +80,10 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     readPartitions(); 
 
     ext2.init();
+
+    initVESA(stivaleInfo);
+
+    renderChar(50, 50, 0, 0xffffff, 'h');
 
 /*    createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);

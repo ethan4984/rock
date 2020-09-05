@@ -48,7 +48,7 @@ build:
 	sudo umount diskImage/
 	sudo losetup -d `cat loopback_dev`
 	rm -rf diskImage loopback_dev
-	cd limine && ./limine-install limine.bin ../rock.img
+	cd limine && ./limine-install ../rock.img
 	rm kernel/*.o
 
 qemu: build
