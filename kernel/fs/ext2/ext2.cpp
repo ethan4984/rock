@@ -79,6 +79,52 @@ end: // todo: get smart pointers setup so we dont have to deal with this mess
     return ret; 
 }
 
+void ext2_t::readInode(inode_t inode, uint64_t start, uint64_t cnt, void *buffer) {
+    superblock.read(0);
+
+    uint32_t headway = 0;
+
+    while(headway < cnt) {
+        uint64_t block = (start + headway) / superblock.blockSize;
+
+        uint64_t size = cnt - headway;
+        uint64_t offset = (start + headway) % superblock.blockSize;
+
+        if (size > superblock.blockSize - offset)
+            size = superblock.blockSize - offset;
+
+        uint32_t blockIndex;
+
+        if (block < 12) { // direct
+            blockIndex = inode.blocks[block];
+        } else { // indirect
+            block -= 12;
+            if (block * sizeof(uint32_t) >= superblock.blockSize) { // double indirect
+                block -= superblock.blockSize / sizeof(uint32_t);
+                uint32_t index  = block / (superblock.blockSize / sizeof(uint32_t));
+                if (index * sizeof(uint32_t) >= superblock.blockSize) { // triple indirect
+                    uint32_t doubleIndirect, indirectBlock, offset = block % (superblock.blockSize / sizeof(uint32_t));
+
+                    ahci.read(&ahci.drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &doubleIndirect);
+                    ahci.read(&ahci.drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirectBlock);
+                    ahci.read(&ahci.drives[0], partitions[0], indirectBlock * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
+                }
+                uint32_t offset = block % (superblock.blockSize / sizeof(uint32_t));
+                uint32_t indirect_block;
+
+                ahci.read(&ahci.drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
+                ahci.read(&ahci.drives[0], partitions[0], indirect_block * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
+            } else { // single indirect
+                ahci.read(&ahci.drives[0], partitions[0], inode.blocks[12] * superblock.blockSize + block * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
+            }
+        }
+
+        ahci.read(&ahci.drives[0], partitions[0], (blockIndex * superblock.blockSize) + offset, size, (void*)((uint64_t)buffer + headway));
+
+        headway += size;
+    }
+}
+
 void ext2_t::getDir(inode_t *inode, directory_t *ret) {
     directoryEntry_t *dir = new directoryEntry_t;
 
@@ -110,40 +156,6 @@ void ext2_t::getDir(inode_t *inode, directory_t *ret) {
     *ret = (directory_t) { dirBuffer, names, cnt }; // its up to the caller to free dirBuffer/names when theyre done with it
 }
 
-void ext2_t::readInode(inode_t inode, uint64_t addr, uint64_t cnt, void *buffer) {
-    uint32_t block = addr / superblock.blockSize;
-    uint32_t blockOffset = addr % superblock.blockSize;
-
-    if(block < 12) { // is direct block
-        kprintDS("[KDEBUG]", "directly reading from block %d", inode.blocks[block]);
-        ahci.read(&ahci.drives[0], partitions[0], inode.blocks[block] * superblock.blockSize + blockOffset, cnt, buffer);
-        return;
-    }
-
-    if(block >= superblock.blockSize / 4) { // doubly indirect block
-        block -= superblock.blockSize / 4;
-        uint32_t doubleIndirectBlockIndex = block / (superblock.blockSize / 4);
-        if(doubleIndirectBlockIndex >= superblock.blockSize / 4) { // triply indirect block
-            return;
-        }
-
-        uint32_t indirectBlockIndex;
-        uint32_t blockIndex;
-
-        ahci.read(&ahci.drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + doubleIndirectBlockIndex, sizeof(uint32_t), &indirectBlockIndex); // get the indirect block index
-        ahci.read(&ahci.drives[0], partitions[0], indirectBlockIndex * superblock.blockSize, sizeof(uint32_t), &blockIndex); // get the block index
-    
-        kprintDS("[KDEBUG]", "doubly indirect reading from block %d", blockIndex);
-
-        ahci.read(&ahci.drives[0], partitions[0], blockIndex * superblock.blockSize + blockOffset, cnt, buffer); // read that block
-    } else { // singly indirect block
-        uint32_t blockIndex;
-        ahci.read(&ahci.drives[0], partitions[0], inode.blocks[12] * superblock.blockSize + block, sizeof(uint32_t), &blockIndex); // block index
-        kprintDS("[KDEBUG]", "singly indirect reading from block %d", blockIndex);
-        ahci.read(&ahci.drives[0], partitions[0], blockIndex * superblock.blockSize + blockOffset, cnt, buffer); // read that block
-    }
-}
-
 void ext2_t::read(const char *path, uint64_t start, uint64_t cnt, void *buffer) {
     directoryEntry_t dirEntry = getDirEntry(rootInode, path);     
 
@@ -163,7 +175,7 @@ void ext2_t::init() {
     kprintDS("[FS]", "parsing ext2 superblock");
     kprintDS("[FS]", "total number of inodes %d", superblock.data.inodeCount);
     kprintDS("[FS]", "total number of blocks %d", superblock.data.blockCount);
-    kprintDS("[FS]", "superblock reserved block count %d", superblock.data.reservedBlocksCount);
+    kprintDS("[FS]", "superblock reserved block cnt %d", superblock.data.reservedBlocksCount);
     kprintDS("[FS]", "unalloacted blocks %d", superblock.data.freeBlocksCount);
     kprintDS("[FS]", "unalloacted inodes %d", superblock.data.freeInodesCount);
     kprintDS("[FS]", "block number containing the superblock %d", superblock.data.sbBlock);
@@ -219,7 +231,7 @@ static void printBGD(blockGroupDescriptor_t bgd) {
     kprintDS("[KDEBUG]", "startingBlock %x", bgd.startingBlock);
     kprintDS("[KDEBUG]", "unalloactedblocks %x", bgd.unallocatedBlocks);
     kprintDS("[KDEBUG]", "unallocatedInodes %x", bgd.unallocatedInodes);
-    kprintDS("[KDEBUG]", "directory count %x", bgd.directoryCnt);
+    kprintDS("[KDEBUG]", "directory cnt %x", bgd.directoryCnt);
 }
 
 __attribute__((unused))

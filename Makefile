@@ -44,6 +44,7 @@ build:
 	sudo mkdir diskImage/boot
 	sudo cp Bin/rock.elf diskImage/boot/
 	sudo cp kernel/limine.cfg diskImage/
+	sudo cp Wallpapers/14569.bmp diskImage/
 	sync
 	sudo umount diskImage/
 	sudo losetup -d `cat loopback_dev`

@@ -2,7 +2,7 @@
 #include <kernel/mm/virtualPageManager.h>
 #include <kernel/fs/ext2/ext2.h>
 #include <kernel/drivers/ahci.h>
-#include <kernel/drivers/vesa.h>
+#include <kernel/bridge/kterm.h>
 #include <kernel/drivers/pci.h>
 #include <kernel/int/syscall.h>
 #include <kernel/sched/task.h>
@@ -18,6 +18,8 @@
 #include <kernel/stivale.h>
 #include <kernel/fs/vfs.h>
 #include <lib/output.h>
+#include <lib/vesa.h>
+#include <lib/bmp.h> 
 
 #include <stddef.h>
 
@@ -81,9 +83,27 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     ext2.init();
 
-    initVESA(stivaleInfo);
+    vesa.initVESA(stivaleInfo);
 
-    renderChar(50, 50, 0, 0xffffff, 'h');
+    kterm.setBackground("14569.bmp");
+    
+    kterm.setForeground(0xff); 
+
+    for(int i = 0; i < 100; i++) {
+        kterm.putchar('h');
+        kterm.putchar('e');
+        kterm.putchar('n');
+        kterm.putchar('t');
+        kterm.putchar('a');
+        kterm.putchar('i');
+    }
+
+    ksleep(1000);
+
+    for(int i = 0; i < 400; i++) 
+        kterm.putchar('\b');
+
+    kterm.putchar('\b');
 
 /*    createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
