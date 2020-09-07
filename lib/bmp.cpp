@@ -22,12 +22,18 @@ bmpImage_t drawBMP(const char *path) {
 
     ext2.read(path, bmpFileHdr.bfOffset, bmpFileHdr.bfSize, data);
 
+    kprintDS("[KDEBUG]", "height %d", bmpFileHdr.biHeight);
+    kprintDS("[KDEBUG]", "width %d", bmpFileHdr.biWidth);
+    kprintDS("[KDEBUG]", "bpp %d", bmpFileHdr.biBitCount);
+    kprintDS("[KDEBUG]", "offset %d", bmpFileHdr.bfOffset);
+    kprintDS("[KDEBUG]", "size %d", bmpFileHdr.bfSize);
+
     for(uint32_t i = 0; i < bmpFileHdr.biHeight; i++) {
         for(uint32_t j = 0; j < bmpFileHdr.biWidth; j++)
             vesa.setPixel(j, i, bmpGetPixel(j, i, bmpImage)); 
     }
 
-    return bmpImage_t { bmpFileHdr, data };
+    return bmpImage;
 }
 
 }

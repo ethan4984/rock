@@ -1,11 +1,25 @@
+#include <kernel/bridge/commandHub.h>
 #include <kernel/bridge/kterm.h>
 #include <lib/stringUtils.h> 
+#include <kernel/mm/kHeap.h>
+#include <lib/memoryUtils.h>
 #include <lib/output.h>
 #include <lib/vesa.h>
 #include <lib/bmp.h>
 #include <stdarg.h>
 
 namespace kernel {
+
+command *kterm::commands;
+
+void kterm::addBuffer(char c) {
+    if(currentIndex >= maxSize) {
+        buffer = (char*)kheap.krealloc(buffer, maxSize);
+        maxSize *= 2;
+    }
+
+    buffer[currentIndex++] = c;
+}
 
 void kterm::drawBackground(uint32_t x, uint32_t y) {
     if(backgroundOverride != 0x69694200) {
@@ -22,17 +36,26 @@ void kterm::drawBackground(uint32_t x, uint32_t y) {
     }
 } 
 
-void kterm::putchar(char c) {
+void kterm::putchar(uint8_t c) {
     switch(c) {
         case '\n':
             currentRow = 0;
             currentColumn += 8;
+
+            commandHub();
+
+            memset(buffer, 0, maxSize);
+            currentIndex = 0;
             break;
         case '\b':
-            if(currentRow == 0) {
-                if(currentColumn == 0) 
-                    break;
+            if(currentColumn == 0) 
+                break;
 
+            if(currentIndex != 0 && input) {
+                buffer[--currentIndex] = 0;
+            }
+
+            if(currentRow == 0) {
                 drawBackground(currentRow, currentColumn);
                 currentRow = vesa.width;
                 currentColumn -= 8;
@@ -45,6 +68,10 @@ void kterm::putchar(char c) {
             break;
         default:
             vesa.renderChar(currentRow, currentColumn, foreground, c);
+            
+            if(input)
+                addBuffer(c);
+
             currentRow += 8;
             if(currentRow == vesa.width) {
                 currentRow = 0;
@@ -56,54 +83,14 @@ void kterm::putchar(char c) {
 }
 
 void kterm::print(const char *str, ...) {
-    uint64_t hold = 0;
-    char *string;
-    char character;
-
     va_list arg;
     va_start(arg, str);
 
-    for(uint64_t i = 0; i < strlen(str); i++) {
-        if(str[i] != '%')
-            putchar(str[i]);
-        else {
-            i++;
-            switch(str[i]) {
-                case 'd':
-                    hold = va_arg(arg, long);
-                    string = itob(hold, 10);
-                    for(uint64_t i = 0; i < strlen(string); i++)
-                        putchar(string[i]);
-                    break;
-                case 's':
-                    string = va_arg(arg, char*);
-                    for(uint64_t i = 0; i < strlen(string); i++)
-                        putchar(string[i]);
-                    break;
-                case 'c':
-                    character = va_arg(arg, int);
-                    putchar(character);
-                    break; 
-                case 'x':
-                    hold = va_arg(arg, uint64_t);
-                    string = itob(hold, 16);
-                    for(uint64_t i = 0; i < strlen(string); i++)
-                        putchar(string[i]);
-                    break;
-                case 'a':
-                    hold = va_arg(arg, uint64_t);
-                    string = itob(hold, 16);
-                    int offset_zeros = 16 - strlen(string);
-                    for(int i = 0; i < offset_zeros; i++)
-                        putchar('0');
-                    for(uint64_t i = 0; i < strlen(string); i++)
-                        putchar(string[i]);
-                    break;
-            }
-        }
-    }
+    input = false;
 
-    va_end(arg);
+    printArgs(str, arg, basePutchar);
+
+    input = true;
 }
 
 void kterm::setForeground(uint32_t fg) {
@@ -117,6 +104,17 @@ void kterm::setBackground(const char *filePath, uint32_t colourOverride) {
     }
 
     background = drawBMP(filePath);
+}
+
+void kterm::init() { 
+    buffer = new char[256];
+    maxSize = 256; 
+    memset(buffer, 0, maxSize);
+    commands = new command[50];
+}
+
+void basePutchar(uint8_t c) {
+    kterm.putchar(c);
 }
 
 }

@@ -32,55 +32,41 @@ void apic_t::ioapicWrite(uint64_t base, uint32_t reg, uint32_t data) {
 
 uint32_t apic_t::getMaxGSIs(uint64_t ioapic_base) {
     uint32_t data = ioapicRead(ioapic_base, 1) >> 16; // Read register 1
-    return data & ~(1<<7);
+    return data & ~(1 << 7);
 }
 
-uint64_t apic_t::findVaildIOAPIC(uint64_t gsi) {
-    uint64_t i;
-    for(i = 0; i < madtInfo.madtEntry1Count; i++) {
-        uint32_t maxGSIs = getMaxGSIs(madtInfo.madtEntry1[i].ioapicAddr) + madtInfo.madtEntry1[i].gsiBase;
-        if(madtInfo.madtEntry1[i].gsiBase <= gsi && maxGSIs >= gsi)
-            break;
-        if(i == madtInfo.madtEntry1Count)
-            return ERROR; // error code
-    }
-    return i;
-}
-
-uint64_t apic_t::writeRedirectionTable(uint32_t gsi, uint64_t data) {
-    uint64_t ioapicIndex = findVaildIOAPIC(gsi);
-
-    if(ioapicIndex == ERROR) { // error code
-        cout + "[APIC]" << "Bad GSI\n";
-        return 0;
-    }
-
+uint64_t apic_t::writeRedirectionTable(uint32_t gsi, uint64_t data, uint64_t ioapicIndex) {
     uint32_t reg = ((gsi - madtInfo.madtEntry1[ioapicIndex].gsiBase) * 2) + 16;
     ioapicWrite(madtInfo.madtEntry1[ioapicIndex].ioapicAddr, reg, (uint32_t)data);
     ioapicWrite(madtInfo.madtEntry1[ioapicIndex].ioapicAddr, reg + 1, (uint32_t)(data >> 32));
     return 1;
 }
 
-uint64_t apic_t::readRedirectionTable(uint32_t gsi) {
-    uint64_t ioapicIndex = findVaildIOAPIC(gsi);
-
-    if(ioapicIndex == ERROR) {
-        cout + "[APIC]" << "Bad GSI\n";
-        return 69420;
-    }
-
+uint64_t apic_t::readRedirectionTable(uint32_t gsi, uint64_t ioapicIndex) {
     uint32_t reg = ((gsi - madtInfo.madtEntry1[ioapicIndex].gsiBase) * 2) + 16;
     uint64_t data = (uint64_t)ioapicRead(madtInfo.madtEntry1[ioapicIndex].ioapicAddr, reg);
     return data | ((uint64_t)(ioapicRead(madtInfo.madtEntry1[ioapicIndex].ioapicAddr, reg + 1)) << 32);
 }
 
 void apic_t::maskGSI(uint32_t gsi) {
-    uint64_t redirectionTable = readRedirectionTable(gsi);
+    uint64_t redirectionTable = readRedirectionTable(gsi, 0);
     if(redirectionTable == ERROR) {
         cout + "[APIC]" << "Bad redirection table : unable to mask GSI " << gsi << "\n";
         return;
     }
-    writeRedirectionTable(gsi, redirectionTable | (1 << 16));
+
+    writeRedirectionTable(gsi, redirectionTable | (1 << 16), 0); // mask it
+}
+
+void apic_t::unmaskGSI(uint32_t gsi) {
+    uint64_t redirectionTable = readRedirectionTable(gsi, 0);
+    if(redirectionTable == ERROR) {
+        cout + "[APIC]" << "Bad redirection table : unable to mask GSI " << gsi << "\n";
+        return;
+    }
+
+    writeRedirectionTable(gsi, redirectionTable & (1 << 16), 0); // unmask it
+    writeRedirectionTable(gsi, gsi + 32, 0); // map it again
 }
 
 void apic_t::lapicTimerInit(uint64_t ticksPerMS) { 
@@ -119,13 +105,15 @@ void apic_t::initAPIC() {
     cout + "[APIC]" << "Detected core count " << madtInfo.madtEntry0Count << "\n";
 
     for(uint64_t i = 0; i < madtInfo.madtEntry1Count; i++) {
-        for(uint64_t j = madtInfo.madtEntry1[i].gsiBase; j < getMaxGSIs(madtInfo.madtEntry1[i].ioapicAddr); j++)
+        for(uint64_t j = madtInfo.madtEntry1[i].gsiBase; j < getMaxGSIs(madtInfo.madtEntry1[i].ioapicAddr); j++) { 
             maskGSI(j);
+        }
     }
 
-    for(uint64_t i = 0; i < 16; i++) {
-        writeRedirectionTable(i, i + 32);
-    }
+    for(int i = 0; i < 16; i++) 
+        writeRedirectionTable(i, i + 32, 0);
+
+    maskGSI(2);
 
     lapicWrite(LAPIC_SINT, lapicRead(LAPIC_SINT) | 0x1ff); // enavle spurious interrupts
 

@@ -1,6 +1,9 @@
 #pragma once
 
+#include <lib/memoryUtils.h>
+
 #include <stdint.h>
+#include <stdarg.h>
 
 namespace kernel {
 
@@ -34,5 +37,7 @@ public:
 inline coutBase cout;
 
 void kprintDS(const char *prefix, const char *str, ...);
+
+void printArgs(const char *str, va_list arg, function<void, uint8_t> handler);
 
 }

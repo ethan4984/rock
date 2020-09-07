@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kernel/drivers/keyboard.h>
 #include <kernel/sched/scheduler.h>
 #include <kernel/int/syscall.h>
 
@@ -335,7 +336,7 @@ inline eventHandlers_t eventHandlers[] =   {
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 16
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 24
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 32
-                                        schedulerMain, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 40
+                                        schedulerMain, keyboardHandlerMain, NULL, NULL, NULL, NULL, NULL, NULL, // 40
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 48
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 56
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 64

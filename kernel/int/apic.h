@@ -86,11 +86,15 @@ public:
 
     uint64_t findVaildIOAPIC(uint64_t gsi);
 
-    uint64_t writeRedirectionTable(uint32_t gsi, uint64_t data);
+    uint64_t writeRedirectionTable(uint32_t gsi, uint64_t data, uint64_t ioapicIndx);
 
-    uint64_t readRedirectionTable(uint32_t gsi);
+    uint64_t readRedirectionTable(uint32_t gsi, uint64_t ioapicIndex);
 
     void maskGSI(uint32_t gsi);
+
+    void unmaskGSI(uint32_t gsi);
+
+    void mapIRQ(uint32_t irq);
 
     void lapicTimerInit(uint64_t ticksPerMS);
 };
