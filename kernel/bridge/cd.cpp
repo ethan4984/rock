@@ -1,7 +1,7 @@
 #include <kernel/bridge/commandHub.h>
 #include <kernel/bridge/kterm.h>
 #include <kernel/fs/ext2/ext2.h>
-#include <kernel/bridge/cat.h>
+#include <kernel/bridge/cd.h>
 #include <lib/stringUtils.h>
 #include <lib/output.h>
 

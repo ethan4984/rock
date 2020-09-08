@@ -1,6 +1,6 @@
 #include <kernel/bridge/commandHub.h>
 #include <kernel/bridge/kterm.h>
-#include <kernel/bridge/cat.h>
+#include <kernel/bridge/cd.h>
 #include <kernel/bridge/ls.h>
 #include <lib/stringUtils.h>
 #include <lib/output.h>
