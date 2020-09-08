@@ -97,10 +97,6 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     asm volatile ("sti");
     
-    for(int i = 0; i < 100; i++) {
-        kterm.print("hentai"); 
-    }
-
 /*    createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task3, 2);

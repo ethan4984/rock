@@ -45,7 +45,7 @@ void keyboardHandlerMain(regs_t *regs) {
             func('\b');
             break;
         case 0x1c:
-            func('\n');
+            func(0x1c);
             break;
         default:
             if(keycode <= 128) {

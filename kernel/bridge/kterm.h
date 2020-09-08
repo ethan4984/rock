@@ -24,6 +24,8 @@ public:
     void putchar(uint8_t c);
 
     void addCommand(command newCommand);
+
+    void updatePath(const char *currentPath);
 public:
     char *buffer;
 
@@ -31,7 +33,7 @@ public:
 
     uint32_t maxSize;
 private:
-    uint32_t foreground = 0xffffff, currentRow = 0, currentColumn = 0, backgroundOverride = 0x69694200;
+    uint32_t foreground = 0xffffff, currentRow = 0, currentColumn = 0, backgroundOverride = 0x69694200, cursorColour = 0xffc0cb;
 
     bool input = true;
 
@@ -39,9 +41,13 @@ private:
 
     static command *commands;
 
-    uint32_t commandCnt = 0;
+    static uint32_t commandCnt;
+
+    char *path;
 private:
     void drawBackground(uint32_t x, uint32_t y);
+
+    void updateCursor(); 
 
     void addBuffer(char c);
 

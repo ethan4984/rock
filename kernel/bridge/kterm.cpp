@@ -11,6 +11,7 @@
 namespace kernel {
 
 command *kterm::commands;
+uint32_t kterm::commandCnt;
 
 void kterm::addBuffer(char c) {
     if(currentIndex >= maxSize) {
@@ -34,16 +35,24 @@ void kterm::drawBackground(uint32_t x, uint32_t y) {
         for(int j = 0; j < 8; j++)
             vesa.setPixel(x + i, y + j, bmpGetPixel(x + i, y + j, background));
     }
-} 
+}
+
+void kterm::updateCursor() {
+    for(int i = 0; i < 8; i++) {
+        for(int j = 0; j < 8; j++) {
+            vesa.setPixel(i + currentRow + 8, j + currentColumn, cursorColour);
+        }
+    }
+}
 
 void kterm::putchar(uint8_t c) {
     switch(c) {
         case '\n':
             currentRow = 0;
             currentColumn += 8;
-
+            break;
+        case 0x1c:
             commandHub();
-
             memset(buffer, 0, maxSize);
             currentIndex = 0;
             break;
@@ -52,6 +61,7 @@ void kterm::putchar(uint8_t c) {
                 break;
 
             if(currentIndex != 0 && input) {
+                updateCursor();
                 buffer[--currentIndex] = 0;
             }
 
@@ -67,10 +77,13 @@ void kterm::putchar(uint8_t c) {
 
             break;
         default:
+            drawBackground(currentRow, currentColumn);
             vesa.renderChar(currentRow, currentColumn, foreground, c);
             
-            if(input)
+            if(input) {
+                updateCursor();
                 addBuffer(c);
+            }
 
             currentRow += 8;
             if(currentRow == vesa.width) {
@@ -93,6 +106,14 @@ void kterm::print(const char *str, ...) {
     input = true;
 }
 
+void kterm::addCommand(command newCommand) {
+    if(++commandCnt % 10 == 0) {
+        commands = (command*)kheap.krealloc(commands, 10);
+    }
+
+    commands[commandCnt - 1] = newCommand;
+}
+
 void kterm::setForeground(uint32_t fg) {
     foreground = fg;
 }
@@ -109,8 +130,15 @@ void kterm::setBackground(const char *filePath, uint32_t colourOverride) {
 void kterm::init() { 
     buffer = new char[256];
     maxSize = 256; 
+
     memset(buffer, 0, maxSize);
     commands = new command[50];
+    commandCnt = 0;
+
+    path = new char[256];
+    strcpy(path, "/");
+    
+    initCommands();
 }
 
 void basePutchar(uint8_t c) {

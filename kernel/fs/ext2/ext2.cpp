@@ -41,6 +41,9 @@ directoryEntry_t ext2_t::getDirEntry(inode_t inode, const char *path) {
     directoryEntry_t *dir = new directoryEntry_t;
     directoryEntry_t ret;
 
+    if(*path == '/')
+        ++path;
+
     char **paths = new char*[256];
 
     uint64_t cnt = splitString(paths, path, "/");
@@ -157,7 +160,7 @@ void ext2_t::getDir(inode_t *inode, directory_t *ret) {
 }
 
 void ext2_t::read(const char *path, uint64_t start, uint64_t cnt, void *buffer) {
-    directoryEntry_t dirEntry = getDirEntry(rootInode, path);     
+    directoryEntry_t dirEntry = getDirEntry(rootInode, path);
 
     inode_t inode = getInode(dirEntry.inode);
 
