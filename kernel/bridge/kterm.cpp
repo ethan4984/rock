@@ -30,17 +30,24 @@ void kterm::drawBackground(uint32_t x, uint32_t y) {
         }
         return;
     } 
-
-    for(int i = 0; i < 8; i++) {
+for(int i = 0; i < 8; i++) {
         for(int j = 0; j < 8; j++)
             vesa.setPixel(x + i, y + j, bmpGetPixel(x + i, y + j, background));
     }
 }
 
-void kterm::updateCursor() {
+void kterm::updateCursor(uint64_t x, uint64_t y) {
     for(int i = 0; i < 8; i++) {
         for(int j = 0; j < 8; j++) {
-            vesa.setPixel(i + currentRow + 8, j + currentColumn, cursorColour);
+            vesa.setPixel(i + x, j + y, foreground);
+        }
+    }
+}
+
+void kterm::deleteCursor(uint64_t x, uint64_t y) {
+    for(int i = 0; i < 8; i++) {
+        for(int j = 0; j < 8; j++) {
+            vesa.setPixel(i + x, j + y, bmpGetPixel(i + x, j + y, background));
         }
     }
 }
@@ -61,7 +68,8 @@ void kterm::putchar(uint8_t c) {
                 break;
 
             if(currentIndex != 0 && input) {
-                updateCursor();
+                deleteCursor(currentRow, currentColumn);
+                updateCursor(currentRow + 8, currentColumn);
                 buffer[--currentIndex] = 0;
             }
 
@@ -81,7 +89,7 @@ void kterm::putchar(uint8_t c) {
             vesa.renderChar(currentRow, currentColumn, foreground, c);
             
             if(input) {
-                updateCursor();
+                updateCursor(currentRow, currentColumn);
                 addBuffer(c);
             }
 

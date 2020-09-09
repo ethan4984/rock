@@ -33,7 +33,7 @@ public:
 
     uint32_t maxSize;
 private:
-    uint32_t foreground = 0xffffff, currentRow = 0, currentColumn = 0, backgroundOverride = 0x69694200, cursorColour = 0xffc0cb;
+    uint32_t foreground = 0xffffff, currentRow = 0, currentColumn = 0, backgroundOverride = 0x69694200;
 
     bool input = true;
 
@@ -47,7 +47,9 @@ private:
 private:
     void drawBackground(uint32_t x, uint32_t y);
 
-    void updateCursor(); 
+    void updateCursor(uint64_t x, uint64_t y); 
+
+    void deleteCursor(uint64_t x, uint64_t y);
 
     void addBuffer(char c);
 
