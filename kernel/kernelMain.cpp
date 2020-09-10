@@ -3,7 +3,6 @@
 #include <kernel/drivers/keyboard.h>
 #include <kernel/fs/ext2/ext2.h>
 #include <kernel/drivers/ahci.h>
-#include <kernel/bridge/kterm.h>
 #include <kernel/drivers/pci.h>
 #include <kernel/int/syscall.h>
 #include <kernel/sched/task.h>
@@ -89,13 +88,18 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     vesa.initVESA(stivaleInfo);
 
-    kterm.init();
+    uint8_t *ell = new uint8_t[2];
+    kprintDS("[KDEBUG]", "%x", ell);
+    
 
-    kterm.setBackground("14569.bmp");
+//    drawBMP("14569.bmp");
+    VesaBlkGrp bruh(100, 100, 3, 3, 0xff);
 
-    kterm.setForeground(0xff); 
+    ksleep(1000);
 
-    asm volatile ("sti");
+    bruh.redraw(200, 200);
+
+    //asm volatile ("sti");
     
 /*    createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
@@ -104,6 +108,8 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task5, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task6, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task7, 2);*/
+    
+    kprintDS("[KDEBUG]", "Heloo");
 
     for(;;);
 }

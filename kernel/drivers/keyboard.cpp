@@ -1,5 +1,4 @@
 #include <kernel/drivers/keyboard.h>
-#include <kernel/bridge/kterm.h>
 #include <kernel/mm/kHeap.h>
 #include <lib/memoryUtils.h>
 #include <lib/asmUtils.h>
@@ -9,7 +8,11 @@
 
 namespace kernel {
 
-function<void, uint8_t> func = basePutchar;
+void dummyChar(uint8_t c) {
+
+}
+
+function<void, uint8_t> func = dummyChar;
 	
 char keyMap[] = {   ' ', ' ', '1', '2', '3',  '4', '5', '6',  '7', '8', '9', '0',
                     '-', '=', '\b', '\t', 'q',  'w', 'e', 'r',  't', 'y', 'u', 'i',
