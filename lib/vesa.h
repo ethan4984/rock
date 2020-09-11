@@ -22,13 +22,13 @@ public:
 struct VesaBlk {
     uint32_t x, y, colour;
     uint32_t backgroundBuffer[VESA_BLOCK_SIZE^2];
-};
+} __attribute__((packed));
 
-void redraw(uint32_t newX, uint32_t newY, VesaBlk *blk);
+void blkRedraw(uint32_t newX, uint32_t newY, VesaBlk *blk);
 
-void changeColour(uint32_t newColour, VesaBlk *blk);
+void blkChangeColour(uint32_t newColour, VesaBlk *blk);
 
-void draw(VesaBlk *blk);
+void blkDraw(VesaBlk *blk);
     
 class VesaBlkGrp {
 public:

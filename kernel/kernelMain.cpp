@@ -1,4 +1,4 @@
-#include <kernel/mm/physicalPageManager.h>
+# include <kernel/mm/physicalPageManager.h>
 #include <kernel/mm/virtualPageManager.h>
 #include <kernel/drivers/keyboard.h>
 #include <kernel/fs/ext2/ext2.h>
@@ -88,20 +88,21 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     vesa.initVESA(stivaleInfo);
 
-    uint8_t *ell = new uint8_t[2];
-    kprintDS("[KDEBUG]", "%x", ell);
-    
-
-//    drawBMP("14569.bmp");
-    VesaBlkGrp bruh(100, 100, 3, 3, 0xff);
-
+    drawBMP("14569.bmp");
+    /*VesaBlk lel = { 100, 100, 0xff };
+    blkDraw(&lel); 
     ksleep(1000);
+    blkRedraw(200, 200, &lel);*/
 
-    bruh.redraw(200, 200);
+    VesaBlkGrp gaming(400, 400, 4, 9, 0xff);
 
-    //asm volatile ("sti");
-    
-/*    createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
+    ksleep(1000); 
+
+    gaming.redraw(200, 200);
+
+    asm volatile ("sti");
+
+    /*    createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task3, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task4, 2);
@@ -109,8 +110,6 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task6, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task7, 2);*/
     
-    kprintDS("[KDEBUG]", "Heloo");
-
     for(;;);
 }
 
