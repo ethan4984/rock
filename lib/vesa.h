@@ -19,32 +19,21 @@ public:
     uint32_t width, height, bpp, framebuffer, pitch;
 };
 
-struct VesaBlk {
-    uint32_t x, y, colour;
-    uint32_t backgroundBuffer[VESA_BLOCK_SIZE^2];
-} __attribute__((packed));
-
-void blkRedraw(uint32_t newX, uint32_t newY, VesaBlk *blk);
-
-void blkChangeColour(uint32_t newColour, VesaBlk *blk);
-
-void blkDraw(VesaBlk *blk);
-    
-class VesaBlkGrp {
+class VesaBlk {
 public:
-    VesaBlkGrp(uint32_t x, uint32_t y, uint32_t blkCntX, uint32_t blkCntY, uint32_t colours);
+    VesaBlk(uint32_t x, uint32_t y, uint32_t colour) : x(x), 
+        y(y), colour(colour) { }
 
-    VesaBlkGrp() = default;
+    VesaBlk() = default;
 
-    ~VesaBlkGrp();
+    void blkRedraw(uint32_t newX, uint32_t newY);
 
-    void draw();
+    void blkChangeColour(uint32_t newColour);
 
-    void redraw(uint32_t newX, uint32_t newY);
+    void blkDraw();
 private:
-    VesaBlk *blocks;
-
-    uint32_t x, y, blkCntX, blkCntY, colour;
+    uint32_t x, y, colour;
+    uint32_t backgroundBuffer[VESA_BLOCK_SIZE^2] = { 0 };
 };
 
 inline vesa vesa;

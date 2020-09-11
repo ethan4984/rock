@@ -33,66 +33,31 @@ void vesa::renderChar(uint64_t x, uint64_t y, uint32_t fg, char c) {
     }
 }
 
-void blkDraw(VesaBlk *blk) {
+void VesaBlk::blkDraw() {
     uint32_t cnt = 0;
-    for(uint32_t i = blk->x; i < blk->x + VESA_BLOCK_SIZE; i++) {
-        for(uint32_t j = blk->y; j < blk->y + VESA_BLOCK_SIZE; j++) {
-            blk->backgroundBuffer[cnt++] = vesa.grabColour(i, j);
-            vesa.setPixel(i, j, blk->colour); 
+    for(uint32_t i = x; i < x + VESA_BLOCK_SIZE; i++) {
+        for(uint32_t j = y; j < y + VESA_BLOCK_SIZE; j++) {
+            backgroundBuffer[cnt++] = vesa.grabColour(i, j);
+            vesa.setPixel(i, j, colour); 
         }
     }
 }
 
-void blkRedraw(uint32_t newX, uint32_t newY, VesaBlk *blk) {
-    kprintDS("[KDEBUG]", "%d %d", blk->x, blk->y);
+void VesaBlk::blkRedraw(uint32_t newX, uint32_t newY) {
     uint32_t cnt = 0;
-    for(uint32_t i = blk->x; i < blk->x + VESA_BLOCK_SIZE; i++) {
-        for(uint32_t j = blk->y; j < blk->y + VESA_BLOCK_SIZE; j++) {
-            vesa.setPixel(i, j, blk->backgroundBuffer[cnt++]); 
+    for(uint32_t i = x; i < x + VESA_BLOCK_SIZE; i++) {
+        for(uint32_t j = y; j < y + VESA_BLOCK_SIZE; j++) {
+            vesa.setPixel(i, j, backgroundBuffer[cnt++]); 
         }
     }
 
-    blk->x = newY; blk->y = newY;
-    blkDraw(blk);
+    x = newY; y = newY;
+    blkDraw();
 }
 
-void changeColour(uint32_t newColour, VesaBlk *blk) {
-    blk->colour = newColour; 
-    blkDraw(blk);
-}
-
-VesaBlkGrp::VesaBlkGrp(uint32_t x, uint32_t y, uint32_t blkCntX, uint32_t blkCntY, uint32_t colour) : x(x), 
-    y(y), blkCntX(blkCntX), blkCntY(blkCntY), colour(colour) {
-    blocks = new VesaBlk[blkCntX * blkCntY]; 
-    uint32_t cnt = 0;
-    for(int i = 0; i < blkCntY; i++) {
-        for(int j = 0; j < blkCntX; j++, cnt++) {
-            blocks[cnt] = { j * VESA_BLOCK_SIZE + x, i * VESA_BLOCK_SIZE + y, colour };
-            blkDraw(&blocks[cnt]);
-        }
-    } 
-}
-
-VesaBlkGrp::~VesaBlkGrp() {
-    delete blocks;
-}
-
-void VesaBlkGrp::draw() { 
-    for(int i = 0; i < blkCntX * blkCntY; i++) {
-        blkDraw(&blocks[i]);
-    }
-}
-
-void VesaBlkGrp::redraw(uint32_t newX, uint32_t newY) {
-    x = newX;
-    y = newY;
-    uint32_t cnt = 0;
-    for(int i = 0; i < blkCntY; i++) {
-        for(int j = 0; j < blkCntX; j++) {
-            VesaBlk *lel = &blocks[cnt++];
-            blkRedraw(j * 8 + x, i * 8 + y, lel);
-        }
-    } 
+void VesaBlk::blkChangeColour(uint32_t newColour) {
+    colour = newColour; 
+    blkDraw();
 }
 
 }

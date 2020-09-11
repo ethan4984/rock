@@ -89,16 +89,11 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     vesa.initVESA(stivaleInfo);
 
     drawBMP("14569.bmp");
-    /*VesaBlk lel = { 100, 100, 0xff };
-    blkDraw(&lel); 
+
+    VesaBlk lel(100, 100, 0xff);
+    lel.blkDraw(); 
     ksleep(1000);
-    blkRedraw(200, 200, &lel);*/
-
-    VesaBlkGrp gaming(400, 400, 4, 9, 0xff);
-
-    ksleep(1000); 
-
-    gaming.redraw(200, 200);
+    lel.blkRedraw(200, 200);
 
     asm volatile ("sti");
 
