@@ -1,4 +1,4 @@
-%include 'lib/asmMacros.inc'
+%include 'src/lib/asmMacros.inc'
 
 global startTask
 
