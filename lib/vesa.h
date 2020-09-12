@@ -19,7 +19,7 @@ public:
     uint32_t grabColour(uint16_t x, uint16_t y);
 
     uint32_t width, height, bpp, framebuffer, pitch;
-} __attribute__((packed));
+};
 
 class VesaBlk {
 public:
@@ -34,20 +34,16 @@ public:
 
     void blkDraw();
     
-    void operator=(VesaBlk bruh) {
-        x = bruh.x;
-        y = bruh.y;
-        colour = bruh.colour;
-        kprintDS("[KDEBUG]", "%d %d", x, y);
-    }
-private:
     uint32_t x, y, colour;
-    uint32_t backgroundBuffer[VESA_BLOCK_SIZE^2] = { 0 };
+
+    uint32_t backgroundBuffer[64];
 };
 
 class VesaBlkGrp {
 public:
     VesaBlkGrp(uint32_t x, uint32_t y, uint32_t xCnt, uint32_t yCnt, uint32_t colour);
+
+    ~VesaBlkGrp();
 
     void draw();
 
@@ -55,8 +51,10 @@ public:
 private:    
     uint32_t x, y, xCnt, yCnt, colour;
 
-//    VesaBlk blocks[9];
+    VesaBlk *blocks;
 };
+
+void test();
 
 inline vesa vesa;
 
