@@ -2,6 +2,7 @@
 
 #include <kernel/drivers/keyboard.h>
 #include <kernel/sched/scheduler.h>
+#include <kernel/drivers/mouse.h>
 #include <kernel/int/syscall.h>
 
 #include <stdint.h>
@@ -337,7 +338,7 @@ inline eventHandlers_t eventHandlers[] =   {
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 24
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 32
                                         schedulerMain, keyboardHandlerMain, NULL, NULL, NULL, NULL, NULL, NULL, // 40
-                                        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 48
+                                        NULL, NULL, NULL, NULL, mouseHandler, NULL, NULL, NULL, // 48
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 56
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 64
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 72

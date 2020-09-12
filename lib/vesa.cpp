@@ -94,4 +94,38 @@ void VesaBlkGrp::redraw(uint32_t newX, uint32_t newY) {
     }
 }
 
+VesaShape::VesaShape(uint32_t x, uint32_t y, uint8_t *foreground, uint32_t xCnt, uint32_t yCnt, uint32_t colour) : x(x), y(y), xCnt(xCnt), yCnt(yCnt), colour(colour), foreground(foreground) {
+    background = new uint32_t[xCnt * yCnt];
+    draw();
+}
+
+void VesaShape::draw() {
+    uint32_t cnt = 0;
+
+    for(uint32_t i = y; i < y + yCnt; i++) {
+        for(uint32_t j = x; j < x + xCnt; j++, cnt++) {
+            if(foreground[cnt] == 1) {
+                background[cnt] = vesa.grabColour(j, i);
+                vesa.setPixel(j, i, colour); 
+            } else if(foreground[cnt] == 2) {
+                background[cnt] = vesa.grabColour(j, i);
+                vesa.setPixel(j, i, 0); 
+            }
+        }
+    }
+}
+
+void VesaShape::redraw(uint32_t newX, uint32_t newY) {
+    uint32_t cnt = 0;
+    for(uint32_t i = y; i < y + xCnt; i++) { 
+        for(uint32_t j = x; j < x + yCnt; j++, cnt++) { 
+            if(foreground[cnt] != 0) {
+                vesa.setPixel(j, i, background[cnt]);
+            }
+        }
+    }
+    x = newX; y = newY;
+    draw();
+}
+
 }
