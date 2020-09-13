@@ -39,6 +39,14 @@ textBox::~textBox() {
     delete characters;
 }
 
+void textBox::deleteAll() {
+    uint32_t oldTotal = totalChars;
+    for(int i = 0; i < oldTotal; i++) {
+        characters[totalChars--].unrender();
+        x -= 8;
+    }
+}
+
 void textBox::putchar(uint8_t c) {
     switch(c) {
         case '\t':
@@ -54,6 +62,7 @@ void textBox::putchar(uint8_t c) {
             if(totalChars == 0)
                 break;
             characters[totalChars--].unrender();
+            x -= 8;
             break;
         default:
             characters[totalChars] = character(c, x, y, colour);

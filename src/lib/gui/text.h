@@ -30,6 +30,8 @@ public:
     void printf(const char *str, ...);
 
     void putchar(uint8_t c);
+
+    void deleteAll();
 private:
     uint32_t x, y, xCnt, yCnt, colour, totalChars = 0;
 

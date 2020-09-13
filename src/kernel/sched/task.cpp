@@ -18,8 +18,6 @@ void createTask(uint16_t ss, uint64_t rsp, uint16_t cs, uint64_t entryPoint, uin
 
     int64_t index = findFreeIndex();
 
-    cout + "[KDEBUG]" << index << "\n";
-
     if(index == -1) {
         cout + "[KDEBUG]" << "Extreme bruh momento\n";
         for(;;);

@@ -39,8 +39,11 @@ void task5();
 void task6();
 void task7();
 
-void handler(const char *str) {
-    kprintDS("[KDEBUG]", "lmao");
+void kernelTask() {
+    kprintDS("[KDEBUG]", "lmoa"); 
+    initMouse();
+    pannel newPanel(0, 0, 1024 / 8, 2, 0xff);
+    for(;;);
 }
 
 extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
@@ -92,13 +95,15 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     drawBMP("14569.bmp");
 
-    initMouse();
-
-    pannel(0, 0, 1024 / 8, 2, 0xff);
-
     asm volatile ("sti");
 
-    /*    createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
+    pannel newPanel(0, 0, 1024 / 8, 2, 0xff);
+
+    initMouse();
+
+//    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)kernelTask, 2);
+
+    /*createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task3, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task4, 2);

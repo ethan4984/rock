@@ -43,7 +43,7 @@ void schedulerMain(regs_t *regs) {
     cpuInfo[regs->core].currentTask = nextTask;
 
     tasks[nextTask].idleTime = 0;
-    virtualPageManager.initAddressSpace(tasks[nextTask].pml4Index); // set pml4 as whatever its supposed tp be
+//    virtualPageManager.initAddressSpace(tasks[nextTask].pml4Index); // set pml4 as whatever its supposed tp be
 
     if(tasks[nextTask].status == WAITING_TO_START) {
         tasks[nextTask].status = RUNNING;
