@@ -30,9 +30,11 @@ public:
     void *krealloc(void *addr, uint64_t size);
 private:
     uint64_t heapBegin;
-    int64_t bitmapSize;
-    int64_t allocationSize;
+
+    int64_t bitmapSize, allocationSize;
+
     uint8_t *bitmap;
+
     allocation_t *allocation;
 
     int64_t firstFreeSlot();

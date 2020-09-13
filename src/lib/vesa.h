@@ -43,15 +43,15 @@ class VesaBlkGrp {
 public:
     VesaBlkGrp(uint32_t x, uint32_t y, uint32_t xCnt, uint32_t yCnt, uint32_t colour);
 
-    ~VesaBlkGrp();
+    VesaBlkGrp() = default;
 
     void draw();
 
     void redraw(uint32_t newX, uint32_t newY);
-private:    
-    uint32_t x, y, xCnt, yCnt, colour;
 
     VesaBlk *blocks;
+private:    
+    uint32_t x, y, xCnt, yCnt, colour;
 };
 
 class VesaShape {

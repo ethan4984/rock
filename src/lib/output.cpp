@@ -88,7 +88,7 @@ void kprintDS(const char *prefix, const char *str, ...) { // debug serial
     serialWrite('\n'); 
 }
 
-void printArgs(const char *str, va_list arg, function<void, uint8_t> handler) {
+void printArgs(const char *str, va_list arg, void (*handler)(uint8_t)) {
     uint64_t hold = 0;
     char *string;
     char character;

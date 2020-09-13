@@ -38,6 +38,6 @@ inline coutBase cout;
 
 void kprintDS(const char *prefix, const char *str, ...);
 
-void printArgs(const char *str, va_list arg, function<void, uint8_t> handler);
+void printArgs(const char *str, va_list arg, void (*fp)(uint8_t));
 
 }

@@ -74,9 +74,10 @@ VesaBlkGrp::VesaBlkGrp(uint32_t x, uint32_t y, uint32_t xCnt, uint32_t yCnt, uin
     draw();
 }
 
-VesaBlkGrp::~VesaBlkGrp() {
+/*VesaBlkGrp::~VesaBlkGrp() {
+    kprintDS("[KDEBUG]", "%x", (uint64_t)blocks);
     delete blocks;
-}
+}*/
 
 void VesaBlkGrp::draw() {
     for(uint32_t j = 0; j < xCnt * yCnt; j++) {

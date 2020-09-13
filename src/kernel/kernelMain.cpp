@@ -1,4 +1,4 @@
-# include <kernel/mm/physicalPageManager.h>
+#include <kernel/mm/physicalPageManager.h>
 #include <kernel/mm/virtualPageManager.h>
 #include <kernel/drivers/keyboard.h>
 #include <kernel/fs/ext2/ext2.h>
@@ -16,7 +16,9 @@
 #include <kernel/int/gdt.h>
 #include <kernel/int/tss.h>
 #include <kernel/stivale.h>
+#include <lib/gui/desktop.h>
 #include <kernel/fs/vfs.h>
+#include <lib/gui/text.h>
 #include <lib/output.h>
 #include <lib/vesa.h>
 #include <lib/bmp.h> 
@@ -90,39 +92,10 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     drawBMP("14569.bmp");
 
-/*    VesaBlkGrp ok(400, 400, 3, 5, 0xffff);
-    ksleep(1000);
-    ok.redraw(500, 500);
-    ksleep(1000);
-    ok.redraw(600, 600);*/
-
-    
-    /*uint8_t cursor[] = {
-                    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0,
-                    2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0,
-                    2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0,
-                    2, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0,
-                    2, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0,
-                    2, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0,
-                    2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0,
-                    2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0,
-                    2, 1, 1, 2, 0, 2, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0,
-                    2, 1, 2, 0, 0, 0, 2, 1, 1, 1, 1, 1, 2, 0, 0, 0,
-                    2, 2, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 2, 0, 0,
-                    2, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 2, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 2,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 2, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 2, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,
-                   };
-
-    VesaShape bruh(500, 500, &*cursor, 16, 16, 0xff);
-    bruh.draw();
-    ksleep(1000);
-    bruh.redraw(400, 400);*/
-
     initMouse();
-    
+
+    pannel(0, 0, 1024 / 8, 2, 0xff);
+
     asm volatile ("sti");
 
     /*    createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
