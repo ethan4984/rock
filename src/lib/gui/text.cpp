@@ -41,8 +41,8 @@ textBox::~textBox() {
 
 void textBox::deleteAll() {
     uint32_t oldTotal = totalChars;
-    for(int i = 0; i < oldTotal; i++) {
-        characters[totalChars--].unrender();
+    for(uint32_t i = 0; i < oldTotal; i++) {
+        characters[--totalChars].unrender();
         x -= 8;
     }
 }
@@ -61,7 +61,7 @@ void textBox::putchar(uint8_t c) {
         case '\b':
             if(totalChars == 0)
                 break;
-            characters[totalChars--].unrender();
+            characters[--totalChars].unrender();
             x -= 8;
             break;
         default:

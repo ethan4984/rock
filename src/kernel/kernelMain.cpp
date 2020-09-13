@@ -17,6 +17,7 @@
 #include <kernel/int/tss.h>
 #include <kernel/stivale.h>
 #include <lib/gui/desktop.h>
+#include <lib/gui/widget.h>
 #include <kernel/fs/vfs.h>
 #include <lib/gui/text.h>
 #include <lib/output.h>
@@ -39,11 +40,8 @@ void task5();
 void task6();
 void task7();
 
-void kernelTask() {
-    kprintDS("[KDEBUG]", "lmoa"); 
-    initMouse();
-    pannel newPanel(0, 0, 1024 / 8, 2, 0xff);
-    for(;;);
+void bruh(uint32_t x, uint32_t y) {
+    kprintDS("[KDEBUG]", "you cliked this");
 }
 
 extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
@@ -99,12 +97,13 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     pannel newPanel(0, 0, 1024 / 8, 2, 0xff);
 
+    widget lmao(400, 400, 3, 3, 0xffff, bruh);
+
+    createWidget(lmao);
+
     initMouse();
 
-//    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)kernelTask, 2);
-
-    /*createTask(0x23, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x1b, (uint64_t)userTest, 2);
-    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
+    /*createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task3, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task4, 2);
     createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task5, 2);
@@ -115,59 +114,59 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 }
 
 void task1() {
-    //uint64_t bruh = 0;
+    uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-      //  kprintDS("[KDEBUG]", "hi from task0 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task0 %d", bruh++);
     }
 }
 
 
 void task2() {
-   // uint64_t bruh = 0;
+    uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-     //   kprintDS("[KDEBUG]", "hi from task1 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task1 %d", bruh++);
     }
 }
 
 void task3() {
-  //  uint64_t bruh = 0;
+    uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-    //    kprintDS("[KDEBUG]", "hi from task2 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task2 %d", bruh++);
     }
 }
 
 void task4() {
- //   uint64_t bruh = 0;
+    uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-   //     kprintDS("[KDEBUG]", "hi from task3 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task3 %d", bruh++);
     }
 }
 
 void task5() {
-//    uint64_t bruh = 0;
+    uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-//        kprintDS("[KDEBUG]", "hi from task4 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task4 %d", bruh++);
     }
 }
 
 void task6() {
-//    uint64_t bruh = 0;
+    uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
- //       kprintDS("[KDEBUG]", "hi from task5 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task5 %d", bruh++);
     }
 }
 
 void task7() {
-  //  uint64_t bruh = 0;
+    uint64_t bruh = 0;
     while(1) {
         for(uint64_t i = 0; i < 100000000; i++);
-  //      kprintDS("[KDEBUG]", "hi from task6 %d", bruh++);
+        kprintDS("[KDEBUG]", "hi from task6 %d", bruh++);
     }
 }
 
