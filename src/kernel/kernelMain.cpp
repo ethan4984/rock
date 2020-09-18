@@ -91,7 +91,7 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     vesa.initVESA(stivaleInfo);
 
-    drawBMP("14569.bmp");
+    drawBMP("wallpaper.bmp");
 
     asm volatile ("sti");
 

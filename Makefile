@@ -19,6 +19,7 @@ OBJ_LINK_LIST:=$(CRTI_OBJ) $(CRTBEGIN_OBJ) Bin/*.o $(CRTEND_OBJ) $(CRTN_OBJ)
 INTERNAL_OBJS:=$(CRTI_OBJ) $(OBJ) $(CRTN_OBJ)
 
 build:
+	mkdir -p Bin
 	rm -f rock.img
 	$(CXX) $(CXXFLAGS) $(CXX_SRC) -c
 	mv *.o Bin
@@ -45,11 +46,12 @@ build:
 	sudo cp Bin/rock.elf diskImage/boot/
 	sudo cp src/kernel/limine.cfg diskImage/
 	sudo cp src/lib/gui/Wallpapers/14569.bmp diskImage/
+	sudo cp src/lib/gui/Wallpapers/wallpaper.bmp diskImage/
 	sync
 	sudo umount diskImage/
 	sudo losetup -d `cat loopback_dev`
 	rm -rf diskImage loopback_dev
-	cd limine && ./limine-install ../rock.img
+	cd limine && ./limine-install limine.bin ../rock.img 
 	rm src/kernel/*.o
 
 qemu: build
