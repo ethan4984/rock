@@ -1,6 +1,6 @@
 # Rock
 
-This is a simple multicore operating system that is made completely for fun
+This is a simple multicore operating system that is made for fun
 
 # Features
 
@@ -24,3 +24,7 @@ This is a simple multicore operating system that is made completely for fun
 # Demo
 
 ![](Demo/osdemo1.gif)
+
+# Contributing
+
+Contributors are very welcome, just make sure to use the same code style as me :^)
