@@ -118,8 +118,8 @@ void VesaShape::draw() {
 
 void VesaShape::redraw(uint32_t newX, uint32_t newY) {
     uint32_t cnt = 0;
-    for(uint32_t i = y; i < y + xCnt; i++) { 
-        for(uint32_t j = x; j < x + yCnt; j++, cnt++) { 
+    for(uint32_t i = y; i < y + yCnt; i++) { 
+        for(uint32_t j = x; j < x + xCnt; j++, cnt++) { 
             if(foreground[cnt] != 0) {
                 vesa.setPixel(j, i, background[cnt]);
             }
