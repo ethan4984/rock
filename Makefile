@@ -45,7 +45,6 @@ build:
 	sudo mkdir diskImage/boot
 	sudo cp Bin/rock.elf diskImage/boot/
 	sudo cp src/kernel/limine.cfg diskImage/
-	sudo cp src/lib/gui/Wallpapers/14569.bmp diskImage/
 	sudo cp src/lib/gui/Wallpapers/wallpaper.bmp diskImage/
 	sync
 	sudo umount diskImage/
