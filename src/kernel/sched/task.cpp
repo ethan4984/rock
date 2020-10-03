@@ -5,8 +5,6 @@
 #include <kernel/mm/kHeap.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 uint64_t maxNumberOfTasks = 10;
 static int64_t findFreeIndex();
 
@@ -32,7 +30,7 @@ void createTask(uint16_t ss, uint64_t rsp, uint16_t cs, uint64_t entryPoint, uin
     task_t newTask = {  WAITING_TO_START, // status
                         virtualPageManager.newUserMap(pageCnt), // pml4Index
                         regs,
-                        physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, // kernelStack
+                        pmm::alloc(2) + 0x2000 + HIGH_VMA, // kernelStack
                         entryPoint,
                         0,
                      };
@@ -47,6 +45,4 @@ static int64_t findFreeIndex() {
             return i;
     }
     return -1;
-}
-
 }

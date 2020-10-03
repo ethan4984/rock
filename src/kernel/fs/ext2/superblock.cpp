@@ -4,8 +4,6 @@
 #include <kernel/fs/vfs.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 void superblock_t::writeBack(uint8_t partitionIndex) {
     superBlockData_t *superBlockData = new superBlockData_t;
     *superBlockData = data;
@@ -20,6 +18,4 @@ void superblock_t::read(uint8_t partitionIndex) {
     blockSize = 1024 << data.blockSize;
     fragmentSize = 1024 << data.fragSize;
     delete superBlockData;
-}
-
 }

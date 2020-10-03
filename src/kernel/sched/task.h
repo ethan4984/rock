@@ -2,8 +2,6 @@
 
 #include <lib/asmUtils.h>
 
-namespace kernel {
-
 enum {
     WAITING_TO_START = 1, 
     RUNNING,
@@ -22,5 +20,3 @@ struct task_t {
 inline task_t *tasks;
 
 void createTask(uint16_t ss, uint64_t rsp, uint16_t cs, uint64_t entryPoint, uint64_t pageCnt);
-
-}

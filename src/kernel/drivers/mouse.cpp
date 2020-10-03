@@ -2,8 +2,6 @@
 #include <lib/gui/widget.h>
 #include <lib/vesa.h>
 
-namespace kernel {
-                      
 uint8_t cursorPalate[] = { 
                             2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                             2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -35,7 +33,7 @@ int mouseX = 512;
 int mouseY = 512;
 
 void mouseHandler(regs_t *regs) {
-    static VesaShape cursor(512, 512, &*cursorPalate, 14, 23, 0xffff); 
+    static vesa::shape cursor(512, 512, &*cursorPalate, 14, 23, 0xffff); 
     
     uint8_t status = inb(0x64);
     if(status != 0x3D) { // make sure the data on port 0x60 is for the mouse
@@ -59,9 +57,9 @@ void mouseHandler(regs_t *regs) {
         mouseX += x / mouseSensitivity;
         mouseY -= y / mouseSensitivity;
 
-        if(mouseX >= (int)vesa.width)
+        if(mouseX >= (int)vesa::width)
             mouseX -= x / mouseSensitivity;
-        if(mouseY >= (int)vesa.height)
+        if(mouseY >= (int)vesa::height)
             mouseY += y / mouseSensitivity;
         if(mouseX < 0)
             mouseX -= x / mouseSensitivity;
@@ -88,6 +86,4 @@ void initMouse() {
 
     outb(0x64, 0xD4);
     outb(0x60, 0xF4); // enables ps2 mouse
-}
-
 }

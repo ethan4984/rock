@@ -4,8 +4,6 @@
 #include <lib/output.h>
 #include <stddef.h>
 
-namespace kernel {
-
 void readPartitions() {
     if(partitions == NULL) {
         partitions = new partition_t[4];
@@ -17,6 +15,4 @@ void readPartitions() {
     mbrPartitionEntry *mbrEntries = (mbrPartitionEntry*)((uint64_t)sector0 + 0x1BE);
 
     partitions[0] = (partition_t) { EXT2, *mbrEntries };
-}
-
 }

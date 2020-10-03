@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-namespace kernel {
-
 struct pciInfo_t {
     uint8_t classCode;
     uint8_t subclass;
@@ -44,5 +42,3 @@ private:
 };
 
 inline pci_t pci;
-
-}

@@ -5,50 +5,50 @@
 #include <lib/asmUtils.h>
 #include <lib/output.h>
 
-namespace kernel {
+namespace apic {
 
-uint32_t apic_t::lapicRead(uint16_t offset) {
+uint32_t lapicRead(uint16_t offset) {
     return *(volatile uint32_t*)(madtInfo.lapicAddr + HIGH_VMA + offset);
 }
 
-void apic_t::lapicWrite(uint16_t offset, uint32_t data) {
+void lapicWrite(uint16_t offset, uint32_t data) {
     *(volatile uint32_t*)(madtInfo.lapicAddr + HIGH_VMA + offset) = data;
 }
 
-void apic_t::sendIPI(uint8_t ap, uint32_t ipi) {
+void sendIPI(uint8_t ap, uint32_t ipi) {
     lapicWrite(LAPIC_ICRH, (ap << 24));
     lapicWrite(LAPIC_ICRL, ipi);
 }
 
-uint32_t apic_t::ioapicRead(uint64_t base, uint32_t reg) {
+uint32_t ioapicRead(uint64_t base, uint32_t reg) {
     *(volatile uint32_t*)(base + 16 + HIGH_VMA) = reg;
     return *(volatile uint32_t*)(base + 18 + HIGH_VMA);
 }
 
-void apic_t::ioapicWrite(uint64_t base, uint32_t reg, uint32_t data) {
+void ioapicWrite(uint64_t base, uint32_t reg, uint32_t data) {
     *(volatile uint32_t*)(base + HIGH_VMA) = reg;
     *(volatile uint32_t*)(base + 16 + HIGH_VMA) = data;
 }
 
-uint32_t apic_t::getMaxGSIs(uint64_t ioapic_base) {
-    uint32_t data = ioapicRead(ioapic_base, 1) >> 16; // Read register 1
+uint32_t getMaxGSIs(uint64_t ioapicBase) {
+    uint32_t data = ioapicRead(ioapicBase, 1) >> 16; // Read register 1
     return data & ~(1 << 7);
 }
 
-uint64_t apic_t::writeRedirectionTable(uint32_t gsi, uint64_t data, uint64_t ioapicIndex) {
+uint64_t writeRedirectionTable(uint32_t gsi, uint64_t data, uint64_t ioapicIndex) {
     uint32_t reg = ((gsi - madtInfo.madtEntry1[ioapicIndex].gsiBase) * 2) + 16;
     ioapicWrite(madtInfo.madtEntry1[ioapicIndex].ioapicAddr, reg, (uint32_t)data);
     ioapicWrite(madtInfo.madtEntry1[ioapicIndex].ioapicAddr, reg + 1, (uint32_t)(data >> 32));
     return 1;
 }
 
-uint64_t apic_t::readRedirectionTable(uint32_t gsi, uint64_t ioapicIndex) {
+uint64_t readRedirectionTable(uint32_t gsi, uint64_t ioapicIndex) {
     uint32_t reg = ((gsi - madtInfo.madtEntry1[ioapicIndex].gsiBase) * 2) + 16;
     uint64_t data = (uint64_t)ioapicRead(madtInfo.madtEntry1[ioapicIndex].ioapicAddr, reg);
     return data | ((uint64_t)(ioapicRead(madtInfo.madtEntry1[ioapicIndex].ioapicAddr, reg + 1)) << 32);
 }
 
-void apic_t::maskGSI(uint32_t gsi) {
+void maskGSI(uint32_t gsi) {
     uint64_t redirectionTable = readRedirectionTable(gsi, 0);
     if(redirectionTable == ERROR) {
         cout + "[APIC]" << "Bad redirection table : unable to mask GSI " << gsi << "\n";
@@ -58,7 +58,7 @@ void apic_t::maskGSI(uint32_t gsi) {
     writeRedirectionTable(gsi, redirectionTable | (1 << 16), 0); // mask it
 }
 
-void apic_t::unmaskGSI(uint32_t gsi) {
+void unmaskGSI(uint32_t gsi) {
     uint64_t redirectionTable = readRedirectionTable(gsi, 0);
     if(redirectionTable == ERROR) {
         cout + "[APIC]" << "Bad redirection table : unable to mask GSI " << gsi << "\n";
@@ -69,7 +69,7 @@ void apic_t::unmaskGSI(uint32_t gsi) {
     writeRedirectionTable(gsi, gsi + 32, 0); // map it again
 }
 
-void apic_t::lapicTimerInit(uint64_t ticksPerMS) { 
+void lapicTimerInit(uint64_t ticksPerMS) { 
     ticksPerMS -= 10; // make up for ksleep 10
 
     lapicWrite(LAPIC_TIMER_DIVIDE_CONF, 0x3);
@@ -85,7 +85,7 @@ void apic_t::lapicTimerInit(uint64_t ticksPerMS) {
     lapicWrite(LAPIC_TIMER_INITAL_COUNT, ticks);
 }
 
-void apic_t::initAPIC() {
+void init() {
     // remap the pic
     outb(0x20, 0x11);
     outb(0xa0, 0x11);

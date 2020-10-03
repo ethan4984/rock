@@ -1,8 +1,6 @@
 #include <lib/stringUtils.h>
 #include <lib/asmUtils.h>
 
-namespace kernel {
-
 void outb(uint16_t port, uint8_t data) {
     asm volatile("outb %0,%1"::"a"(data), "Nd"(port));
 }
@@ -59,6 +57,4 @@ void wrmsr(uint64_t msr, uint64_t data) {
     uint64_t rax = (uint32_t)data;
     uint64_t rdx = data >> 32;
     asm volatile ("wrmsr" :: "a"(rax), "d"(rdx), "c"(msr));
-}
-
 }

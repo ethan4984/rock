@@ -66,39 +66,34 @@
 
 #include <stdint.h>
 
-namespace kernel {
-   
-class apic_t {
-public:
-    void initAPIC();
+namespace apic {
 
-    uint32_t lapicRead(uint16_t offset);
+void init();
 
-    void lapicWrite(uint16_t offset, uint32_t data);
+uint32_t lapicRead(uint16_t offset);
 
-    void sendIPI(uint8_t ap, uint32_t ipi);
+void lapicWrite(uint16_t offset, uint32_t data);
 
-    uint32_t ioapicRead(uint64_t base, uint32_t reg);
+void sendIPI(uint8_t ap, uint32_t ipi);
 
-    void ioapicWrite(uint64_t base, uint32_t reg, uint32_t data);
+uint32_t ioapicRead(uint64_t base, uint32_t reg);
 
-    uint32_t getMaxGSIs(uint64_t ioapic_base);
+void ioapicWrite(uint64_t base, uint32_t reg, uint32_t data);
 
-    uint64_t findVaildIOAPIC(uint64_t gsi);
+uint32_t getMaxGSIs(uint64_t ioapicBase);
 
-    uint64_t writeRedirectionTable(uint32_t gsi, uint64_t data, uint64_t ioapicIndx);
+uint64_t findVaildIOAPIC(uint64_t gsi);
 
-    uint64_t readRedirectionTable(uint32_t gsi, uint64_t ioapicIndex);
+uint64_t writeRedirectionTable(uint32_t gsi, uint64_t data, uint64_t ioapicIndex);
 
-    void maskGSI(uint32_t gsi);
+uint64_t readRedirectionTable(uint32_t gsi, uint64_t ioapicIndex);
 
-    void unmaskGSI(uint32_t gsi);
+void maskGSI(uint32_t gsi);
 
-    void mapIRQ(uint32_t irq);
+void unmaskGSI(uint32_t gsi);
 
-    void lapicTimerInit(uint64_t ticksPerMS);
-};
+void mapIRQ(uint32_t irq);
 
-inline apic_t apic;
+void lapicTimerInit(uint64_t ticksPerMS);
 
 }

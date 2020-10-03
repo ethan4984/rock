@@ -4,8 +4,6 @@
 #include <lib/memoryUtils.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 uint64_t kpml3;
 uint64_t kpml3HH;
 
@@ -84,10 +82,10 @@ pageMap_t virtualPageManager_t::getIndexes(uint64_t base, uint64_t flags) {
 }
 
 uint64_t virtualPageManager_t::newUserMap(uint64_t pageCnt) {
-    uint64_t *pml4 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
-    uint64_t *pml3 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
-    uint64_t *pml2 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
-    uint64_t *pml1 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
+    uint64_t *pml4 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+    uint64_t *pml3 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+    uint64_t *pml2 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+    uint64_t *pml1 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
 
     memset(pml4, 0, 0x1000);
     memset(pml3, 0, 0x1000);
@@ -145,16 +143,16 @@ void virtualPageManager_t::initAddressSpace(uint64_t index) {
 void virtualPageManager_t::init() {
     pdEntries = new pdEntry_t[0x1000];
 
-    uint64_t *pml4 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
-    uint64_t *pml3 = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
+    uint64_t *pml4 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+    uint64_t *pml3 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
 
-    uint64_t *pml3_HH = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
-    uint64_t *pml2_HH = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
+    uint64_t *pml3_HH = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+    uint64_t *pml2_HH = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
 
-    uint64_t *pml2_1G = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
-    uint64_t *pml2_2G = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
-    uint64_t *pml2_3G = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
-    uint64_t *pml2_4G = (uint64_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
+    uint64_t *pml2_1G = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+    uint64_t *pml2_2G = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+    uint64_t *pml2_3G = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+    uint64_t *pml2_4G = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
 
     memset(pml4, 0, 0x8000);
 
@@ -193,6 +191,4 @@ void virtualPageManager_t::init() {
 
 void virtualPageManager_t::tlbFlush() {
     asm volatile ("movq %0, %%cr3" :: "r" (grabPML4()) : "memory");
-}
-
 }

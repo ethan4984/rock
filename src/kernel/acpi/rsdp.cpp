@@ -3,8 +3,6 @@
 #include <lib/stringUtils.h>
 #include <lib/output.h>
 
-namespace kernel {
-    
 void acpi_t::rsdpInit(uint64_t *rsdpAddr) {
     rsdp = (rsdp_t*)rsdpAddr;
     if(rsdp->xsdtAddr) {
@@ -44,6 +42,4 @@ void *acpi_t::findSDT(const char *signature) {
     cout + "[ACPI]" << signature << " cout not be found :(\n";
 
     return NULL;
-}
-
 }

@@ -5,8 +5,6 @@
 #include <lib/memoryUtils.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 static pciBar_t bar;
     
 void ahci_t::initAHCI() {
@@ -111,7 +109,7 @@ void ahci_t::initSATAdevice(volatile hbaPorts_t *hbaPort) {
     static uint64_t driveCnt = 0;
 
     uint32_t CMDslot = findCMD(hbaPort);
-    uint16_t *identify = (uint16_t*)physicalPageManager.alloc(1);
+    uint16_t *identify = (uint16_t*)pmm::alloc(1);
     volatile hbaCMDhdr_t *hbaCMDhdr = (volatile hbaCMDhdr_t*)((uint64_t)hbaPort->clb + HIGH_VMA);
 
     hbaCMDhdr += CMDslot;
@@ -180,6 +178,4 @@ void ahci_t::sataRW(drive_t *drive, uint64_t start, uint32_t count, void *buffer
     cmdfis->counth = (uint8_t)(count >> 8);
     
     sendCommand(drive->hbaPort, CMDslot);
-}
-
 }

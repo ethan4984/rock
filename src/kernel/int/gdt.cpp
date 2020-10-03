@@ -2,14 +2,14 @@
 #include <lib/memoryUtils.h>
 #include <kernel/int/gdt.h>
 
-namespace kernel {
+namespace gdt {
 
-void gdt_t::gdtInit() {
+void init() {
     gdtCores = new gdtCore_t[32];
     memset(gdtCores, 0, sizeof(gdtCore_t[32]));
 }
 
-void gdt_t::initCore(uint64_t core, uint64_t tssAddr) {
+void initCore(uint64_t core, uint64_t tssAddr) {
     /* code 64 */
 
     gdtCores[core].gdtEntries[1].limit = 0;

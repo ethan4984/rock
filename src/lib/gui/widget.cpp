@@ -3,11 +3,9 @@
 #include <lib/output.h>
 #include <lib/vesa.h>
 
-namespace kernel {
-
 widget::widget(uint32_t x, uint32_t y, uint32_t xCnt, uint32_t yCnt, uint32_t colour, function<void, uint32_t, uint32_t> clickHandler) : x(x),
     y(y), xCnt(xCnt), yCnt(yCnt), colour(colour), clickHandler(clickHandler) {
-    VesaBlkGrp(x, y, xCnt, yCnt, colour); 
+    vesa::blkGrp(x, y, xCnt, yCnt, colour); 
 }
 
 void widget::inRange(uint32_t x, uint32_t y) {
@@ -28,6 +26,4 @@ void createWidget(widget newWidget) {
     }
 
     widgets[widgetCnt - 1] = newWidget;
-}
-
 }

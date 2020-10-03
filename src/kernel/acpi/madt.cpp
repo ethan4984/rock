@@ -1,8 +1,6 @@
 #include <kernel/acpi/madt.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 void madtInfo_t::madtInit() {
     madt_t *madt = (madt_t*)acpi.findSDT("APIC");
 
@@ -77,4 +75,3 @@ void madtInfo_t::printMADT() {
     }
 }
 
-}

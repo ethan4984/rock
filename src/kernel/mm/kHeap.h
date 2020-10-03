@@ -12,8 +12,6 @@ void operator delete(void *addr, uint64_t size);
 
 void operator delete(void *addr);
 
-namespace kernel {
-
 struct allocation_t {
     uint16_t block;
     uint32_t count;
@@ -43,5 +41,3 @@ private:
 };
 
 inline kheap_t kheap;
-
-}

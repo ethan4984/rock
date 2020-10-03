@@ -3,8 +3,6 @@
 #include <lib/gui/text.h>
 #include <lib/vesa.h>
 
-namespace kernel {
-
 character::character(char c, uint32_t x, uint32_t y, uint32_t colour) : c(c),
     x(x), y(y), colour(colour) {
 
@@ -14,18 +12,18 @@ void character::render() {
     uint32_t cnt = 0;
     for(uint32_t i = y; i < y + 8; i++) {
         for(uint32_t j = x; j < x + 8; j++, cnt++) {
-            backgroundBuffer[cnt] = vesa.grabColour(j, i);
+            backgroundBuffer[cnt] = vesa::grabColour(j, i);
         }
     }
 
-    vesa.renderChar(x, y, colour, c);
+    vesa::renderChar(x, y, colour, c);
 }
 
 void character::unrender() {
     uint32_t cnt = 0;
     for(uint32_t i = y; i < y + 8; i++) {
         for(uint32_t j = x; j < x + 8; j++, cnt++) {
-            vesa.setPixel(j, i, backgroundBuffer[cnt]);
+            vesa::setPixel(j, i, backgroundBuffer[cnt]);
         }
     }
 }
@@ -128,5 +126,3 @@ void textBox::printf(const char *str, ...) {
     }
     va_end(arg);
 } 
-
-}

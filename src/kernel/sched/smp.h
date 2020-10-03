@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-namespace kernel {
-
 struct cpuInfo_t { 
     uint64_t coreID;
     uint64_t numberOfTasks; 
@@ -18,5 +16,3 @@ void spinLock(char *ptr);
 void spinRelease(char *ptr);
 
 inline cpuInfo_t *cpuInfo;
-
-}

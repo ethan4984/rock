@@ -6,8 +6,6 @@
 #include <lib/stringUtils.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 static void printInode(inode_t inode);
 static void printBGD(blockGroupDescriptor_t bgd);
 static void printDirEntry(directoryEntry_t dir);
@@ -243,6 +241,4 @@ static void printDirEntry(directoryEntry_t dir) {
     kprintDS("[KDEBUG]", "size: %d ", dir.sizeofEntry);
     kprintDS("[KDEBUG]", "name length: %d ", dir.nameLength);
     kprintDS("[KDEBUG]", "type: %d ", dir.typeIndicator);
-}
-
 }

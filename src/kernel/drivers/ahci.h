@@ -24,8 +24,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-namespace kernel {
-
 struct hbaPorts_t {
     uint32_t clb;
     uint32_t clbu;
@@ -180,5 +178,3 @@ private:
 };
 
 inline ahci_t ahci;
-
-}

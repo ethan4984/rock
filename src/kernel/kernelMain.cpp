@@ -30,8 +30,6 @@ extern "C" void _init();
 extern "C" void userTest() asm("userTest");
 extern "C" void testDiv();
 
-namespace kernel {
-
 void task1();
 void task2();
 void task3();
@@ -47,20 +45,20 @@ void bruh(uint32_t x, uint32_t y) {
 extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     _init(); /* calls all global constructors, dont put anything before here */
 
-    physicalPageManager.init(stivaleInfo);
+    pmm::init(stivaleInfo);
     kheap.init();
     virtualPageManager.init();
 
-    idt.initIDT();
+    idt::init();
 
-    idt.setIDTR();
+    idt::setIDTR();
 
-    gdt.gdtInit();
+    gdt::init();
 
     tssMain.init();
-    tssMain.newTss(physicalPageManager.alloc(1) + HIGH_VMA); 
+    tssMain.newTss(pmm::alloc(1) + HIGH_VMA); 
 
-    gdt.initCore(0, (uint64_t)tssMain.tss);
+    gdt::initCore(0, (uint64_t)tssMain.tss);
 
     acpi.rsdpInit((uint64_t*)(stivaleInfo->rsdp + HIGH_VMA));
 
@@ -68,16 +66,14 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     madtInfo.printMADT();
     initHPET(); 
 
-    apic.initAPIC();
-
-    apic.lapicTimerInit(100);
+    apic::init();
 
     pci.initPCI();
     ahci.initAHCI();
 
     initSMP();
 
-    apic.lapicTimerInit(100);
+    apic::lapicTimerInit(100);
 
     asm volatile(  "xor %ax, %ax\n"
                    "mov %ax, %fs"
@@ -89,7 +85,7 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     ext2.init();
 
-    vesa.initVESA(stivaleInfo);
+    vesa::init(stivaleInfo);
 
     drawBMP("wallpaper.bmp");
 
@@ -168,6 +164,4 @@ void task7() {
         for(uint64_t i = 0; i < 100000000; i++);
         kprintDS("[KDEBUG]", "hi from task6 %d", bruh++);
     }
-}
-
 }

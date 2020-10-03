@@ -7,27 +7,25 @@
 #include <stddef.h>
 
 void *operator new(uint64_t size) {
-    return kernel::kheap.kmalloc(size);
+    return kheap.kmalloc(size);
 }
 
 void *operator new[](uint64_t size) {
-    return kernel::kheap.kmalloc(size);
+    return kheap.kmalloc(size);
 }
 
 void operator delete(void *addr) {
-    kernel::kheap.kfree(addr);
+    kheap.kfree(addr);
 }
 
 void operator delete[](void *addr) {
-    kernel::kheap.kfree(addr);
+    kheap.kfree(addr);
 }
-
-namespace kernel {
     
 void kheap_t::init() {
-    heapBegin = physicalPageManager.alloc(0x100); /* allocate a 1mb heap */
-    bitmap = (uint8_t*)(physicalPageManager.alloc(1) + HIGH_VMA);
-    allocation = (allocation_t*)(physicalPageManager.alloc(0x20) + HIGH_VMA);
+    heapBegin = pmm::alloc(0x100); /* allocate a 1mb heap */
+    bitmap = (uint8_t*)(pmm::alloc(1) + HIGH_VMA);
+    allocation = (allocation_t*)(pmm::alloc(0x20) + HIGH_VMA);
 
     bitmapSize = 0x100000 * 8;
     allocationSize = 0x100000 / sizeof(allocation_t);
@@ -115,12 +113,10 @@ int64_t kheap_t::firstFreeAllocationSlot() {
     return -1;
 }
 
-}
-
 void operator delete[](void *addr, uint64_t size) {
-    kernel::kheap.kfree(addr);
+    kheap.kfree(addr);
 }
 
 void operator delete(void *addr, uint64_t size) {
-    kernel::kheap.kfree(addr);
+    kheap.kfree(addr);
 }

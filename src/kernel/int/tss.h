@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-namespace kernel {
-
 struct tss_t {
     uint32_t reserved = 0;
     uint64_t rsp0 = 0;
@@ -33,5 +31,3 @@ public:
 };
 
 inline tssMain_t tssMain;
-
-}

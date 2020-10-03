@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-namespace kernel {
-
 extern "C" void lgdt(uint64_t gdtAddr, uint64_t tssAddr);
 
 struct gdtEntry_t {
@@ -37,15 +35,12 @@ struct gdtCore_t {
     gdtr_t gdtr;
 } __attribute__((packed));
 
-class gdt_t {
-public:
-    void gdtInit();
+namespace gdt {
 
-    void initCore(uint64_t core, uint64_t tssAddr);
-private:
-    gdtCore_t *gdtCores;
-};
+void init();
 
-inline gdt_t gdt;
+void initCore(uint64_t core, uint64_t tssAddr);
+
+inline gdtCore_t *gdtCores;
 
 }

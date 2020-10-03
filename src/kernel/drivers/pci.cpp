@@ -3,8 +3,6 @@
 #include <lib/asmUtils.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 uint32_t pci_t::pciRead(uint8_t bus, uint8_t device, uint8_t func, uint8_t reg) {
     outd(0xcf8, (1 << 31) | ((uint32_t)bus << 16) | (((uint32_t)device & 31) << 11) | (((uint32_t)func & 7) << 8) | ((uint32_t)reg & ~(3)));
     return ind(0xcfc);
@@ -89,6 +87,4 @@ void pci_t::showDevices() {
         cout + "[PCI]" << "\tDevice type: [class] " << pciDevice[device].classCode << " [subclass] " << pciDevice[device].subclass << " [progIF] " << pciDevice[device].progIF << " [Device ID] " << pciDevice[device].deviceID << "\n";
     }
     cout + "[PCI]" << "Total Devices: " << totalDevices << "\n";
-}
-
 }

@@ -2,8 +2,6 @@
 
 #include <kernel/acpi/rsdp.h>
 
-namespace kernel {
-
 struct madt_t {
     acpihdr_t acpihdr;
     uint32_t lapicAddr;
@@ -64,5 +62,3 @@ public:
 };
 
 inline madtInfo_t madtInfo;
-
-}

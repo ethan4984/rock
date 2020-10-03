@@ -4,8 +4,6 @@
 
 #include <stdint.h>
 
-namespace kernel {
-
 struct inode_t {
     uint16_t permissions;
     uint16_t userID;
@@ -108,4 +106,3 @@ struct superBlockData_t {
     uint64_t lastMounted[8];
 } __attribute__((packed));
 
-}

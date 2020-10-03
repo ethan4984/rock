@@ -8,8 +8,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-namespace kernel {
-
 typedef void (*eventHandlers_t)(regs_t*);
 
 struct idtEntry_t {
@@ -26,15 +24,16 @@ struct idtr_t {
     uint16_t limit;
     uint64_t offset;
 } __attribute__((packed));
+
+namespace idt {
     
-class idt_t {
-public:
-    void setIDTentry(uint16_t selector, uint8_t ist, uint8_t attributes, uint64_t offset, uint8_t index);
+void setEntry(uint16_t selector, uint8_t ist, uint8_t attributes, uint64_t offset, uint8_t index);
 
-    void initIDT();
+void init();
 
-    void setIDTR();
-};
+void setIDTR();
+
+}
 
 extern "C" void isr0();
 extern "C" void isr1();
@@ -293,8 +292,6 @@ extern "C" void isr253();
 extern "C" void isr254();
 extern "C" void isr255();
 
-inline idt_t idt;
-
 inline const char *exceptionMessages[] = { "Divide by zero",
                                     "Debug",
                                     "NMI",
@@ -366,5 +363,3 @@ inline eventHandlers_t eventHandlers[] =   {
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
                                     };
-
-}

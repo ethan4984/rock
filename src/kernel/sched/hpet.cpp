@@ -1,8 +1,6 @@
 #include <kernel/mm/virtualPageManager.h>
 #include <kernel/sched/hpet.h>
 
-namespace kernel {
-
 hpetTable_t *hpetTable;
 volatile hpet_t *hpet;
 
@@ -15,6 +13,4 @@ void initHPET() {
     hpetTable = (hpetTable_t*)acpi.findSDT("HPET");
     *(volatile uint64_t*)(hpetTable->address + HIGH_VMA + 0x10) = 1;
     hpet = (hpet_t*)(hpetTable->address + HIGH_VMA);
-}
-
 }

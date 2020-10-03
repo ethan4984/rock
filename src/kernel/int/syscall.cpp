@@ -3,8 +3,6 @@
 #include <lib/asmUtils.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 extern "C" void syscallMain(regs_t *regs) {
     switch(regs->r15) {
         case 0:
@@ -25,6 +23,4 @@ extern "C" void syscallMain(regs_t *regs) {
             }
             break;
     }
-}
-
 }

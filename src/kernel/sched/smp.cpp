@@ -12,14 +12,13 @@
 #include <lib/asmUtils.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 static idtr_t idtr;
 
 extern "C" symbol smpBegin;
 extern "C" symbol smpEnd;
 
 uint8_t cpuInfo_t::numberOfCores = 1;
+
 uint8_t dynCnt = 1;
 
 void prepTrampoline(uint64_t stack, uint64_t pml4, uint64_t entryPoint, uint64_t idt) {
@@ -32,15 +31,15 @@ void prepTrampoline(uint64_t stack, uint64_t pml4, uint64_t entryPoint, uint64_t
 }
 
 void bootstrapCoreMain() {
-    apic.lapicWrite(LAPIC_SINT, apic.lapicRead(LAPIC_SINT) | 0x1ff); 
+    apic::lapicWrite(LAPIC_SINT, apic::lapicRead(LAPIC_SINT) | 0x1ff); 
 
-    cpuInfo[dynCnt].coreID = apic.lapicRead(LAPIC_ID_REG);
+    cpuInfo[dynCnt].coreID = apic::lapicRead(LAPIC_ID_REG);
     cpuInfo[dynCnt].currentTask = -1;
 
-    tssMain.newTss(physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA);
-    gdt.initCore(cpuInfo_t::numberOfCores, (uint64_t)&tssMain.tss[dynCnt]);
+    tssMain.newTss(pmm::alloc(2) + 0x2000 + HIGH_VMA);
+    gdt::initCore(cpuInfo_t::numberOfCores, (uint64_t)&tssMain.tss[dynCnt]);
 
-    apic.lapicTimerInit(100);
+    apic::lapicTimerInit(100);
 
     asm volatile ("sti");
 
@@ -59,9 +58,9 @@ void initSMP() {
     for(uint64_t i = 1; i < madtInfo.madtEntry0Count; i++) {
         uint64_t coreID = madtInfo.madtEntry0[i].apicID;
         if(madtInfo.madtEntry0[i].flags == 1) {
-            prepTrampoline(physicalPageManager.alloc(4) + 0x4000 + HIGH_VMA, virtualPageManager.grabPML4(), (uint64_t)&bootstrapCoreMain, (uint64_t)&idtr);
-            apic.sendIPI(coreID, 0x500);
-            apic.sendIPI(coreID, 0x600 | (uint32_t)((uint64_t)0x1000 / 0x1000)); 
+            prepTrampoline(pmm::alloc(4) + 0x4000 + HIGH_VMA, virtualPageManager.grabPML4(), (uint64_t)&bootstrapCoreMain, (uint64_t)&idtr);
+            apic::sendIPI(coreID, 0x500);
+            apic::sendIPI(coreID, 0x600 | (uint32_t)((uint64_t)0x1000 / 0x1000)); 
             ksleep(10);
         }
     }
@@ -78,6 +77,4 @@ void spinLock(char *ptr) {
 
 void spinRelease(char *ptr) {
     __atomic_clear(ptr, __ATOMIC_RELEASE);
-}
-
 }

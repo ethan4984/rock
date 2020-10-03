@@ -2,8 +2,6 @@
 
 #include <kernel/fs/ext2/ext2types.h>
 
-namespace kernel {
-
 struct directory_t {
     directoryEntry_t *dirEntries;
     char **names;
@@ -32,5 +30,3 @@ private:
 };
 
 inline ext2_t ext2;
-
-}

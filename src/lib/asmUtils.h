@@ -7,8 +7,6 @@
 
 #include <stdint.h>
 
-namespace kernel {
-
 typedef void *symbol[];
 
 struct regs_t {
@@ -58,5 +56,3 @@ uint8_t serialRead();
 void serialWrite(uint8_t data);
 
 void serialWriteString(const char *str);
-
-}

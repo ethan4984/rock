@@ -4,8 +4,6 @@
 
 #include <stdint.h>
 
-namespace kernel {
-
 class superblock_t {
 public:
     void writeBack(uint8_t partitionIndex);
@@ -20,5 +18,3 @@ public:
 };
 
 inline superblock_t superblock;
-
-}

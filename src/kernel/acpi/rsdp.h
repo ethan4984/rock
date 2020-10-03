@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-namespace kernel {
-
 struct acpihdr_t {
     char signature[4];
     uint32_t length;
@@ -53,5 +51,3 @@ private:
 };
 
 inline acpi_t acpi;
-
-}

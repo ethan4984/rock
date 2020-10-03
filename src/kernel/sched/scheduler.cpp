@@ -6,8 +6,6 @@
 #include <kernel/mm/kHeap.h>
 #include <lib/output.h>
 
-namespace kernel {
-
 void schedulerMain(regs_t *regs) {
     static char lock = 0;
     spinLock(&lock);
@@ -48,19 +46,17 @@ void schedulerMain(regs_t *regs) {
     if(tasks[nextTask].status == WAITING_TO_START) {
         tasks[nextTask].status = RUNNING;
         spinRelease(&lock);
-        apic.lapicWrite(LAPIC_EOI, 0);
+        apic::lapicWrite(LAPIC_EOI, 0);
         startTask(tasks[nextTask].regs.ss, tasks[nextTask].regs.rsp, tasks[nextTask].regs.cs, tasks[nextTask].entryPoint);
     }
 
     if(tasks[nextTask].status == WAITING) {
         tasks[nextTask].status = RUNNING;
         spinRelease(&lock);
-        apic.lapicWrite(LAPIC_EOI, 0);
+        apic::lapicWrite(LAPIC_EOI, 0);
         switchTask((uint64_t)&tasks[nextTask].regs, tasks[nextTask].regs.ss);
     }
 end:
     spinRelease(&lock);
     return;
-}
-
 }

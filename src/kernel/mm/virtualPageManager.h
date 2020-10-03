@@ -16,8 +16,6 @@
 
 #define ERROR 0xffffffffffffffff
 
-namespace kernel {
-
 struct pageMap_t {
     int64_t pml4Index; 
     int64_t pml3Index;
@@ -46,8 +44,6 @@ public:
 
     uint64_t newUserMap(uint64_t pageCnt);
 
-    void fork(uint64_t pageMapIndex);
-
     void map(uint64_t base, uint64_t physicalBase, uint64_t cnt, uint64_t flags);
 
     void unmap(uint64_t base, uint64_t cnt, uint64_t flags);
@@ -69,5 +65,3 @@ private:
 };
 
 inline virtualPageManager_t virtualPageManager;
-
-}

@@ -2,8 +2,6 @@
 
 #include <kernel/acpi/rsdp.h>
 
-namespace kernel {
-
 typedef struct {
     acpihdr_t acpihdr;     
     uint8_t hardwareRevID;
@@ -34,5 +32,3 @@ typedef struct {
 void initHPET();
 
 void ksleep(uint64_t ms);
-
-}

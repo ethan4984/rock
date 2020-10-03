@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-namespace kernel {
-
 enum {
     DEFAULT,
     BLACK,
@@ -39,5 +37,3 @@ inline coutBase cout;
 void kprintDS(const char *prefix, const char *str, ...);
 
 void printArgs(const char *str, va_list arg, void (*fp)(uint8_t));
-
-}

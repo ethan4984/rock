@@ -4,8 +4,6 @@
 #include <lib/output.h>
 #include <stdarg.h>
 
-namespace kernel {
-
 class prefixList_t {
 public:
         prefixList_t(const char *prefix, uint8_t prefixColour, uint8_t textColour) : 
@@ -132,6 +130,4 @@ void printArgs(const char *str, va_list arg, void (*handler)(uint8_t)) {
         }
     }
     va_end(arg);
-}
-
 }

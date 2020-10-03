@@ -2,8 +2,6 @@
 
 #include <lib/font.h>
 
-namespace kernel {
-
 class character {
 public:
     character(char c, uint32_t x, uint32_t y, uint32_t colour);
@@ -37,5 +35,3 @@ private:
 
     character *characters;
 };
-
-}

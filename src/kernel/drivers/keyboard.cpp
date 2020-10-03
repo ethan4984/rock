@@ -6,8 +6,6 @@
 
 #include <stdbool.h>
 
-namespace kernel {
-
 void dummyChar(uint8_t c) {
 
 }
@@ -63,6 +61,4 @@ void keyboardHandlerMain(regs_t *regs) {
 
 void changeInputFunction(function<void, uint8_t> newFunc) {
     func = newFunc;
-}
-
 }

@@ -4,9 +4,16 @@
 #include <lib/asmUtils.h>
 #include <lib/output.h>
 
-namespace kernel {
+namespace pmm {
 
-void physicalPageManager_t::init(stivaleInfo_t *stivaleInfo) {
+static uint8_t *bitmap; 
+static uint64_t totalDetectedMemory = 0;
+
+static void allocateRegion(uint64_t start, uint64_t length);
+static void freeRegion(uint64_t start, uint64_t length);
+static int64_t firstFreePage();
+
+void init(stivaleInfo_t *stivaleInfo) {
     stivaleMMAPentry_t *stivaleMMAPentry = (stivaleMMAPentry_t*)stivaleInfo->memoryMapAddr;
     for(uint64_t i = 0; i < stivaleInfo->memoryMapEntries; i++) {
         totalDetectedMemory += stivaleMMAPentry[i].len;
@@ -37,19 +44,19 @@ void physicalPageManager_t::init(stivaleInfo_t *stivaleInfo) {
     cout + "[KMM]" << "Total Detected Memory: " << totalDetectedMemory << "\n";
 }
 
-void physicalPageManager_t::allocateRegion(uint64_t start, uint64_t limit) {
+static void allocateRegion(uint64_t start, uint64_t limit) {
     for(uint64_t i = start / PAGESIZE; i < (start / PAGESIZE) + ROUNDUP(limit, PAGESIZE); i++) {
         set(bitmap, i);
     }
 }
 
-void physicalPageManager_t::freeRegion(uint64_t start, uint64_t limit) {
+static void freeRegion(uint64_t start, uint64_t limit) {
     for(uint64_t i = start / PAGESIZE; i < (start / PAGESIZE) + ROUNDUP(limit, PAGESIZE); i++) {
         clear(bitmap, i);
     }
 }
 
-uint64_t physicalPageManager_t::alloc(uint64_t cnt) {
+uint64_t alloc(uint64_t cnt) {
     uint64_t base = firstFreePage() * PAGESIZE, count = 0;
     for(uint64_t i = firstFreePage(); i < totalDetectedMemory / PAGESIZE; i++) {
         if(isset(bitmap, i)) {
@@ -70,13 +77,13 @@ uint64_t physicalPageManager_t::alloc(uint64_t cnt) {
     return 0;
 }
 
-void physicalPageManager_t::free(uint64_t base, uint64_t count) {
+void free(uint64_t base, uint64_t count) {
     for(uint64_t i = ROUNDUP((uint64_t)base, PAGESIZE); i < ROUNDUP((uint64_t)base, PAGESIZE) + count; i++) {
         clear(bitmap, i);
     }
 }
 
-int64_t physicalPageManager_t::firstFreePage() {
+static int64_t firstFreePage() {
     for(uint64_t i = 0; i < totalDetectedMemory / PAGESIZE; i++) {
         if(!isset(bitmap, i)) {
             return i;

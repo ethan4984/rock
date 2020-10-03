@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-namespace kernel {
-
 struct bmpFileHdr_t {
     uint16_t bfType;
     uint32_t bfSize;
@@ -34,5 +32,3 @@ struct bmpImage_t {
 uint32_t bmpGetPixel(uint32_t x, uint32_t y, bmpImage_t bmpImage);
 
 bmpImage_t drawBMP(const char *path); 
-
-}

@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-namespace kernel {
-
 struct mbrPartitionEntry {
     uint8_t bootIndicator;
     uint8_t startingCHS[3]; 
@@ -37,5 +35,3 @@ void readPartitions();
 inline partition_t *partitions = NULL;
 
 inline fs *fsFunctions;
-
-}

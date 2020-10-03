@@ -6,57 +6,6 @@
 
 #define ROUNDUP(a, b) (((a) + ((b) - 1)) / (b))
 
-namespace kernel {
-
-template <typename T>
-class unique_ptr {
-public:
-    unique_ptr(uint64_t size) {
-        ptr = (T*)new uint8_t[size];
-    }
-
-    ~unique_ptr() {
-        delete ptr;
-    }
-
-    explicit operator bool() {
-        return ptr;
-    }
-
-    T operator[](uint64_t index) {
-        return ptr[index];
-    }
-
-    T operator*(void) {
-        return *ptr; 
-    }
-
-    T *operator+(uint64_t num) {
-        return ptr + num;
-    }
-
-    T *operator-(uint64_t num) {
-       return  ptr - num;
-    }
-
-    void operator++(void) {
-        ptr++;
-    }
-
-    void operator--(void) {
-        ptr--;
-    }
-
-    void operator=(uint64_t addr) {
-        ptr = (T*)addr;
-    }
-
-    unique_ptr(const unique_ptr &) = delete;
-
-private:
-    T *ptr;
-};
-
 template <typename F, typename ...args> using function = F(*)(args...);
 
 void memset(void *src, int64_t data, uint64_t count);
@@ -82,5 +31,3 @@ void set(uint8_t *bitmap, uint64_t location);
 void clear(uint8_t *bitmap, uint64_t location);
 
 bool isset(uint8_t *bitmap, uint64_t location);
-
-}
