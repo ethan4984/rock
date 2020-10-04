@@ -23,7 +23,7 @@ This is a simple multicore operating system that is made for fun
   - panel
 # Demo
 
-![](Demo/osdemo1.gif)
+![](demo/osdemo1.gif)
 
 # Build Instructions
 
