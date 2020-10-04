@@ -21,7 +21,7 @@ namespace vmm {
 
 void init();
 
-void map(uint64_t physicalAddr, uint64_t virtualAddress, uint64_t flags);
+void map(uint64_t physicalAddr, uint64_t virtualAddress, uint64_t flags, uint64_t flags1);
 
 void unmap(uint64_t virtualAddress, uint64_t flags);
 

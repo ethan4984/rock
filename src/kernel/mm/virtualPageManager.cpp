@@ -15,8 +15,18 @@ struct mappingIndexes {
 
         pml4 = (uint64_t*)(grabPML4() + HIGH_VMA);
         pml3 = (uint64_t*)((pml4[pml4idx] & ~(0xfff)) + HIGH_VMA);
-        pml2 = (uint64_t*)((pml3[pml3idx] & ~(0xfff)) + HIGH_VMA);
-        pml1 = (uint64_t*)((pml2[pml2idx] & ~(0xfff)) + HIGH_VMA);
+
+        if((uint64_t)pml3 != HIGH_VMA) 
+            pml2 = (uint64_t*)((pml3[pml3idx] & ~(0xfff)) + HIGH_VMA);
+        else {
+            pml3 = NULL;
+            pml2 = NULL;
+        }
+
+        if((uint64_t)pml2 != HIGH_VMA)
+            pml1 = (uint64_t*)((pml2[pml2idx] & ~(0xfff)) + HIGH_VMA);
+        else
+            pml1 = NULL;
     }
 
     uint64_t pml4idx;
@@ -30,10 +40,37 @@ struct mappingIndexes {
     uint64_t *pml1;
 };
 
+void map(uint64_t physicalAddr, uint64_t virtualAddr, uint64_t flags, uint64_t flags1) {
+    mappingIndexes indexes(virtualAddr);
+
+    if(indexes.pml3 == NULL) {
+        indexes.pml3 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+        indexes.pml4[indexes.pml4idx] = ((uint64_t)indexes.pml3 - HIGH_VMA) | flags; 
+    }
+
+    if(indexes.pml2 == NULL) {
+        indexes.pml2 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+        indexes.pml3[indexes.pml3idx] = ((uint64_t)indexes.pml2 - HIGH_VMA) | flags; 
+    }
+
+    if(!(flags1 & (1 << 7))) { // check for 4kb pages
+        if(indexes.pml1 == NULL) {
+            indexes.pml1 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+            indexes.pml2[indexes.pml2idx] = ((uint64_t)indexes.pml1 - HIGH_VMA) | flags;
+        }
+
+        indexes.pml1[indexes.pml1idx] = physicalAddr | flags1;
+    } else {
+        indexes.pml2[indexes.pml2idx] = physicalAddr | flags1;
+    }
+
+    tlbFlush();
+}
+
 void unmap(uint64_t virtualAddr, uint64_t flags) {
     mappingIndexes indexes(virtualAddr);
 
-    if(flags & (1 << 7)) {
+    if(flags & (1 << 7)) { // check for 2mb pages
         indexes.pml2[indexes.pml2idx] = 0;
     } else {
         indexes.pml1[indexes.pml1idx] = 0;
