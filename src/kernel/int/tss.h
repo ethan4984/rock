@@ -21,13 +21,10 @@ struct tss_t {
     uint16_t IOPB = 0;
 } __attribute__((packed));
 
-class tssMain_t {
-public:
-    void init(); 
+namespace tss {
 
-    void newTss(uint64_t rsp0);
-    
-    tss_t *tss;
-};
+void init();
 
-inline tssMain_t tssMain;
+tss_t *create();
+
+}

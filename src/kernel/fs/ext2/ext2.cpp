@@ -17,7 +17,7 @@ blockGroupDescriptor_t ext2_t::readBGD(uint64_t index) {
 
     uint64_t blockGroupIndex = (index - 1) / superblock.data.inodesPerGroup;
 
-    ahci.read(&ahci.drives[0], partitions[0], bgdOffset + (sizeof(blockGroupDescriptor_t) * blockGroupIndex), sizeof(blockGroupDescriptor_t), &bgd);
+    ahci::read(&ahci::drives[0], partitions[0], bgdOffset + (sizeof(blockGroupDescriptor_t) * blockGroupIndex), sizeof(blockGroupDescriptor_t), &bgd);
     return bgd;
 }
 
@@ -28,7 +28,7 @@ inode_t ext2_t::getInode(uint64_t index) {
 
     uint64_t inodeTableIndex = (index - 1) % superblock.data.inodesPerGroup;
     
-    ahci.read(&ahci.drives[0], partitions[0], (bgd.startingBlock * superblock.blockSize) + (superblock.data.inodeSize * inodeTableIndex), sizeof(inode_t), &inode);
+    ahci::read(&ahci::drives[0], partitions[0], (bgd.startingBlock * superblock.blockSize) + (superblock.data.inodeSize * inodeTableIndex), sizeof(inode_t), &inode);
     return inode;
 }
 
@@ -106,21 +106,21 @@ void ext2_t::readInode(inode_t inode, uint64_t start, uint64_t cnt, void *buffer
                 if (index * sizeof(uint32_t) >= superblock.blockSize) { // triple indirect
                     uint32_t doubleIndirect, indirectBlock, offset = block % (superblock.blockSize / sizeof(uint32_t));
 
-                    ahci.read(&ahci.drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &doubleIndirect);
-                    ahci.read(&ahci.drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirectBlock);
-                    ahci.read(&ahci.drives[0], partitions[0], indirectBlock * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
+                    ahci::read(&ahci::drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &doubleIndirect);
+                    ahci::read(&ahci::drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirectBlock);
+                    ahci::read(&ahci::drives[0], partitions[0], indirectBlock * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
                 }
                 uint32_t offset = block % (superblock.blockSize / sizeof(uint32_t));
                 uint32_t indirect_block;
 
-                ahci.read(&ahci.drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
-                ahci.read(&ahci.drives[0], partitions[0], indirect_block * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
+                ahci::read(&ahci::drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
+                ahci::read(&ahci::drives[0], partitions[0], indirect_block * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
             } else { // single indirect
-                ahci.read(&ahci.drives[0], partitions[0], inode.blocks[12] * superblock.blockSize + block * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
+                ahci::read(&ahci::drives[0], partitions[0], inode.blocks[12] * superblock.blockSize + block * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
             }
         }
 
-        ahci.read(&ahci.drives[0], partitions[0], (blockIndex * superblock.blockSize) + offset, size, (void*)((uint64_t)buffer + headway));
+        ahci::read(&ahci::drives[0], partitions[0], (blockIndex * superblock.blockSize) + offset, size, (void*)((uint64_t)buffer + headway));
 
         headway += size;
     }

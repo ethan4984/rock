@@ -158,23 +158,21 @@ typedef struct {
     volatile hbaPorts_t *hbaPort;
 } drive_t;
 
-class ahci_t {
-public:
-    void initAHCI();
+namespace ahci {
 
-    void sataRW(drive_t *drive, uint64_t lbaStart, uint32_t cnt, void *buffer, bool w); 
+inline uint64_t driveCnt;
+inline drive_t *drives; 
 
-    void read(drive_t *drive, partition_t partition, uint64_t addr, uint32_t cnt, void *buffer);
+void init();
 
-    uint64_t driveCnt;
+void sataRW(drive_t *drive, uint64_t lbaStart, uint32_t cnt, void *buffer, bool w); 
 
-    drive_t *drives; 
-private:
-    void initSATAdevice(volatile hbaPorts_t *hbaPort);
+void read(drive_t *drive, partition_t partition, uint64_t addr, uint32_t cnt, void *buffer);
 
-    uint32_t findCMD(volatile hbaPorts_t *hbaPort);
+void initSATAdevice(volatile hbaPorts_t *hbaPort);
 
-    void sendCommand(volatile hbaPorts_t *hbaPort, uint32_t CMDslot);
-};
+uint32_t findCMD(volatile hbaPorts_t *hbaPort);
 
-inline ahci_t ahci;
+void sendCommand(volatile hbaPorts_t *hbaPort, uint32_t CMDslot);
+
+}

@@ -10,7 +10,7 @@ void readPartitions() {
     }
 
     void *sector0 = new uint8_t[0x200];
-    ahci.sataRW(&ahci.drives[0], 0, 1, sector0, 0);
+    ahci::sataRW(&ahci::drives[0], 0, 1, sector0, 0);
 
     mbrPartitionEntry *mbrEntries = (mbrPartitionEntry*)((uint64_t)sector0 + 0x1BE);
 

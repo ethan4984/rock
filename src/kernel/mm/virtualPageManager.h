@@ -15,53 +15,18 @@
 #define HIGH_VMA 0xffff800000000000
 
 #define ERROR 0xffffffffffffffff
+#define PML4 (uint64_t*)(pml4 + HIGH_VMA)
 
-struct pageMap_t {
-    int64_t pml4Index; 
-    int64_t pml3Index;
-    int64_t pml2Index;
-    int64_t pml1Index;
-};
+namespace vmm {
 
-class pdEntry_t {
-public:
-    pdEntry_t(uint64_t pml4, uint64_t pdFlags, uint64_t ptFlags, uint64_t hashIdentifier);
+void init();
 
-    pdEntry_t() { }
+void map(uint64_t physicalAddr, uint64_t virtualAddress, uint64_t flags);
 
-    void initPageMap();
-    
-    uint64_t pml4;
+void unmap(uint64_t virtualAddress, uint64_t flags);
 
-    uint64_t pdFlags;
+uint64_t grabPML4();
 
-    uint64_t ptFlags;
-};
+void tlbFlush();
 
-class virtualPageManager_t : protected pdEntry_t {
-public:
-    void init();
-
-    uint64_t newUserMap(uint64_t pageCnt);
-
-    void map(uint64_t base, uint64_t physicalBase, uint64_t cnt, uint64_t flags);
-
-    void unmap(uint64_t base, uint64_t cnt, uint64_t flags);
-
-    uint64_t grabPML4();
-
-    uint64_t firstFreeSlot();
-
-    void initAddressSpace(uint64_t index);
-
-private:
-    pageMap_t getIndexes(uint64_t base, uint64_t flags);
-
-    void tlbFlush();
-
-    uint64_t entryCnt = 0x1000;
-
-    static pdEntry_t *pdEntries;
-};
-
-inline virtualPageManager_t virtualPageManager;
+}

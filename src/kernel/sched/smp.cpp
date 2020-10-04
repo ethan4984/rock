@@ -36,8 +36,8 @@ void bootstrapCoreMain() {
     cpuInfo[dynCnt].coreID = apic::lapicRead(LAPIC_ID_REG);
     cpuInfo[dynCnt].currentTask = -1;
 
-    tssMain.newTss(pmm::alloc(2) + 0x2000 + HIGH_VMA);
-    gdt::initCore(cpuInfo_t::numberOfCores, (uint64_t)&tssMain.tss[dynCnt]);
+    tss_t *tss = tss::create();
+    gdt::initCore(cpuInfo_t::numberOfCores, (uint64_t)tss);
 
     apic::lapicTimerInit(100);
 
@@ -58,7 +58,7 @@ void initSMP() {
     for(uint64_t i = 1; i < madtInfo.madtEntry0Count; i++) {
         uint64_t coreID = madtInfo.madtEntry0[i].apicID;
         if(madtInfo.madtEntry0[i].flags == 1) {
-            prepTrampoline(pmm::alloc(4) + 0x4000 + HIGH_VMA, virtualPageManager.grabPML4(), (uint64_t)&bootstrapCoreMain, (uint64_t)&idtr);
+            prepTrampoline(pmm::alloc(4) + 0x4000 + HIGH_VMA, vmm::grabPML4(), (uint64_t)&bootstrapCoreMain, (uint64_t)&idtr);
             apic::sendIPI(coreID, 0x500);
             apic::sendIPI(coreID, 0x600 | (uint32_t)((uint64_t)0x1000 / 0x1000)); 
             ksleep(10);

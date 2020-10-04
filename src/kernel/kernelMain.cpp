@@ -47,7 +47,7 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     pmm::init(stivaleInfo);
     kheap.init();
-    virtualPageManager.init();
+    vmm::init();
 
     idt::init();
 
@@ -55,10 +55,10 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     gdt::init();
 
-    tssMain.init();
-    tssMain.newTss(pmm::alloc(1) + HIGH_VMA); 
+    tss::init();
+    tss_t *tss = tss::create(); 
 
-    gdt::initCore(0, (uint64_t)tssMain.tss);
+    gdt::initCore(0, (uint64_t)tss);
 
     acpi.rsdpInit((uint64_t*)(stivaleInfo->rsdp + HIGH_VMA));
 
@@ -68,8 +68,8 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     apic::init();
 
-    pci.initPCI();
-    ahci.initAHCI();
+    pci::init();
+    ahci::init();
 
     initSMP();
 

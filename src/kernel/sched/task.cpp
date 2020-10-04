@@ -28,7 +28,7 @@ void createTask(uint16_t ss, uint64_t rsp, uint16_t cs, uint64_t entryPoint, uin
     regs.cs = cs; 
 
     task_t newTask = {  WAITING_TO_START, // status
-                        virtualPageManager.newUserMap(pageCnt), // pml4Index
+                        0, //virtualPageManager.newUserMap(pageCnt), // pml4Index
                         regs,
                         pmm::alloc(2) + 0x2000 + HIGH_VMA, // kernelStack
                         entryPoint,

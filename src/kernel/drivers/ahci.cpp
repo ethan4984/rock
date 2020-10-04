@@ -6,27 +6,29 @@
 #include <lib/output.h>
 
 static pciBar_t bar;
-    
-void ahci_t::initAHCI() {
+
+namespace ahci {
+
+void init() {
     pciInfo_t device;
 
-    for(uint64_t i = 0; i < pci.totalDevices; i++) {
-        if((pci.pciDevice[i].classCode == 1) && (pci.pciDevice[i].subclass == 6)) {
-            switch(pci.pciDevice[i].progIF) {
+    for(uint64_t i = 0; i < pci::pciDevices.totalDevices; i++) {
+        if((pci::pciDevices.devices[i].classCode == 1) && (pci::pciDevices.devices[i].subclass == 6)) {
+            switch(pci::pciDevices.devices[i].progIF) {
                 case 0:
-                    cout + "[AHCI]" << "Detected a Vendor Sepcific Interface (get a new pc retard)\n";
+                    kprintDS("[AHCI]", "Detected a Vendor Sepcific Interface (get a new pc)");
                     return;
                 case 1:
-                    cout + "[AHCI]" << "Detected an AHCI 1.0 device\n";
-                    device = pci.pciDevice[i];
+                    kprintDS("[AHCI]", "Detected an AHCI 1.0 device");
+                    device = pci::pciDevices.devices[i];
     
-                    if(!(pci.pciRead(device.bus, device.device, device.function, 0x4) & (1 << 2))) {
-                        pci.pciWrite(pci.pciRead(device.bus, device.device, device.function, 0x4) | (1 << 2), device.bus, device.device, device.function, 0x4);
+                    if(!(pci::pciRead(device.bus, device.device, device.function, 0x4) & (1 << 2))) {
+                        pci::pciWrite(pci::pciRead(device.bus, device.device, device.function, 0x4) | (1 << 2), device.bus, device.device, device.function, 0x4);
                     }
 
                     break;
                 case 2:
-                    cout + "[AHCI]" << "Detected a Serial Storage Bus\n";
+                    kprintDS("[AHCI]", "Detected a Serial Storage Bus");
                     return;
             }
         }
@@ -34,9 +36,9 @@ void ahci_t::initAHCI() {
    
     drives = new drive_t[32];
 
-    bar = pci.getBAR(device, 5);
+    bar = pci::getBAR(device, 5);
 
-    cout + "[AHCI]" << "BAR5 base " << bar.base << " | size " <<  bar.size << "\n";
+    kprintDS("[AHCI]", "BAR5 base %x | size %x", bar.base, bar.size);
     
     volatile GHC_t *GHC = (volatile GHC_t*)((uint64_t)bar.base + HIGH_VMA);
 
@@ -63,7 +65,7 @@ void ahci_t::initAHCI() {
     }
 }
 
-void ahci_t::sendCommand(volatile hbaPorts_t *hbaPort, uint32_t CMDslot) {
+void sendCommand(volatile hbaPorts_t *hbaPort, uint32_t CMDslot) {
     while((hbaPort->tfd & (0x80 | 0x8)));
 
     hbaPort->cmd &= ~HBA_CMD_ST;
@@ -85,7 +87,7 @@ void ahci_t::sendCommand(volatile hbaPorts_t *hbaPort, uint32_t CMDslot) {
     hbaPort->cmd &= ~HBA_CMD_FRE;
 }
 
-void ahci_t::read(drive_t *drive, partition_t partition, uint64_t addr, uint32_t cnt, void *buffer) {
+void read(drive_t *drive, partition_t partition, uint64_t addr, uint32_t cnt, void *buffer) {
     uint64_t startingSector = addr / 512, count = ROUNDUP(cnt, 512);
 
     uint8_t *diskBuffer = new uint8_t[count * 512];
@@ -97,7 +99,7 @@ void ahci_t::read(drive_t *drive, partition_t partition, uint64_t addr, uint32_t
     delete diskBuffer;
 }
 
-uint32_t ahci_t::findCMD(volatile hbaPorts_t *hbaPort) {
+uint32_t findCMD(volatile hbaPorts_t *hbaPort) {
     for(int i = 0; i < 32; i++) {
         if(((hbaPort->sact | hbaPort->ci) & (1 << i)) == 0)
             return i;
@@ -105,7 +107,7 @@ uint32_t ahci_t::findCMD(volatile hbaPorts_t *hbaPort) {
     return 0;
 }
 
-void ahci_t::initSATAdevice(volatile hbaPorts_t *hbaPort) {
+void initSATAdevice(volatile hbaPorts_t *hbaPort) {
     static uint64_t driveCnt = 0;
 
     uint32_t CMDslot = findCMD(hbaPort);
@@ -139,7 +141,7 @@ void ahci_t::initSATAdevice(volatile hbaPorts_t *hbaPort) {
     drives[driveCnt - 1] = (drive_t) { *((uint64_t*)((uint64_t)&identify[100] + HIGH_VMA)), hbaPort };
 }
 
-void ahci_t::sataRW(drive_t *drive, uint64_t start, uint32_t count, void *buffer, bool w) {
+void sataRW(drive_t *drive, uint64_t start, uint32_t count, void *buffer, bool w) {
     uint32_t CMDslot = findCMD(drive->hbaPort);
 
     volatile hbaCMDhdr_t *hbaCMDhdr = (volatile hbaCMDhdr_t*)((uint64_t)drive->hbaPort->clb + HIGH_VMA);
@@ -178,4 +180,6 @@ void ahci_t::sataRW(drive_t *drive, uint64_t start, uint32_t count, void *buffer
     cmdfis->counth = (uint8_t)(count >> 8);
     
     sendCommand(drive->hbaPort, CMDslot);
+}
+
 }

@@ -1,13 +1,23 @@
+#include <kernel/mm/physicalPageManager.h> 
 #include <kernel/mm/kHeap.h>
 #include <kernel/int/tss.h>
 
-void tssMain_t::init() {
-    tss = new tss_t[32];
+namespace tss {
+
+tss_t *tssEntries;
+
+void init() {
+    tssEntries = new tss_t[32];
 }
 
-void tssMain_t::newTss(uint64_t rsp0) {
+tss_t *create() {
     static uint64_t cnt = 0;
-    tss_t newTSS = { 0 };
-    newTSS.rsp0 = rsp0; 
-    tss[cnt++] = newTSS;
+    tss_t tss = { 0 };
+    tss.rsp0 = pmm::alloc(2);
+    tss.rsp1 = pmm::alloc(2);
+    tss.rsp2 = pmm::alloc(2);
+    tssEntries[cnt] = tss;
+    return &tssEntries[cnt++];
+}
+
 }
