@@ -21,10 +21,7 @@ if [ ! -f gcc-$GCCVERSION.tar.gz ]; then
     wget https://ftp.gnu.org/gnu/gcc/gcc-$GCCVERSION/gcc-$GCCVERSION.tar.gz
 fi
 
-if [ ! -f build ]; then
-    exit
-fi
-
+rm -rf build
 mkdir build
 cd build
 
