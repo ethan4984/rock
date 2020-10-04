@@ -30,7 +30,10 @@ This is a simple multicore operating system that is made for fun
 Here are some programs you will need to build rock:
   - `nasm`
   - `make`
-  - `rock`
+  - `qemu`
+  - `tar`
+  - `sed`
+  - `wget`
   - `git`
   
 Now that you have those just run the build script `tools/build_tools.sh`
