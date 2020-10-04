@@ -1,4 +1,4 @@
-CXX = ~/opt/cross/bin/x86_64-elf-g++
+CXX = tools/bin/x86_64-elf-g++
 NASM = nasm -felf64
 
 NORMAL_CXXFLAGS = -ffreestanding -Wall -O2 -Wextra -fno-stack-protector -fno-exceptions -Isrc  -Wno-unused-parameter
@@ -6,7 +6,7 @@ KERNEL_CXXFLAGS = -fno-pic -mno-sse -mno-sse2 -mno-mmx -mno-80387 -mno-red-zone 
 
 CXXFLAGS = $(NORMAL_CXXFLAGS) $(KERNEL_CXXFLAGS)
 
-CXX_SRC = $(shell find . -type f -name '*.cpp')
+CXX_SRC = $(shell find src -type f -name '*.cpp')
 
 QEMUFLAGS = -m 4G -vga vmware -serial file:serial.log -smp 4 -netdev user,id=n1 -device e1000,netdev=n1 
 
@@ -50,7 +50,7 @@ build:
 	sudo umount diskImage/
 	sudo losetup -d `cat loopback_dev`
 	rm -rf diskImage loopback_dev
-	cd limine && ./limine-install limine.bin ../rock.img 
+	cd tools/limine && ./limine-install limine.bin ../../rock.img 
 	rm src/kernel/*.o
 
 qemu: build
