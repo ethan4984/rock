@@ -6,6 +6,9 @@
 
 namespace vmm {
 
+mapping *mapping::mappings;
+uint64_t mapping::mappingCnt = 0;
+
 struct mappingIndexes {
     mappingIndexes(uint64_t addr) {
         pml4idx = (addr & ((uint64_t)0x1ff << 39)) >> 39;
@@ -39,6 +42,58 @@ struct mappingIndexes {
     uint64_t *pml2;
     uint64_t *pml1;
 };
+
+void mapping::operator=(mapping *m1) {
+    pml4 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
+    memcpy64(pml4, m1->pml4, 0x200);
+
+    for(int i = 0; i < 0x200; i++) {
+        if(m1->pml4[i] != 0) {
+            pml4[i] = pmm::alloc(1);
+            uint64_t *pml3 = (uint64_t*)(pml4[i] + HIGH_VMA), *m1pml3 = (uint64_t*)(m1->pml4[i] + HIGH_VMA);
+            memcpy64(pml3, m1pml3, 0x200);
+
+            for(int i = 0; i < 0x200; i++) {
+                if(m1pml3[i] != 0) {
+                    pml3[i] = pmm::alloc(1);
+                    uint64_t *pml2 = (uint64_t*)(pml3[i] + HIGH_VMA), *m1pml2 = (uint64_t*)(m1pml3[i] + HIGH_VMA);
+                    memcpy64(pml2, m1pml2, 0x200);
+
+                    for(int i = 0; i < 0x200; i++) {
+                        if(m1pml2[i] != 0 && !(m1pml2[i] & ( 1<< 7))) {
+                            pml2[i] = pmm::alloc(1);
+                            uint64_t *pml1 = (uint64_t*)(pml2[i] + HIGH_VMA), *m1pml1 = (uint64_t*)(m1pml2[i] + HIGH_VMA);
+                            memcpy64(pml1, m1pml1, 0x200);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    tlbFlush();
+}
+
+mapping::~mapping() {
+        
+}
+
+void mapping::init() {
+    asm volatile ("movq %0, %%cr3" :: "r" ((uint64_t)pml4 - HIGH_VMA) : "memory");
+}
+
+void mapping::addMapping(mapping newMapping) {
+    if(mappingCnt + 1 % 10 == 0) {
+        mappings = (mapping*)kheap.krealloc(mappings, 10);
+        mappingCnt += 10;
+    }
+
+    mappings[mappingCnt++] = newMapping;
+}
+
+void mapping::mappingsInit() {
+    mappingCnt = 10;
+    mappings = new mapping[10];
+}
 
 void map(uint64_t physicalAddr, uint64_t virtualAddr, uint64_t flags, uint64_t flags1) {
     mappingIndexes indexes(virtualAddr);
@@ -116,9 +171,11 @@ void init() {
         physical += 0x200000;
     }
 
+    mapping::mappingsInit();
+    mapping::addMapping(mapping { pml4 } );
+
     asm volatile ("movq %0, %%cr3" :: "r" ((uint64_t)pml4 - HIGH_VMA) : "memory");
 }
-
 
 void tlbFlush() {
     asm volatile ("movq %0, %%cr3" :: "r" (grabPML4()) : "memory");

@@ -19,6 +19,19 @@
 
 namespace vmm {
 
+struct mapping { 
+    uint64_t *pml4;
+    ~mapping();
+
+    void init();
+    static void mappingsInit();
+    static void addMapping(mapping newMapping);
+    static mapping *mappings;
+    static uint64_t mappingCnt;
+
+    void operator=(mapping *m1);
+};
+
 void init();
 
 void map(uint64_t physicalAddr, uint64_t virtualAddress, uint64_t flags, uint64_t flags1);
