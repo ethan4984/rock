@@ -13,9 +13,10 @@
 
 #define KERNEL_HIGH_VMA 0xffffffff80000000
 #define HIGH_VMA 0xffff800000000000
-
 #define ERROR 0xffffffffffffffff
-#define PML4 (uint64_t*)(pml4 + HIGH_VMA)
+
+#define GET_PMLX_FLAGS(pmlX) ((pmlX) & 0xfff)
+#define GET_PMLX_ADDR(pmlX) ((pmlX) & ~(0xfff))
 
 namespace vmm {
 
@@ -24,12 +25,12 @@ struct mapping {
     ~mapping();
 
     void init();
+    void copy(mapping m1); 
+
     static void mappingsInit();
     static void addMapping(mapping newMapping);
     static mapping *mappings;
     static uint64_t mappingCnt;
-
-    void operator=(mapping *m1);
 };
 
 void init();

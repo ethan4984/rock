@@ -43,26 +43,26 @@ struct mappingIndexes {
     uint64_t *pml1;
 };
 
-void mapping::operator=(mapping *m1) {
+void mapping::copy(mapping m1) {
     pml4 = (uint64_t*)(pmm::alloc(1) + HIGH_VMA);
-    memcpy64(pml4, m1->pml4, 0x200);
+    memcpy64(pml4, m1.pml4, 0x200);
 
     for(int i = 0; i < 0x200; i++) {
-        if(m1->pml4[i] != 0) {
-            pml4[i] = pmm::alloc(1);
-            uint64_t *pml3 = (uint64_t*)(pml4[i] + HIGH_VMA), *m1pml3 = (uint64_t*)(m1->pml4[i] + HIGH_VMA);
+        if(m1.pml4[i] & 0b1) {
+            pml4[i] = pmm::alloc(1) | GET_PMLX_FLAGS(m1.pml4[i]);
+            uint64_t *pml3 = (uint64_t*)(GET_PMLX_ADDR(pml4[i]) + HIGH_VMA), *m1pml3 = (uint64_t*)(GET_PMLX_ADDR(m1.pml4[i]) + HIGH_VMA);
             memcpy64(pml3, m1pml3, 0x200);
 
-            for(int i = 0; i < 0x200; i++) {
-                if(m1pml3[i] != 0) {
-                    pml3[i] = pmm::alloc(1);
-                    uint64_t *pml2 = (uint64_t*)(pml3[i] + HIGH_VMA), *m1pml2 = (uint64_t*)(m1pml3[i] + HIGH_VMA);
+            for(int j = 0; j < 0x200; j++) {
+                if(m1pml3[j] & 0b1 && !(m1pml3[j] & (1 << 7))) {
+                    pml3[j] = pmm::alloc(1) | GET_PMLX_FLAGS(m1pml3[j]);
+                    uint64_t *pml2 = (uint64_t*)(GET_PMLX_ADDR(pml3[j]) + HIGH_VMA), *m1pml2 = (uint64_t*)(GET_PMLX_ADDR(m1pml3[j])  + HIGH_VMA);
                     memcpy64(pml2, m1pml2, 0x200);
 
-                    for(int i = 0; i < 0x200; i++) {
-                        if(m1pml2[i] != 0 && !(m1pml2[i] & ( 1<< 7))) {
-                            pml2[i] = pmm::alloc(1);
-                            uint64_t *pml1 = (uint64_t*)(pml2[i] + HIGH_VMA), *m1pml1 = (uint64_t*)(m1pml2[i] + HIGH_VMA);
+                    for(int k = 0; k < 0x200; k++) {
+                        if(m1pml2[k] & 0b1 && !(m1pml2[k] & (1 << 7))) {
+                            pml2[k] = pmm::alloc(1) | GET_PMLX_FLAGS(m1pml2[k]);
+                            uint64_t *pml1 = (uint64_t*)(GET_PMLX_ADDR(pml2[k]) + HIGH_VMA), *m1pml1 = (uint64_t*)(GET_PMLX_ADDR(m1pml2[k]) + HIGH_VMA);
                             memcpy64(pml1, m1pml1, 0x200);
                         }
                     }
@@ -70,7 +70,6 @@ void mapping::operator=(mapping *m1) {
             }
         }
     }
-    tlbFlush();
 }
 
 mapping::~mapping() {
@@ -84,14 +83,13 @@ void mapping::init() {
 void mapping::addMapping(mapping newMapping) {
     if(mappingCnt + 1 % 10 == 0) {
         mappings = (mapping*)kheap.krealloc(mappings, 10);
-        mappingCnt += 10;
     }
-
+    
     mappings[mappingCnt++] = newMapping;
 }
 
 void mapping::mappingsInit() {
-    mappingCnt = 10;
+    mappingCnt = 0;
     mappings = new mapping[10];
 }
 
