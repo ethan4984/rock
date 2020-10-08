@@ -334,7 +334,7 @@ inline eventHandlers_t eventHandlers[] =   {
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 16
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 24
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 32
-                                        schedulerMain, keyboardHandlerMain, NULL, NULL, NULL, NULL, NULL, NULL, // 40
+                                        sched::schedulerMain, keyboardHandlerMain, NULL, NULL, NULL, NULL, NULL, NULL, // 40
                                         NULL, NULL, NULL, NULL, mouseHandler, NULL, NULL, NULL, // 48
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 56
                                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 64

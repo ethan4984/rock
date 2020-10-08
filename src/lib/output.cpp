@@ -64,6 +64,9 @@ coutBase &coutBase::operator+(const char *str) {
 
 
 void kprintDS(const char *prefix, const char *str, ...) { // debug serial
+    static char lock = 0;
+    spinLock(&lock);
+
     va_list arg;
     va_start(arg, str);
 
@@ -84,6 +87,8 @@ void kprintDS(const char *prefix, const char *str, ...) { // debug serial
     printArgs(str, arg, serialWrite);
 
     serialWrite('\n'); 
+    
+    spinRelease(&lock);
 }
 
 void printArgs(const char *str, va_list arg, void (*handler)(uint8_t)) {
@@ -114,6 +119,12 @@ void printArgs(const char *str, va_list arg, void (*handler)(uint8_t)) {
                 case 'x':
                     hold = va_arg(arg, uint64_t);
                     string = itob(hold, 16);
+                    for(uint64_t i = 0; i < strlen(string); i++)
+                        handler(string[i]);
+                    break;
+                case 'b':
+                    hold = va_arg(arg, uint64_t);
+                    string = itob(hold, 2);
                     for(uint64_t i = 0; i < strlen(string); i++)
                         handler(string[i]);
                     break;

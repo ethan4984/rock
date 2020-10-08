@@ -72,8 +72,25 @@ void mapping::copy(mapping m1) {
     }
 }
 
-mapping::~mapping() {
-        
+static void freeMapping(uint64_t *pmlX) {
+    static size_t cnt = 4; 
+
+    for(int i = 0; i < 0x200; i++) { 
+        if(pmlX[i] & 0b1 && !(pmlX[i] & (1 << 7))) {
+            if(cnt > 0 && cnt <= 4) {
+                freeMapping((uint64_t*)(GET_PMLX_ADDR(pmlX[i]) + HIGH_VMA));
+                cnt--;
+            }
+            pmm::free(pmlX[i], 1);
+        }
+    }
+
+    cnt = 4;
+}
+
+void mapping::exit() {
+    if(pml4 != NULL)
+        freeMapping(pml4);
 }
 
 void mapping::init() {

@@ -21,8 +21,10 @@ void operator delete(void *addr) {
 void operator delete[](void *addr) {
     kheap.kfree(addr);
 }
+
+namespace mm {
     
-void kheap_t::init() {
+void heap::init() {
     heapBegin = pmm::alloc(0x100); /* allocate a 1mb heap */
     bitmap = (uint8_t*)(pmm::alloc(1) + HIGH_VMA);
     allocation = (allocation_t*)(pmm::alloc(0x20) + HIGH_VMA);
@@ -34,7 +36,7 @@ void kheap_t::init() {
     memset(allocation, 0, 0x1000 * 0x20);
 }
 
-void *kheap_t::kmalloc(uint64_t size) {
+void *heap::kmalloc(uint64_t size) {
     if(size == 0) {
         cout + "[KMM]" << "stop trying to allocate zero bytes retard\n";
         return NULL;
@@ -68,7 +70,7 @@ void *kheap_t::kmalloc(uint64_t size) {
     return NULL;
 }
 
-uint64_t kheap_t::kfree(void *addr) {
+uint64_t heap::kfree(void *addr) {
     uint64_t bitmapBase = ((uint64_t)addr - HIGH_VMA - heapBegin) / 32, sizeOfAllocation = 0;
 
     int64_t i;
@@ -89,14 +91,14 @@ uint64_t kheap_t::kfree(void *addr) {
     return sizeOfAllocation;
 }
 
-void *kheap_t::krealloc(void *addr, uint64_t size) {
+void *heap::krealloc(void *addr, uint64_t size) {
     uint64_t sizeOfAllocation = kfree(addr);
     void *newPt = kmalloc(sizeOfAllocation + size);
     memcpy64((uint64_t*)newPt, (uint64_t*)addr, sizeOfAllocation);
     return newPt; 
 }
 
-int64_t kheap_t::firstFreeSlot() {
+int64_t heap::firstFreeSlot() {
     for(int64_t i = 0; i < bitmapSize; i++) {
         if(!isset(bitmap, i))
             return i;
@@ -104,13 +106,15 @@ int64_t kheap_t::firstFreeSlot() {
     return -1;
 }
 
-int64_t kheap_t::firstFreeAllocationSlot() {
+int64_t heap::firstFreeAllocationSlot() {
     for(int64_t i = 0; i < allocationSize; i++) {
         if(allocation[i].count == 0) {
             return i;
         }
     }
     return -1;
+}
+
 }
 
 void operator delete[](void *addr, uint64_t size) {

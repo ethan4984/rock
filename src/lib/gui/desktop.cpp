@@ -1,6 +1,5 @@
 #include <kernel/mm/physicalPageManager.h>
 #include <kernel/mm/virtualPageManager.h>
-#include <kernel/sched/task.h>
 #include <kernel/sched/hpet.h>
 #include <kernel/mm/kHeap.h>
 #include <lib/stringUtils.h>
@@ -19,5 +18,5 @@ void timeAndDate() {
 pannel::pannel(uint32_t x, uint32_t y, uint32_t xCnt, uint32_t yCnt, uint32_t colour) : x(x),
     y(y), xCnt(xCnt), yCnt(yCnt), colour(colour) {
     pannelGrp = vesa::blkGrp(x, y, xCnt, yCnt, colour);
-    createTask(0x10, pmm::alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)timeAndDate, 2);
+//    createTask(0x10, pmm::alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)timeAndDate, 2);
 }

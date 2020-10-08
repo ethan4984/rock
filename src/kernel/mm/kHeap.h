@@ -12,12 +12,14 @@ void operator delete(void *addr, uint64_t size);
 
 void operator delete(void *addr);
 
+namespace mm {
+
 struct allocation_t {
     uint16_t block;
     uint32_t count;
 };
 
-class kheap_t {
+class heap {
 public:
     void init();
 
@@ -40,4 +42,6 @@ private:
     int64_t firstFreeAllocationSlot();
 };
 
-inline kheap_t kheap;
+}
+
+inline mm::heap kheap;

@@ -21,10 +21,10 @@
 namespace vmm {
 
 struct mapping { 
-    uint64_t *pml4;
-    ~mapping();
+    uint64_t *pml4 = NULL;
 
     void init();
+    void exit();
     void copy(mapping m1); 
 
     static void mappingsInit();

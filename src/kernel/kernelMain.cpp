@@ -5,7 +5,6 @@
 #include <kernel/drivers/ahci.h>
 #include <kernel/drivers/pci.h>
 #include <kernel/int/syscall.h>
-#include <kernel/sched/task.h>
 #include <kernel/sched/hpet.h>
 #include <kernel/acpi/madt.h>
 #include <kernel/acpi/rsdp.h>
@@ -28,6 +27,7 @@
 
 extern "C" void _init();
 extern "C" void userTest() asm("userTest");
+extern "C" void initsyscall() asm("initsyscall");
 extern "C" void testDiv();
 
 void task1();
@@ -79,8 +79,6 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
                    "mov %ax, %fs"
                 );
 
-    tasks = (task_t*)kheap.kmalloc(sizeof(task_t) * 0x1000);
-
     readPartitions(); 
 
     ext2.init();
@@ -99,14 +97,21 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     initMouse();
 
-    /*createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task2, 2);
-    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task3, 2);
-    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task4, 2);
-    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task5, 2);
-    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task6, 2);
-    createTask(0x10, physicalPageManager.alloc(2) + 0x2000 + HIGH_VMA, 0x8, (uint64_t)task7, 2);*/
+    sched::init();
+
+    asm volatile ("sti");
+
+    sched::createTask(0x8, (uint64_t)task1);
+    sched::createTask(0x8, (uint64_t)task2);
+    sched::createTask(0x8, (uint64_t)task3);
+    sched::createTask(0x8, (uint64_t)task4);
+    sched::createTask(0x8, (uint64_t)task5);
+    sched::createTask(0x8, (uint64_t)task6);
+    sched::createTask(0x8, (uint64_t)task7);
     
-    for(;;);
+    for(;;) {
+        asm ("hlt");
+    }
 }
 
 void task1() {
