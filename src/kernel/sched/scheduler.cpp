@@ -14,6 +14,8 @@ namespace sched {
 static task *tasks;
 static int taskCnt = 0;
 
+int debug = 0;
+
 void schedulerMain(regs_t *regs) {
     static char lock = 0;
     spinLock(&lock);
@@ -42,15 +44,15 @@ void schedulerMain(regs_t *regs) {
     cpuInfo[regs->core]. currentTask = nextTask;
 
     tasks[nextTask].taskInfo.idleCnt = 0;
-    //tasks[nextTask].pageMapping.init();
-    
+    tasks[nextTask].pageMapping.init();
+
     if(tasks[nextTask].taskInfo.status == WAITING_TO_START) {
         tasks[nextTask].taskInfo.status = RUNNING;
         apic::lapicWrite(LAPIC_EOI, 0); 
         spinRelease(&lock);
         startTask(tasks[nextTask].regs.ss, tasks[nextTask].regs.rsp, tasks[nextTask].regs.cs, tasks[nextTask].taskInfo.entry);
     }
-
+    
     if(tasks[nextTask].taskInfo.status == WAITING) { 
         tasks[nextTask].taskInfo.status = RUNNING;
         apic::lapicWrite(LAPIC_EOI, 0);
@@ -86,7 +88,8 @@ void createTask(uint16_t cs, size_t entry) {
         }
     }
 
-    newTask.pageMapping = vmm::mapping();
+    newTask.pageMapping.setup();
+    newTask.pageMapping.mapRange(0, 2, 0); 
 
     newTask.taskInfo.entry = entry;
     newTask.taskInfo.status = WAITING_TO_START;
@@ -94,7 +97,7 @@ void createTask(uint16_t cs, size_t entry) {
 
     newTask.regs.cs = cs;
     newTask.regs.ss = cs + 0x8;
-    newTask.regs.rsp = pmm::alloc(2) + HIGH_VMA;
+    newTask.regs.rsp = pmm::alloc(2) + HIGH_VMA + 0x2000;
 
     if(++taskCnt % 10 == 0) {
         tasks = (task*)kheap.krealloc(tasks, 10);

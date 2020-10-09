@@ -45,6 +45,8 @@ void bruh(uint32_t x, uint32_t y) {
 extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     _init(); /* calls all global constructors, dont put anything before here */
 
+    stivaleInfo = (stivaleInfo_t*)((uint64_t)stivaleInfo + HIGH_VMA);
+
     pmm::init(stivaleInfo);
     kheap.init();
     vmm::init();
@@ -75,9 +77,19 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     apic::lapicTimerInit(100);
 
+    asm volatile ("cli");
+
     asm volatile(  "xor %ax, %ax\n"
                    "mov %ax, %fs"
                 );
+
+/*    uint64_t *pml4 = (uint64_t*)(vmm::grabPML4() + HIGH_VMA);
+    pml4[0] = 0;
+
+    vmm::mapping bruh1;
+    bruh1.setup();
+    bruh1.mapRange(0x3000, 3, (1 << 2));
+    bruh1.init(); */
 
     readPartitions(); 
 
@@ -86,8 +98,6 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     vesa::init(stivaleInfo);
 
     drawBMP("wallpaper.bmp");
-
-    asm volatile ("sti");
 
     pannel newPanel(0, 0, 1024 / 8, 2, 0xff);
 
@@ -100,6 +110,9 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     sched::init();
 
     asm volatile ("sti");
+
+    uint64_t *pml4 = (uint64_t*)(vmm::grabPML4() + HIGH_VMA);
+    pml4[0] = 0;
 
     sched::createTask(0x8, (uint64_t)task1);
     sched::createTask(0x8, (uint64_t)task2);
@@ -121,7 +134,6 @@ void task1() {
         kprintDS("[KDEBUG]", "hi from task0 %d", bruh++);
     }
 }
-
 
 void task2() {
     uint64_t bruh = 0;

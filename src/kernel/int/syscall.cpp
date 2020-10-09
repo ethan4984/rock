@@ -18,6 +18,8 @@ void syscallInit() {
 }
 
 extern "C" void syscallMain(regs_t *regs) {
+    asm volatile ("cli"); 
+    for(;;);
     switch(regs->rax) {
         case 0: 
             break;  

@@ -23,9 +23,11 @@ namespace vmm {
 struct mapping { 
     uint64_t *pml4 = NULL;
 
+    void setup();
     void init();
     void exit();
     void copy(mapping m1); 
+    void mapRange(uint64_t virtualBase, uint64_t cnt, uint64_t extraFlags);
 
     static void mappingsInit();
     static void addMapping(mapping newMapping);
@@ -35,9 +37,9 @@ struct mapping {
 
 void init();
 
-void map(uint64_t physicalAddr, uint64_t virtualAddress, uint64_t flags, uint64_t flags1);
+void map(uint64_t *pml4, uint64_t physicalAddr, uint64_t virtualAddress, uint64_t flags, uint64_t flags1);
 
-void unmap(uint64_t virtualAddress, uint64_t flags);
+void unmap(uint64_t *pml4, uint64_t virtualAddress, uint64_t flags);
 
 uint64_t grabPML4();
 

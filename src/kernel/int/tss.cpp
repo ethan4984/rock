@@ -1,6 +1,7 @@
 #include <kernel/mm/physicalPageManager.h> 
 #include <kernel/mm/kHeap.h>
 #include <kernel/int/tss.h>
+#include <lib/output.h>
 
 namespace tss {
 

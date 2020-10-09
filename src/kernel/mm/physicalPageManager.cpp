@@ -77,6 +77,14 @@ uint64_t alloc(uint64_t cnt) {
     return 0;
 }
 
+uint64_t calloc(uint64_t cnt) {
+    uint64_t base = alloc(cnt);
+
+    memset64((uint64_t*)(base + HIGH_VMA), 0, cnt * 0x1000);
+
+    return base;
+}
+
 void free(uint64_t base, uint64_t count) {
     for(uint64_t i = ROUNDUP((uint64_t)base, PAGESIZE); i < ROUNDUP((uint64_t)base, PAGESIZE) + count; i++) {
         clear(bitmap, i);

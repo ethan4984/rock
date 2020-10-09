@@ -50,7 +50,7 @@ void bootstrapCoreMain() {
 
 void initSMP() {
     cpuInfo = new cpuInfo_t[madtInfo.madtEntry0Count * sizeof(cpuInfo_t)];
-    memcpy8((uint8_t*)(0x1000), (uint8_t*)smpBegin, (uint64_t)smpEnd - (uint64_t)smpBegin);
+    memcpy8((uint8_t*)(0x1000 + HIGH_VMA), (uint8_t*)smpBegin, (uint64_t)smpEnd - (uint64_t)smpBegin);
 
     cpuInfo[0].currentTask = -1;
     asm volatile ("sidt %0" :: "m"(idtr));
