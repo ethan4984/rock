@@ -4,8 +4,9 @@
 
 #include <stdint.h>
 
-class superblock_t {
-public:
+namespace ext2 {
+
+struct superblock_t {
     void writeBack(uint8_t partitionIndex);
 
     void read(uint8_t partitionIndex);
@@ -18,3 +19,5 @@ public:
 };
 
 inline superblock_t superblock;
+
+}

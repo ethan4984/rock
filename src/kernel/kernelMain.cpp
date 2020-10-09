@@ -91,9 +91,9 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     bruh1.mapRange(0x3000, 3, (1 << 2));
     bruh1.init(); */
 
-    readPartitions(); 
+    vfs::readPartitions(); 
 
-    ext2.init();
+    ext2::init(0);
 
     vesa::init(stivaleInfo);
 

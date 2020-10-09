@@ -12,13 +12,13 @@ uint32_t bmpGetPixel(uint32_t x, uint32_t y, bmpImage_t bmpImage) {
 
 bmpImage_t drawBMP(const char *path) { 
     bmpFileHdr_t bmpFileHdr; 
-    ext2.read(path, 0, sizeof(bmpFileHdr_t), &bmpFileHdr);
+    ext2::read(path, 0, sizeof(bmpFileHdr_t), &bmpFileHdr, 0);
 
     uint32_t *data = (uint32_t*)(pmm::alloc(bmpFileHdr.bfSize / 0x1000) + HIGH_VMA);
 
     bmpImage_t bmpImage = { bmpFileHdr, data };
 
-    ext2.read(path, bmpFileHdr.bfOffset, bmpFileHdr.bfSize, data);
+    ext2::read(path, bmpFileHdr.bfOffset, bmpFileHdr.bfSize, data, 0);
 
     kprintDS("[KDEBUG]", "height %d", bmpFileHdr.biHeight);
     kprintDS("[KDEBUG]", "width %d", bmpFileHdr.biWidth);

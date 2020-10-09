@@ -2,31 +2,30 @@
 
 #include <kernel/fs/ext2/ext2types.h>
 
+namespace ext2 {
+
 struct directory_t {
     directoryEntry_t *dirEntries;
     char **names;
     uint64_t dirCnt;
 };
 
-class ext2_t {
-public:
-    void init();
+void init(int partition);
 
-    inode_t getInode(uint64_t index);
+inode_t getInode(uint64_t index, int partition);
 
-    void readInode(inode_t inode, uint64_t block, uint64_t cnt, void *buffer);
+void readInode(inode_t inode, uint64_t block, uint64_t cnt, void *buffer, int partition);
 
-    directoryEntry_t getDirEntry(inode_t inode, const char *path);
+directoryEntry_t getDirEntry(inode_t inode, const char *path, int partition);
 
-    void read(const char *path, uint64_t start, uint64_t cnt, void *buffer);
+void read(const char *path, uint64_t start, uint64_t cnt, void *buffer, int partition);
 
-    void write(const char *path, uint64_t start, uint64_t cnt, void *buffer);
+void write(const char *path, uint64_t start, uint64_t cnt, void *buffer, int partition);
 
-    void getDir(inode_t *inode, directory_t *ret);
+void getDir(inode_t *inode, directory_t *ret, int partition);
 
-    inode_t rootInode;
-private:
-    blockGroupDescriptor_t readBGD(uint64_t index);
-};
+inline inode_t rootInode;
 
-inline ext2_t ext2;
+blockGroupDescriptor_t readBGD(uint64_t index, int partition);
+
+}

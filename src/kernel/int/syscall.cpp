@@ -1,5 +1,4 @@
 #include <kernel/int/syscall.h>
-#include <kernel/fs/ext2/ext2.h>
 #include <lib/asmUtils.h>
 #include <lib/output.h>
 

@@ -6,11 +6,13 @@
 #include <lib/stringUtils.h>
 #include <lib/output.h>
 
+namespace ext2 {
+
 static void printInode(inode_t inode);
 static void printBGD(blockGroupDescriptor_t bgd);
 static void printDirEntry(directoryEntry_t dir);
 
-blockGroupDescriptor_t ext2_t::readBGD(uint64_t index) {
+blockGroupDescriptor_t readBGD(uint64_t index, int partition) {
     blockGroupDescriptor_t bgd;
 
     static uint64_t bgdOffset = superblock.blockSize >= 2048 ? superblock.blockSize : superblock.blockSize * 2;
@@ -21,20 +23,20 @@ blockGroupDescriptor_t ext2_t::readBGD(uint64_t index) {
     return bgd;
 }
 
-inode_t ext2_t::getInode(uint64_t index) {
-    blockGroupDescriptor_t bgd = readBGD(index);
+inode_t getInode(uint64_t index, int part) {
+    blockGroupDescriptor_t bgd = readBGD(index, part);
 
     inode_t inode;
 
     uint64_t inodeTableIndex = (index - 1) % superblock.data.inodesPerGroup;
     
-    ahci::read(&ahci::drives[0], partitions[0], (bgd.startingBlock * superblock.blockSize) + (superblock.data.inodeSize * inodeTableIndex), sizeof(inode_t), &inode);
+    ahci::read(&ahci::drives[0], partitions[part], (bgd.startingBlock * superblock.blockSize) + (superblock.data.inodeSize * inodeTableIndex), sizeof(inode_t), &inode);
     return inode;
 }
 
-directoryEntry_t ext2_t::getDirEntry(inode_t inode, const char *path) {
+directoryEntry_t getDirEntry(inode_t inode, const char *path, int part) {
     char *buffer = new char[0x400];
-    readInode(inode, 0, 0x400, buffer);
+    readInode(inode, 0, 0x400, buffer, part);
 
     directoryEntry_t *dir = new directoryEntry_t;
     directoryEntry_t ret;
@@ -56,11 +58,11 @@ directoryEntry_t ext2_t::getDirEntry(inode_t inode, const char *path) {
             }
 
             if(strncmp(dir->name, paths[j], strlen(paths[j]) - 1) == 0) {
-                inode = getInode(dir->inode);
+                inode = getInode(dir->inode, part);
                 if(!(inode.permissions & 0x4000)) {
                     kprintDS("[KDEBUG]", "%s is not a directory", paths[j]); 
                 }
-                readInode(inode, 0, 0x400, buffer);
+                readInode(inode, 0, 0x400, buffer, part);
                 continue;
             }
 
@@ -80,7 +82,7 @@ end: // todo: get smart pointers setup so we dont have to deal with this mess
     return ret; 
 }
 
-void ext2_t::readInode(inode_t inode, uint64_t start, uint64_t cnt, void *buffer) {
+void readInode(inode_t inode, uint64_t start, uint64_t cnt, void *buffer, int part) {
     superblock.read(0);
 
     uint32_t headway = 0;
@@ -106,31 +108,31 @@ void ext2_t::readInode(inode_t inode, uint64_t start, uint64_t cnt, void *buffer
                 if (index * sizeof(uint32_t) >= superblock.blockSize) { // triple indirect
                     uint32_t doubleIndirect, indirectBlock, offset = block % (superblock.blockSize / sizeof(uint32_t));
 
-                    ahci::read(&ahci::drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &doubleIndirect);
-                    ahci::read(&ahci::drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirectBlock);
-                    ahci::read(&ahci::drives[0], partitions[0], indirectBlock * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
+                    ahci::read(&ahci::drives[0], partitions[part], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &doubleIndirect);
+                    ahci::read(&ahci::drives[0], partitions[part], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirectBlock);
+                    ahci::read(&ahci::drives[0], partitions[part], indirectBlock * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
                 }
                 uint32_t offset = block % (superblock.blockSize / sizeof(uint32_t));
                 uint32_t indirect_block;
 
-                ahci::read(&ahci::drives[0], partitions[0], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
-                ahci::read(&ahci::drives[0], partitions[0], indirect_block * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
+                ahci::read(&ahci::drives[0], partitions[part], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
+                ahci::read(&ahci::drives[0], partitions[part], indirect_block * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
             } else { // single indirect
-                ahci::read(&ahci::drives[0], partitions[0], inode.blocks[12] * superblock.blockSize + block * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
+                ahci::read(&ahci::drives[0], partitions[part], inode.blocks[12] * superblock.blockSize + block * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
             }
         }
 
-        ahci::read(&ahci::drives[0], partitions[0], (blockIndex * superblock.blockSize) + offset, size, (void*)((uint64_t)buffer + headway));
+        ahci::read(&ahci::drives[0], partitions[part], (blockIndex * superblock.blockSize) + offset, size, (void*)((uint64_t)buffer + headway));
 
         headway += size;
     }
 }
 
-void ext2_t::getDir(inode_t *inode, directory_t *ret) {
+void getDir(inode_t *inode, directory_t *ret, int part) {
     directoryEntry_t *dir = new directoryEntry_t;
 
     char *buffer = new char[0x400];
-    readInode(*inode, 0, 0x400, buffer);
+    readInode(*inode, 0, 0x400, buffer, part);
 
     char **names = new char*[256];
 
@@ -157,15 +159,15 @@ void ext2_t::getDir(inode_t *inode, directory_t *ret) {
     *ret = (directory_t) { dirBuffer, names, cnt }; // its up to the caller to free dirBuffer/names when theyre done with it
 }
 
-void ext2_t::read(const char *path, uint64_t start, uint64_t cnt, void *buffer) {
-    directoryEntry_t dirEntry = getDirEntry(rootInode, path);
+void read(const char *path, uint64_t start, uint64_t cnt, void *buffer, int part) {
+    directoryEntry_t dirEntry = getDirEntry(rootInode, path, part);
 
-    inode_t inode = getInode(dirEntry.inode);
+    inode_t inode = getInode(dirEntry.inode, part);
 
-    readInode(inode, start, cnt, buffer);
+    readInode(inode, start, cnt, buffer, part);
 }
 
-void ext2_t::init() {
+void init(int part) {
     superblock.read(0);
 
     if(superblock.data.magicNum != 0xef53) {
@@ -193,12 +195,12 @@ void ext2_t::init() {
         return;
     }
 
-    rootInode = getInode(2);
+    rootInode = getInode(2, part);
     printInode(rootInode);
 
     directory_t *dir = new directory_t;
 
-    getDir(&rootInode, dir);
+    getDir(&rootInode, dir, part);
 
     for(uint64_t i = 0; i < dir->dirCnt; i++) {
         kprintDS("[FS]", "%s", dir->names[i]);
@@ -241,4 +243,6 @@ static void printDirEntry(directoryEntry_t dir) {
     kprintDS("[KDEBUG]", "size: %d ", dir.sizeofEntry);
     kprintDS("[KDEBUG]", "name length: %d ", dir.nameLength);
     kprintDS("[KDEBUG]", "type: %d ", dir.typeIndicator);
+}
+
 }

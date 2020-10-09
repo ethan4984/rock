@@ -14,6 +14,16 @@ struct mbrPartitionEntry {
     uint32_t totalSize;
 } __attribute__((packed));
 
+struct fd {
+    char *path;
+    int partition, fdID = -1;
+    size_t index;
+    uint32_t flags; 
+
+    function<size_t, char *, uint64_t, uint64_t, void *, int> read;
+    function<size_t, char *, uint64_t, uint64_t, void *, int> write;
+};
+
 struct partition_t {
     uint8_t fsType;
     mbrPartitionEntry mbr;
@@ -21,17 +31,19 @@ struct partition_t {
 
 enum {
     NOFS,
-    EXT2
+    EXT2,
+    FAT32,
+    ECHFS
 };
 
-class fs {
-public:
-    function<const char *, uint64_t, uint64_t, void *> read; 
-    function<const char *, uint64_t, uint64_t, void *> write; 
-};
+namespace vfs {
+
+size_t read(uint32_t fd, char *buf, size_t cnt);
+size_t write(uint32_t fd, char *buf, size_t cnt);
 
 void readPartitions();
 
-inline partition_t *partitions = NULL;
+}
 
-inline fs *fsFunctions;
+inline partition_t *partitions = NULL;
+inline size_t partitionCnt = 0;
