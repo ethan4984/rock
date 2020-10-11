@@ -10,8 +10,8 @@ namespace vfs {
 static fd *fds = NULL;
 static size_t fdCnt = 10;
 
-static void deleteFD(int index);
-static void allocFD(fd newFD);
+static int deleteFD(int index);
+static int allocFD(fd newFD);
 static void addPartition(partition_t newPart);
     
 void readPartitions() {
@@ -21,6 +21,9 @@ void readPartitions() {
 
     if(fds == NULL) { 
         fds = new fd[10]; 
+        for(int i = 0; i < 10; i++) {
+            fds[i].fdID = -1;
+        }
     }
  
     void *sector0 = new uint8_t[0x200];
@@ -53,32 +56,43 @@ size_t write(uint32_t fd, char *buf, size_t cnt) {
     return readCnt;
 }
 
-/*int open(char *path, int flags, int mode) {
+int open(const char *path, int flags, int mode) {
+    fd newFD = { };
 
+    newFD.path = (char*)path; 
+    newFD.flags = flags;
+    newFD.read = ext2::read;
+
+    return allocFD(newFD);
 }
 
-int close(int fd) {
+/*int close(int fd) {
      
 }*/
 
-static void allocFD(fd newFD) {
+static int allocFD(fd newFD) {
     int index = -1;
-    for(size_t i = 0; i < fdCnt; i++) {
-        if(fds[i].fdID == -1)
+    for(size_t i = 0; i < fdCnt; i++) { 
+        if(fds[i].fdID == -1) {
             index = i;
+            break;
+        }
     }
 
     if(index == -1) {
         fds = (fd*)kheap.krealloc(fds, 10);
         index = fdCnt;
     }
-
+    
     fds[index] = newFD;
+    fds[index].fdID = index;
+    return index;
 }
 
-static void deleteFD(int index) {
+static int deleteFD(int index) {
     fdCnt--;
     fds[index].fdID = -1;
+    return 1;
 }
 
 static void addPartition(partition_t newPart) {
