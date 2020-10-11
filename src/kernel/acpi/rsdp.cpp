@@ -3,7 +3,9 @@
 #include <lib/stringUtils.h>
 #include <lib/output.h>
 
-void acpi_t::rsdpInit(uint64_t *rsdpAddr) {
+namespace acpi {
+
+void rsdpInit(uint64_t *rsdpAddr) {
     rsdp = (rsdp_t*)rsdpAddr;
     if(rsdp->xsdtAddr) {
         xsdt = (xsdt_t*)((uint64_t)rsdp->xsdtAddr);
@@ -18,28 +20,4 @@ void acpi_t::rsdpInit(uint64_t *rsdpAddr) {
     }
 }
 
-void *acpi_t::findSDT(const char *signature) {
-    if(xsdt != NULL) {
-        for(uint64_t i = 0; i < (xsdt->acpihdr.length - sizeof(acpihdr_t)); i++) {
-            acpihdr_t *acpihdr = (acpihdr_t*)(xsdt->acpiptr[i] + HIGH_VMA);
-            if(strncmp(acpihdr->signature, signature, 4) == 0) {
-                cout + "[ACPI]" << signature << " located at " << (uint64_t)acpihdr << "\n";
-                return (void*)acpihdr;
-            }
-        }
-    } 
-
-    if(rsdt != NULL) {
-        for(uint64_t i = 0; i < (rsdt->acpihdr.length - sizeof(acpihdr_t)); i++) {
-            acpihdr_t *acpihdr = (acpihdr_t*)((uint64_t)rsdt->acpiptr[i] + HIGH_VMA);
-            if(strncmp(acpihdr->signature, signature, 4) == 0) {
-                cout + "[ACPI]" << signature << " located at " << (uint64_t)acpihdr << "\n";
-                return (void*)acpihdr;
-            }
-        }
-    }
-
-    cout + "[ACPI]" << signature << " cout not be found :(\n";
-
-    return NULL;
 }

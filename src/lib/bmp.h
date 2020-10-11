@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-struct bmpFileHdr_t {
+struct [[gnu::packed]] bmpFileHdr_t {
     uint16_t bfType;
     uint32_t bfSize;
     uint32_t reserved;
@@ -22,7 +22,7 @@ struct bmpFileHdr_t {
     uint32_t redMask;
     uint32_t greenMask;
     uint32_t blueMask;
-} __attribute__((packed));
+};
 
 struct bmpImage_t {
     bmpFileHdr_t hdr;

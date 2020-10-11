@@ -4,16 +4,16 @@
 
 extern "C" void lgdt(uint64_t gdtAddr, uint64_t tssAddr);
 
-struct gdtEntry_t {
+struct [[gnu::packed]] gdtEntry_t {
     uint16_t limit;
     uint16_t baseLow;
     uint8_t baseMid;
     uint8_t access;
     uint8_t granularity; 
     uint8_t baseHigh;
-} __attribute__((packed));
+};
 
-struct gdtTSS_t {
+struct [[gnu::packed]] gdtTSS_t {
     uint16_t length;
     uint16_t baseLow;
     uint8_t baseMid;
@@ -22,18 +22,18 @@ struct gdtTSS_t {
     uint8_t baseHigh;
     uint32_t baseHigh32;
     uint32_t reserved; 
-} __attribute__((packed));
+};
 
-struct gdtr_t {
+struct [[gnu::packed]] gdtr_t {
     uint16_t limit;
     uint64_t offset;
-} __attribute__((packed));
+};
 
-struct gdtCore_t {
+struct [[gnu::packed]] gdtCore_t {
     gdtEntry_t gdtEntries[5];
     gdtTSS_t tss;
     gdtr_t gdtr;
-} __attribute__((packed));
+};
 
 namespace gdt {
 

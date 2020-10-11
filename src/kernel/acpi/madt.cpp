@@ -2,7 +2,7 @@
 #include <lib/output.h>
 
 void madtInfo_t::madtInit() {
-    madt_t *madt = (madt_t*)acpi.findSDT("APIC");
+    madt_t *madt = acpi::findSDT<madt_t>("APIC");
 
     lapicAddr = madt->lapicAddr;
 

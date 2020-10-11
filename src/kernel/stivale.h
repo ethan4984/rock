@@ -2,20 +2,20 @@
 
 #include <stdint.h>
 
-struct stivaleModule {
+struct [[gnu::packed]] stivaleModule {
     uint64_t begin;
     uint64_t end;
     char string[128];
-} __attribute__((packed));
+};
 
-struct stivaleMMAPentry_t {
+struct [[gnu::packed]] stivaleMMAPentry_t {
     uint64_t addr;
     uint64_t len;
     uint32_t type;
     uint32_t unused;
-} __attribute__((packed));
+};
 
-struct stivaleInfo_t {
+struct [[gnu::packed]] stivaleInfo_t {
     char *cmdline;
     uint64_t memoryMapAddr;
     uint64_t memoryMapEntries;
@@ -27,4 +27,4 @@ struct stivaleInfo_t {
     uint64_t rsdp;
     uint64_t moduleCount;
     struct stivaleModule modules[];
-} __attribute__((packed));
+};

@@ -62,7 +62,7 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     gdt::initCore(0, (uint64_t)tss);
 
-    acpi.rsdpInit((uint64_t*)(stivaleInfo->rsdp + HIGH_VMA));
+    acpi::rsdpInit((uint64_t*)(stivaleInfo->rsdp + HIGH_VMA));
 
     madtInfo.madtInit();
     madtInfo.printMADT();

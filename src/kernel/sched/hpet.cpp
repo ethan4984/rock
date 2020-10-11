@@ -10,7 +10,7 @@ void ksleep(uint64_t ms) {
 }
 
 void initHPET() {
-    hpetTable = (hpetTable_t*)acpi.findSDT("HPET");
+    hpetTable = acpi::findSDT<hpetTable_t>("HPET");
     *(volatile uint64_t*)(hpetTable->address + HIGH_VMA + 0x10) = 1;
     hpet = (hpet_t*)(hpetTable->address + HIGH_VMA);
 }

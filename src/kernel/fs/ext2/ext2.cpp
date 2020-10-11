@@ -1,6 +1,8 @@
 #include <kernel/fs/ext2/superblock.h>
+#include <kernel/fs/ext2/inode.h>
 #include <kernel/fs/ext2/ext2.h>
 #include <kernel/drivers/ahci.h>
+#include <kernel/fs/ext2/dir.h>
 #include <kernel/mm/kHeap.h>
 #include <lib/memoryUtils.h>
 #include <lib/stringUtils.h>
@@ -8,163 +10,27 @@
 
 namespace ext2 {
 
-static void printInode(inode_t inode);
-static void printBGD(blockGroupDescriptor_t bgd);
-static void printDirEntry(directoryEntry_t dir);
+static void printInode(inodeStruct_t inode);
 
-blockGroupDescriptor_t readBGD(uint64_t index, int partition) {
-    blockGroupDescriptor_t bgd;
+BGD_t readBGD(uint64_t index, int partition) {
+    BGD_t bgd;
 
     static uint64_t bgdOffset = superblock.blockSize >= 2048 ? superblock.blockSize : superblock.blockSize * 2;
 
     uint64_t blockGroupIndex = (index - 1) / superblock.data.inodesPerGroup;
 
-    ahci::read(&ahci::drives[0], partitions[0], bgdOffset + (sizeof(blockGroupDescriptor_t) * blockGroupIndex), sizeof(blockGroupDescriptor_t), &bgd);
+    ahci::read(&ahci::drives[0], partitions[0], bgdOffset + (sizeof(BGD_t) * blockGroupIndex), sizeof(BGD_t), &bgd);
     return bgd;
 }
 
-inode_t getInode(uint64_t index, int part) {
-    blockGroupDescriptor_t bgd = readBGD(index, part);
+size_t read(const char *path, uint64_t start, size_t cnt, void *buffer, int part) {
+    dir dirEntry(path, part);
 
-    inode_t inode;
+    inode_t inode(dirEntry.dirEntry.inode, part);
 
-    uint64_t inodeTableIndex = (index - 1) % superblock.data.inodesPerGroup;
-    
-    ahci::read(&ahci::drives[0], partitions[part], (bgd.startingBlock * superblock.blockSize) + (superblock.data.inodeSize * inodeTableIndex), sizeof(inode_t), &inode);
-    return inode;
-}
+    inode.read(start, cnt, buffer, part);
 
-directoryEntry_t getDirEntry(inode_t inode, const char *path, int part) {
-    char *buffer = new char[0x400];
-    readInode(inode, 0, 0x400, buffer, part);
-
-    directoryEntry_t *dir = new directoryEntry_t;
-    directoryEntry_t ret;
-
-    if(*path == '/')
-        ++path;
-
-    char **paths = new char*[256];
-
-    uint64_t cnt = splitString(paths, path, "/");
-
-    for(uint64_t j = 0; j < cnt; j++) {
-        for(uint32_t i = 0; i < rootInode.size32l; i++) {     
-            dir = (directoryEntry_t*)((uint64_t)buffer + i);
-
-            if(strncmp(dir->name, paths[j], strlen(paths[j]) - 1) == 0 && j == cnt - 1) {
-                ret = *dir;
-                goto end;
-            }
-
-            if(strncmp(dir->name, paths[j], strlen(paths[j]) - 1) == 0) {
-                inode = getInode(dir->inode, part);
-                if(!(inode.permissions & 0x4000)) {
-                    kprintDS("[KDEBUG]", "%s is not a directory", paths[j]); 
-                }
-                readInode(inode, 0, 0x400, buffer, part);
-                continue;
-            }
-
-            if(dir->sizeofEntry != 0)
-                i += dir->sizeofEntry - 1;
-        }
-    }
-    
-    kprintDS("[KDEBUG]", "%s not found", path);
-
-end: // todo: get smart pointers setup so we dont have to deal with this mess
-    for(uint64_t i = 0; i < cnt; i++)
-        delete paths[i];
-    delete paths;
-    delete buffer;
-    delete dir;
-    return ret; 
-}
-
-void readInode(inode_t inode, uint64_t start, uint64_t cnt, void *buffer, int part) {
-    superblock.read(0);
-
-    uint32_t headway = 0;
-
-    while(headway < cnt) {
-        uint64_t block = (start + headway) / superblock.blockSize;
-
-        uint64_t size = cnt - headway;
-        uint64_t offset = (start + headway) % superblock.blockSize;
-
-        if (size > superblock.blockSize - offset)
-            size = superblock.blockSize - offset;
-
-        uint32_t blockIndex;
-
-        if (block < 12) { // direct
-            blockIndex = inode.blocks[block];
-        } else { // indirect
-            block -= 12;
-            if (block * sizeof(uint32_t) >= superblock.blockSize) { // double indirect
-                block -= superblock.blockSize / sizeof(uint32_t);
-                uint32_t index  = block / (superblock.blockSize / sizeof(uint32_t));
-                if (index * sizeof(uint32_t) >= superblock.blockSize) { // triple indirect
-                    uint32_t doubleIndirect, indirectBlock, offset = block % (superblock.blockSize / sizeof(uint32_t));
-
-                    ahci::read(&ahci::drives[0], partitions[part], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &doubleIndirect);
-                    ahci::read(&ahci::drives[0], partitions[part], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirectBlock);
-                    ahci::read(&ahci::drives[0], partitions[part], indirectBlock * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
-                }
-                uint32_t offset = block % (superblock.blockSize / sizeof(uint32_t));
-                uint32_t indirect_block;
-
-                ahci::read(&ahci::drives[0], partitions[part], inode.blocks[13] * superblock.blockSize + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
-                ahci::read(&ahci::drives[0], partitions[part], indirect_block * superblock.blockSize + offset * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
-            } else { // single indirect
-                ahci::read(&ahci::drives[0], partitions[part], inode.blocks[12] * superblock.blockSize + block * sizeof(uint32_t), sizeof(uint32_t), &blockIndex);
-            }
-        }
-
-        ahci::read(&ahci::drives[0], partitions[part], (blockIndex * superblock.blockSize) + offset, size, (void*)((uint64_t)buffer + headway));
-
-        headway += size;
-    }
-}
-
-void getDir(inode_t *inode, directory_t *ret, int part) {
-    directoryEntry_t *dir = new directoryEntry_t;
-
-    char *buffer = new char[0x400];
-    readInode(*inode, 0, 0x400, buffer, part);
-
-    char **names = new char*[256];
-
-    directoryEntry_t *dirBuffer = new directoryEntry_t[10];
-
-    uint64_t cnt = 0;
-
-    for(uint32_t i = 0; i < inode->size32l;) {
-        dir = (directoryEntry_t*)((uint64_t)buffer + i);
-
-        dirBuffer[cnt] = *dir;
-    
-        names[cnt] = new char[dir->nameLength];
-        strncpy(names[cnt], dir->name, dir->nameLength);
-
-        names[cnt][dir->nameLength] = '\0';
-
-        i += dir->sizeofEntry;
-        cnt++;
-    }
-
-    delete buffer;
-
-    *ret = (directory_t) { dirBuffer, names, cnt }; // its up to the caller to free dirBuffer/names when theyre done with it
-}
-
-void read(const char *path, uint64_t start, uint64_t cnt, void *buffer, int part) {
-    directoryEntry_t dirEntry = getDirEntry(rootInode, path, part);
-
-    inode_t inode = getInode(dirEntry.inode, part);
-
-    readInode(inode, start, cnt, buffer, part);
+    return cnt;
 }
 
 void init(int part) {
@@ -195,12 +61,12 @@ void init(int part) {
         return;
     }
 
-    rootInode = getInode(2, part);
-    printInode(rootInode);
+    inode_t::rootInode = inode_t::getInode(2, part);
+    printInode(inode_t::rootInode.inodeStruct);
 
     directory_t *dir = new directory_t;
 
-    getDir(&rootInode, dir, part);
+    dir::getDir(inode_t::rootInode, dir, part);
 
     for(uint64_t i = 0; i < dir->dirCnt; i++) {
         kprintDS("[FS]", "%s", dir->names[i]);
@@ -209,9 +75,8 @@ void init(int part) {
     delete dir;
 }
 
-__attribute__((unused))
-static void printInode(inode_t inode) {
-    kprintDS("[KDEBUG]", "permissions %x", inode.permissions);
+static void printInode(inodeStruct_t inode) {
+        kprintDS("[KDEBUG]", "permissions %x", inode.permissions);
     kprintDS("[KDEBUG]", "userID %x", inode.userID);
     kprintDS("[KDEBUG]", "size %x", inode.size32l);
     kprintDS("[KDEBUG]", "access time %x", inode.accessTime);
@@ -225,24 +90,6 @@ static void printInode(inode_t inode) {
     kprintDS("[KDEBUG]", "oss1 %x", inode.oss1);
     kprintDS("[KDEBUG]", "generationNumber %x", inode.generationNumber);
     kprintDS("[KDEBUG]", "eab %x", inode.eab);
-}
-
-__attribute__((unused))
-static void printBGD(blockGroupDescriptor_t bgd) {
-    kprintDS("[KDEBUG]", "block address bitmap %x", bgd.blockAddressBitmap);
-    kprintDS("[KDEBUG]", "blockAddressInodeBitmap %x", bgd.blockAddressInodeBitmap);
-    kprintDS("[KDEBUG]", "startingBlock %x", bgd.startingBlock);
-    kprintDS("[KDEBUG]", "unalloactedblocks %x", bgd.unallocatedBlocks);
-    kprintDS("[KDEBUG]", "unallocatedInodes %x", bgd.unallocatedInodes);
-    kprintDS("[KDEBUG]", "directory cnt %x", bgd.directoryCnt);
-}
-
-__attribute__((unused))
-static void printDirEntry(directoryEntry_t dir) {
-    kprintDS("[KDEBUG]", "inode: %d ", dir.inode);
-    kprintDS("[KDEBUG]", "size: %d ", dir.sizeofEntry);
-    kprintDS("[KDEBUG]", "name length: %d ", dir.nameLength);
-    kprintDS("[KDEBUG]", "type: %d ", dir.typeIndicator);
 }
 
 }

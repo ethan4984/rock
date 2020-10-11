@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-struct tss_t {
+struct [[gnu::packed]] tss_t {
     uint32_t reserved = 0;
     uint64_t rsp0 = 0;
     uint64_t rsp1 = 0;
@@ -19,7 +19,7 @@ struct tss_t {
     uint64_t reserved3 = 0;
     uint16_t reserved4 = 0;
     uint16_t IOPB = 0;
-} __attribute__((packed));
+};
 
 namespace tss {
 

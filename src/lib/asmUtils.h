@@ -9,7 +9,7 @@
 
 typedef void *symbol[];
 
-struct regs_t {
+struct [[gnu::packed]] regs_t {
     uint64_t r15;
     uint64_t r14;
     uint64_t r13;
@@ -33,7 +33,7 @@ struct regs_t {
     uint64_t rflags; 
     uint64_t rsp;
     uint64_t ss; 
-} __attribute__((packed));
+};
 
 void outb(uint16_t port, uint8_t data);
 

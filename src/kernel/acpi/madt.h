@@ -2,43 +2,43 @@
 
 #include <kernel/acpi/rsdp.h>
 
-struct madt_t {
+struct [[gnu::packed]] madt_t {
     acpihdr_t acpihdr;
     uint32_t lapicAddr;
     uint32_t flags;
     uint8_t entries[];
-} __attribute__((packed));
+};
     
-struct madtEntry0_t {
+struct [[gnu::packed]] madtEntry0_t {
     uint8_t acpiProcessorID;
     uint8_t apicID;
     uint32_t flags;
-} __attribute__((packed));
+};
 
-struct madtEntry1_t {
+struct [[gnu::packed]] madtEntry1_t {
     uint8_t ioapicID;
     uint8_t reserved;
     uint32_t ioapicAddr;
     uint32_t gsiBase;
-} __attribute__((packed)); 
+};
 
-struct madtEntry2_t {
+struct [[gnu::packed]] madtEntry2_t {
     uint8_t busSrc;
     uint8_t irqSrc;
     uint32_t gsi;
     uint16_t flags;
-} __attribute__((packed));
+};
 
-struct madtEntry4_t {
+struct [[gnu::packed]] madtEntry4_t {
     uint8_t acpiProcessorID;
     uint16_t flags; 
     uint8_t lint;
-} __attribute__((packed));
+};
 
-struct madtEntry5_t {
+struct [[gnu::packed]] madtEntry5_t {
     uint16_t reserved;
     uint8_t lapicOverride;
-} __attribute__((packed));
+};
 
 class madtInfo_t {
 public:

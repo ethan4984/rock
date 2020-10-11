@@ -1,4 +1,5 @@
 #include <kernel/drivers/ahci.h>
+#include <kernel/fs/ext2/ext2.h>
 #include <kernel/mm/kHeap.h>
 #include <kernel/fs/vfs.h>
 #include <lib/output.h>
@@ -51,6 +52,14 @@ size_t write(uint32_t fd, char *buf, size_t cnt) {
     fds[fd].index += readCnt;
     return readCnt;
 }
+
+/*int open(char *path, int flags, int mode) {
+
+}
+
+int close(int fd) {
+     
+}*/
 
 static void allocFD(fd newFD) {
     int index = -1;

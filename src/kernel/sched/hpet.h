@@ -2,7 +2,7 @@
 
 #include <kernel/acpi/rsdp.h>
 
-typedef struct {
+struct [[gnu::packed]] hpetTable_t {
     acpihdr_t acpihdr;     
     uint8_t hardwareRevID;
     uint8_t info;
@@ -15,9 +15,9 @@ typedef struct {
     uint8_t hpetNum;
     uint16_t miniumTicks;
     uint8_t pageProtection;
-} __attribute__((packed)) hpetTable_t;
+};
 
-typedef struct {
+struct [[gnu::packed]] hpet_t {
     uint64_t capabilities;
     uint64_t unused0;
     uint64_t generalConfig;
@@ -27,7 +27,7 @@ typedef struct {
     uint64_t unused3[24];
     uint64_t counterValue;
     uint64_t unused4;
-} __attribute__((packed)) hpet_t;
+};
 
 void initHPET();
 

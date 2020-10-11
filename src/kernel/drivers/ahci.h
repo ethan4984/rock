@@ -153,10 +153,10 @@ struct hbaCommandTable_t {
     hbaPRDT_t PRDT[1];   
 };
 
-typedef struct { 
+struct drive_t { 
     uint64_t sectorCount; 
     volatile hbaPorts_t *hbaPort;
-} drive_t;
+};
 
 namespace ahci {
 

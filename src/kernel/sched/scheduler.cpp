@@ -14,8 +14,6 @@ namespace sched {
 static task *tasks;
 static int taskCnt = 0;
 
-int debug = 0;
-
 void schedulerMain(regs_t *regs) {
     static char lock = 0;
     spinLock(&lock);

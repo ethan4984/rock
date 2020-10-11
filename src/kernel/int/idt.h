@@ -10,7 +10,7 @@
 
 typedef void (*eventHandlers_t)(regs_t*);
 
-struct idtEntry_t {
+struct [[gnu::packed]] idtEntry_t {
     uint16_t offsetLow;
     uint16_t selector;
     uint8_t ist;
@@ -18,12 +18,12 @@ struct idtEntry_t {
     uint16_t offsetMid;
     uint32_t offsetHigh;
     uint32_t zero;
-} __attribute__((packed)); 
+};
 
-struct idtr_t {
+struct [[gnu::packed]] idtr_t {
     uint16_t limit;
     uint64_t offset;
-} __attribute__((packed));
+};
 
 namespace idt {
     

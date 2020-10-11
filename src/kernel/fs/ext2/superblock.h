@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/fs/ext2/ext2types.h>
+#include <kernel/fs/ext2/types.h>
 
 #include <stdint.h>
 
