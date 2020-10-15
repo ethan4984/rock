@@ -77,19 +77,9 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     apic::lapicTimerInit(100);
 
-    asm volatile ("cli");
-
     asm volatile(  "xor %ax, %ax\n"
                    "mov %ax, %fs"
                 );
-
-/*    uint64_t *pml4 = (uint64_t*)(vmm::grabPML4() + HIGH_VMA);
-    pml4[0] = 0;
-
-    vmm::mapping bruh1;
-    bruh1.setup();
-    bruh1.mapRange(0x3000, 3, (1 << 2));
-    bruh1.init(); */
 
     vfs::readPartitions(); 
 
@@ -105,14 +95,11 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
 
     createWidget(lmao);
 
+    asm volatile ("sti");
+
     initMouse();
 
     sched::init();
-
-    asm volatile ("sti");
-
-    uint64_t *pml4 = (uint64_t*)(vmm::grabPML4() + HIGH_VMA);
-    pml4[0] = 0;
 
     sched::createTask(0x8, (uint64_t)task1);
     sched::createTask(0x8, (uint64_t)task2);

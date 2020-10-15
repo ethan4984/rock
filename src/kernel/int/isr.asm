@@ -3,13 +3,12 @@
 extern isrHandlerMain
 
 isrHandler:
-    cli
+    cld
     pushall
     mov rdi, rsp 
     call isrHandlerMain
     popall
     add rsp, 24
-    sti
     iretq
     
 
