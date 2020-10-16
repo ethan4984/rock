@@ -98,7 +98,7 @@ void createTask(uint16_t cs, size_t entry) {
     newTask.regs.rsp = pmm::alloc(2) + HIGH_VMA + 0x2000;
 
     if(++taskCnt % 10 == 0) {
-        tasks = (task*)kheap.krealloc(tasks, 10);
+        tasks = (task*)kheap.realloc(tasks, 10);
     }
     
     tasks[index] = newTask;
@@ -121,7 +121,7 @@ void task::createThread(uint16_t cs, size_t entry) {
     }
 
     if(++threadCnt % 10 == 0) {
-        threads = (thread*)kheap.krealloc(threads, 10); 
+        threads = (thread*)kheap.realloc(threads, 10); 
     }
 
     threads[index] = newThread;

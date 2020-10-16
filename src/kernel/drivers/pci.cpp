@@ -68,7 +68,7 @@ void addPCIDevice(pciInfo_t newDevice) {
 
     if(pciDevices.totalDevices > maxSize) {
         maxSize += 10;
-        pciDevices.devices = (pciInfo_t*)kheap.krealloc(pciDevices.devices, maxSize);
+        pciDevices.devices = (pciInfo_t*)kheap.realloc(pciDevices.devices, maxSize);
     }
 
     pciDevices.devices[pciDevices.totalDevices++] = newDevice;

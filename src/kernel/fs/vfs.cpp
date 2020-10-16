@@ -80,7 +80,7 @@ static int allocFD(fd newFD) {
     }
 
     if(index == -1) {
-        fds = (fd*)kheap.krealloc(fds, 10);
+        fds = (fd*)kheap.realloc(fds, 10);
         index = fdCnt;
     }
     
@@ -97,7 +97,7 @@ static int deleteFD(int index) {
 
 static void addPartition(partition_t newPart) {
     if(partitionCnt + 1 % 10 == 0) { 
-        partitions = (partition_t*)kheap.krealloc(partitions, 10);
+        partitions = (partition_t*)kheap.realloc(partitions, 10);
     }
 
     partitions[partitionCnt++] = newPart;

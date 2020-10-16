@@ -48,7 +48,7 @@ extern "C" void kernelMain(stivaleInfo_t *stivaleInfo) {
     stivaleInfo = (stivaleInfo_t*)((uint64_t)stivaleInfo + HIGH_VMA);
 
     pmm::init(stivaleInfo);
-    kheap.init();
+    kheap.init(0x100);
     vmm::init();
 
     idt::init();

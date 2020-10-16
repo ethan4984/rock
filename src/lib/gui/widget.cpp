@@ -22,7 +22,7 @@ void createWidget(widget newWidget) {
     }
 
     if(++widgetCnt % 10 == 0) {
-        widgets = (widget*)kheap.krealloc(widgets, 10);
+        widgets = (widget*)kheap.realloc(widgets, 10);
     }
 
     widgets[widgetCnt - 1] = newWidget;

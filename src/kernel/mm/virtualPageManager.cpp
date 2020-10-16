@@ -111,7 +111,7 @@ void mapping::init() {
 
 void mapping::addMapping(mapping newMapping) {
     if(mappingCnt + 1 % 10 == 0) {
-        mappings = (mapping*)kheap.krealloc(mappings, 10);
+        mappings = (mapping*)kheap.realloc(mappings, 10);
     }
     
     mappings[mappingCnt++] = newMapping;
@@ -172,7 +172,7 @@ void init() {
     uint64_t *pml2_2G = (uint64_t*)(pmm::calloc(1) + HIGH_VMA);
     uint64_t *pml2_3G = (uint64_t*)(pmm::calloc(1) + HIGH_VMA);
     uint64_t *pml2_4G = (uint64_t*)(pmm::calloc(1) + HIGH_VMA);
-
+   
     memset(pml4, 0, 0x8000);
 
     pml4[256] = ((uint64_t)&pml3[0] - HIGH_VMA) | KERNEL_PD_FLAGS;
