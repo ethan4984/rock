@@ -1,3 +1,4 @@
+#include <kernel/sched/smp.h>
 #include <kernel/mm/bitmap.h>
 #include <lib/memoryUtils.h>
 #include <lib/output.h>
@@ -18,6 +19,8 @@ void bitmapHeap::init(uint64_t pageCnt) {
 }
 
 void *bitmapHeap::alloc(uint64_t size) {
+    spinLock(&lock);
+
     if(size == 0) {
         cout + "[KMM]" << "stop trying to allocate zero bytes retard\n";
         return NULL;
@@ -42,6 +45,7 @@ void *bitmapHeap::alloc(uint64_t size) {
                 set(bitmap, (uint64_t)base / BLOCK_SIZE + j);
             }
 
+            spinRelease(&lock);
             return (void*)((uint64_t)base + start + HIGH_VMA);
         }
     }
@@ -49,10 +53,12 @@ void *bitmapHeap::alloc(uint64_t size) {
     kprintDS("[KDEBUG]", "%d", size); 
 
     cout + "[KMM]" << "Error: heap is full\n";
+    spinRelease(&lock);
     return NULL; 
 };
 
 uint64_t bitmapHeap::free(void *addr) {
+    spinLock(&lock);
     uint64_t bitmapBase = ((uint64_t)addr - HIGH_VMA - start) / BLOCK_SIZE, sizeOfAllocation = 0;
 
     size_t i;
@@ -69,13 +75,18 @@ uint64_t bitmapHeap::free(void *addr) {
 
     allocations[i] = { };
 
+    spinRelease(&lock);
     return sizeOfAllocation;
 }
 
 void *bitmapHeap::realloc(void *addr, uint64_t size) {
+    spinLock(&lock);
+
     uint64_t sizeOfAllocation = free(addr);
     void *newPt = alloc(sizeOfAllocation + size);
     memcpy64((uint64_t*)newPt, (uint64_t*)addr, sizeOfAllocation);
+
+    spinRelease(&lock); 
     return newPt; 
 }
 

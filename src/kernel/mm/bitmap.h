@@ -32,8 +32,8 @@ private:
     int64_t firstFreeSlot();
 
     int64_t firstFreeAllocationSlot();
-    
-    vmm::mapping heapMap;
+
+    char lock = 0;
 };
 
 }
