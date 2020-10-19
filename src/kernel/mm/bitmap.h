@@ -22,9 +22,9 @@ public:
     uint64_t free(void *addr);
 
     void *realloc(void *addr, uint64_t size);
-private:
+    
     uint64_t start, bitmapSize, allocationSize;
-
+protected:
     uint8_t *bitmap;
 
     allocation_t *allocations;

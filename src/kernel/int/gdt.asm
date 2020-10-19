@@ -11,7 +11,7 @@ lgdt:
     pushfq
     push 0x8 ; code 64
     push entry
-
+    
     iretq
 entry:
     pop rbp

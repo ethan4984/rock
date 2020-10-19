@@ -24,7 +24,7 @@ void initCore(uint64_t core, uint64_t tssAddr) {
     gdtCores[core].gdtEntries[2].limit = 0;
     gdtCores[core].gdtEntries[2].baseLow = 0;
     gdtCores[core].gdtEntries[2].baseMid = 0;
-    gdtCores[core].gdtEntries[2].access = 0b10010010; 
+    gdtCores[core].gdtEntries[2].access = 0b10010110; 
     gdtCores[core].gdtEntries[2].granularity = 0;
     gdtCores[core].gdtEntries[2].baseHigh = 0;
 
