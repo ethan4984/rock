@@ -35,12 +35,6 @@ ext2_fs_t *fs_check_ext2(partition_t part) {
     part.ext2_fs->root_inode = read_inode(&part, 2);
     part.ext2_fs->bgd_cnt = part.ext2_fs->superblock.block_cnt / part.ext2_fs->superblock.blocks_per_group;
 
-    ext2_write(&part, "limine.cfg", 0, 4, "bruh");
-    delete_dir_entry(&part, part.ext2_fs->root_inode, "limine.cfg");
-    char *buffer = kmalloc(100); 
-    ext2_read(&part, "limine.cfg", 0, 100, buffer);
-    kprintf("[KDEBUG]", "\n%s", buffer);
-
     return new_fs;
 }
 

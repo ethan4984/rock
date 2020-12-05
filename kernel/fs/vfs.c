@@ -3,11 +3,8 @@
 #include <output.h>
 #include <bitmap.h>
 
-static device_t *devices;
-static uint64_t device_cnt = 0;
-
 static partition_t *partitions;
-static uint64_t *partition_cnt = 0;
+static uint64_t partition_cnt = 0;
 
 typedef struct {
     uint8_t drive_status;
@@ -45,6 +42,32 @@ static uint8_t partition_check_fs(partition_t *part) {
     return UNKNOWN;
 }
 
+static void add_partition(partition_t *new_partition) {
+    if((partition_cnt + 1) % 4 == 0) {
+        partitions = krealloc(partitions, sizeof(partition_t) * (partition_cnt + 4));
+    }
+
+    partitions[partition_cnt++] = *new_partition;
+}
+
+static partition_t *find_mount_point(char *path) {
+    for(uint64_t i = 0; i < partition_cnt; i++) {
+        if(strncmp(partitions[i].mount_point, path, strlen(partitions[i].mount_point)) == 0)
+            return &partitions[i];
+    }
+    return NULL;
+}
+
+int fs_read(char *path, uint64_t start, uint64_t cnt, void *buf) {
+    partition_t *part = find_mount_point(path);
+    return part->read(part, path, start, cnt, buf);
+}
+
+int fs_write(char *path, uint64_t start, uint64_t cnt, void *buf) {
+    partition_t *part = find_mount_point(path);
+    return part->write(part, path, start, cnt, buf);
+}
+
 static void scan_partitions(device_t *device) {
     uint16_t mbr_signature;
     device->read(device->device_index, 510, 2, &mbr_signature);
@@ -60,8 +83,15 @@ static void scan_partitions(device_t *device) {
             if(mbr_partitions[i].partition_type == 0) // empty partition entry
                 continue;
 
-            partition_t partition = { device, mbr_partitions[i].starting_lba * 0x200, 512, UNKNOWN, NULL, NULL, NULL };
+            partition_t partition = {   .device = device,
+                                        .device_offset = mbr_partitions[i].starting_lba * 0x200,
+                                        .sector_size = 512,
+                                        .fs_type = UNKNOWN,
+                                        .mount_point = "/"
+                                    };
             partition.fs_type = partition_check_fs(&partition);
+
+            add_partition(&partition);
         }
         return; 
     }
@@ -83,18 +113,14 @@ void partition_read(partition_t *partition, uint64_t start, uint64_t cnt, void *
 
 void partition_write(partition_t *partition, uint64_t start, uint64_t cnt, void *ret) {
     partition->device->write(partition->device->device_index, start + partition->device_offset, cnt, ret);
-} 
+}
 
 void add_device(device_t *new_device) {
-    if((device_cnt + 1) % 32 == 0) {
-        devices = krealloc(devices, sizeof(device_t) * (device_cnt + 32)); 
-    }
-
-    devices[device_cnt++] = *new_device;
-
-    scan_partitions(new_device);
+    device_t *device = kmalloc(sizeof(device_t));
+    *device = *new_device; 
+    scan_partitions(device);
 }
 
 void vfs_init() {
-    devices = kmalloc(sizeof(device_t) * 32); 
+    partitions = kmalloc(sizeof(partition_t) * 4);
 }
