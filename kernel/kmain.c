@@ -37,6 +37,8 @@ void kmain(stivale_t *stivale) {
     pci_init();
     ahci_init();
 
+    partition_mount_all();
+
     init_hpet(); 
 
     init_smp();

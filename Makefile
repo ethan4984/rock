@@ -14,6 +14,7 @@ build:
 	sudo mkdir diskImage/boot
 	sudo cp kernel/bin/rock.elf diskImage/boot/
 	sudo cp kernel/limine.cfg diskImage/
+	sudo cp kernel/fs/fstab diskImage/
 	sync
 	sudo umount diskImage/
 	sudo losetup -d `cat loopback_dev`

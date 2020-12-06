@@ -68,6 +68,28 @@ int fs_write(char *path, uint64_t start, uint64_t cnt, void *buf) {
     return part->write(part, path, start, cnt, buf);
 }
 
+void partition_mount_all() {
+    char *fstab = kmalloc(0x1000);
+
+    for(uint64_t i = 0; i < partition_cnt; i++) { 
+        if(partitions[i].device_type == PRIMARY_DEVICE) {
+            partitions[i].read(&partitions[i], "/fstab", 0, 0x1000, fstab);
+            char *line = strtok(fstab, "\n");
+            while(line != NULL) {
+                char *save = line;
+                char *drive_uuid = strtok_r(save, " ", &save);
+                char *partition_index = strtok_r(save, " ", &save);
+                char *mount_point = strtok_r(save, " ", &save);
+                // TODO finish implementing fstab
+                line = strtok(NULL, "\n");
+            }
+            break; 
+        }
+    }
+
+    kfree(fstab);
+}
+
 static void scan_partitions(device_t *device) {
     uint16_t mbr_signature;
     device->read(device->device_index, 510, 2, &mbr_signature);
@@ -77,9 +99,6 @@ static void scan_partitions(device_t *device) {
         device->read(device->device_index, 0x1be, sizeof(mbr_partitions), &mbr_partitions);
 
         for(uint8_t i = 0; i < 4; i++) {
-            if((mbr_partitions[i].drive_status != 0x80) && (mbr_partitions[i].drive_status != 0)) 
-                continue;
-
             if(mbr_partitions[i].partition_type == 0) // empty partition entry
                 continue;
 
@@ -87,8 +106,10 @@ static void scan_partitions(device_t *device) {
                                         .device_offset = mbr_partitions[i].starting_lba * 0x200,
                                         .sector_size = 512,
                                         .fs_type = UNKNOWN,
-                                        .mount_point = "/"
+                                        .mount_point = (mbr_partitions[i].partition_type & (1 << 7 )) ? "/" : NULL,
+                                        .device_type = (mbr_partitions[i].partition_type & (1 << 7)) ? PRIMARY_DEVICE : SECONDARY_DEVICE
                                     };
+
             partition.fs_type = partition_check_fs(&partition);
 
             add_partition(&partition);

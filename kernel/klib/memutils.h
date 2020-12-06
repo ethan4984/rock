@@ -42,6 +42,8 @@ char *itob(uint64_t num, uint64_t base);
 
 char *strtok(char *str, const char *delim);
 
+char *strtok_r(char *__restrict s, const char *__restrict del, char **__restrict m);
+
 int character_cnt(const char *str, char c);
 
 #endif

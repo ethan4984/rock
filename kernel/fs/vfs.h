@@ -9,6 +9,11 @@ enum {
     UNKNOWN
 };
 
+enum {
+    PRIMARY_DEVICE,
+    SECONDARY_DEVICE
+};
+
 typedef struct {
     uint64_t device_index;
     int (*read)(int, uint64_t, uint64_t, void*);
@@ -19,6 +24,7 @@ typedef struct partition_t partition_t;
 
 struct partition_t {
     device_t *device;
+    int device_type;
     uint64_t device_offset, sector_size;
     int fs_type;
     ext2_fs_t *ext2_fs;
@@ -35,6 +41,8 @@ void partition_write(partition_t *partition, uint64_t start, uint64_t cnt, void 
 int fs_write(char *path, uint64_t start, uint64_t cnt, void *buffer);
 
 int fs_read(char *path, uint64_t start, uint64_t cnt, void *buffer);
+
+void partition_mount_all();
 
 void add_device(device_t *device);
 
