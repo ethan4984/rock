@@ -16,6 +16,7 @@ enum {
 
 typedef struct {
     uint64_t device_index;
+    uint64_t uid[2];
     int (*read)(int, uint64_t, uint64_t, void*);
     int (*write)(int, uint64_t, uint64_t, void*);
 } device_t;
@@ -24,7 +25,7 @@ typedef struct partition_t partition_t;
 
 struct partition_t {
     device_t *device;
-    int device_type;
+    int device_type, partition_index;
     uint64_t device_offset, sector_size;
     int fs_type;
     ext2_fs_t *ext2_fs;

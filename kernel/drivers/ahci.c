@@ -146,7 +146,9 @@ static void init_sata_device(volatile port_regs_t *regs) {
 
     ahci_drives[ahci_drive_cnt] = (ahci_drive_t) { *(uint64_t*)((uint64_t)&identity[100]), regs };
 
-    add_device(&(device_t) { ahci_drive_cnt++, ahci_read, ahci_write } );
+    add_device(&(device_t) {    .device_index = ahci_drive_cnt++,
+                                .read = ahci_read,
+                                .write = ahci_write } );
 }
 
 static void ahci_RW(ahci_drive_t *drive, uint64_t start, uint64_t count, void *buffer, uint8_t w) {

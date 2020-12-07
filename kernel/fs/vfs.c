@@ -58,6 +58,20 @@ static partition_t *find_mount_point(char *path) {
     return NULL;
 }
 
+static void fstab_mount(char *line) {
+    char *save = line;
+    char *drive_uid = strtok_r(save, " ", &save);
+    char *partition_index = strtok_r(save, " ", &save);
+    char *mount_point = strtok_r(save, " ", &save);
+
+    for(uint64_t i = 0; i < partition_cnt; i++) {
+        if(partitions[i].partition_index == atoi(partition_index)) { // TODO take into consdieration the device uid
+            partitions[i].mount_point = mount_point;
+            return;
+        }
+    }
+}
+
 int fs_read(char *path, uint64_t start, uint64_t cnt, void *buf) {
     partition_t *part = find_mount_point(path);
     return part->read(part, path, start, cnt, buf);
@@ -76,11 +90,7 @@ void partition_mount_all() {
             partitions[i].read(&partitions[i], "/fstab", 0, 0x1000, fstab);
             char *line = strtok(fstab, "\n");
             while(line != NULL) {
-                char *save = line;
-                char *drive_uuid = strtok_r(save, " ", &save);
-                char *partition_index = strtok_r(save, " ", &save);
-                char *mount_point = strtok_r(save, " ", &save);
-                // TODO finish implementing fstab
+                fstab_mount(line); 
                 line = strtok(NULL, "\n");
             }
             break; 
@@ -98,6 +108,10 @@ static void scan_partitions(device_t *device) {
         mbr_partition_t mbr_partitions[4];
         device->read(device->device_index, 0x1be, sizeof(mbr_partitions), &mbr_partitions);
 
+        uint8_t uid[10];
+        device->read(device->device_index, 0x1b4, 10, &uid);
+        memcpy8((uint8_t*)device->uid, uid, 10);
+
         for(uint8_t i = 0; i < 4; i++) {
             if(mbr_partitions[i].partition_type == 0) // empty partition entry
                 continue;
@@ -107,7 +121,8 @@ static void scan_partitions(device_t *device) {
                                         .sector_size = 512,
                                         .fs_type = UNKNOWN,
                                         .mount_point = (mbr_partitions[i].partition_type & (1 << 7 )) ? "/" : NULL,
-                                        .device_type = (mbr_partitions[i].partition_type & (1 << 7)) ? PRIMARY_DEVICE : SECONDARY_DEVICE
+                                        .device_type = (mbr_partitions[i].partition_type & (1 << 7)) ? PRIMARY_DEVICE : SECONDARY_DEVICE,
+                                        .partition_index = i
                                     };
 
             partition.fs_type = partition_check_fs(&partition);

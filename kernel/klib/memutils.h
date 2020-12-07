@@ -38,6 +38,8 @@ char *strcpy(char *dest, const char *src);
 
 char *strncpy(char *dest, const char *src, uint64_t n);
 
+int atoi(char *str);
+
 char *itob(uint64_t num, uint64_t base);
 
 char *strtok(char *str, const char *delim);

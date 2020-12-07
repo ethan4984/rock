@@ -155,7 +155,15 @@ char *strtok_r(char *__restrict s, const char *__restrict del, char **__restrict
         return NULL;
     return tok;
 }
+
 char *strtok(char *__restrict s, const char *__restrict delimiter) {
     static char *saved;
     return strtok_r(s, delimiter, &saved);
 }
+
+int atoi(char *str) {
+    int ret = 0;
+    for (uint64_t i = 0; i < strlen(str); i++)
+        ret = ret * 10 + str[i] - '0';
+    return ret; }
+

@@ -115,8 +115,8 @@ static void inode_read(partition_t *part, ext2_inode_t inode, uint64_t start, ui
                 uint32_t offset = block % (block_size / sizeof(uint32_t));
                 uint32_t indirect_block;
 
-                partition_read(part, (inode.blocks[13] * block_size) + (index * sizeof(uint32_t)), sizeof(uint32_t), &indirect_block);
-                partition_read(part, indirect_block * block_size + offset, sizeof(uint32_t), &block_index);
+                partition_read(part, inode.blocks[13] * block_size + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
+                partition_read(part, indirect_block * block_size + offset * sizeof(uint32_t), sizeof(uint32_t), &block_index);
             } else {
                 partition_read(part, (inode.blocks[12] * block_size) + (block * sizeof(uint32_t)), sizeof(uint32_t), &block_index);
             }
