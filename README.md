@@ -9,21 +9,14 @@ This is a simple multicore operating system that is made for fun
   - VMM
   - SMP
   - APIC
-  - preemptive multicore scheduler
-  - ext2 FS
-- Basic drivers
-  - keyboard (ps2)
-  - mouse (ps2)
-  - ahci
-  - pci
-- GUI
-  - cursor
-  - clickable widgets 
-  - wallpaper
-  - panel
+  - AHCI
+  - EXT2
+  - PCI
+  - VFS
+  
 # Demo
 
-![](demo/osdemo1.gif)
+![](demo.jpg)
 
 # Build Instructions
 
