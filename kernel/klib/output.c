@@ -165,3 +165,20 @@ void serial_write_str(const char *str) {
     for(; *str != '\0'; str++)
         serial_write(*str);
 }
+
+void stacktrace(uint64_t *rbp) {
+    for(;;) {
+        uint64_t old_frame = *rbp;
+        uint64_t ret_addr = rbp[1];
+
+        if(!ret_addr)
+            break;
+
+        kvprintf("Stacktrace: %x\n", ret_addr);
+
+        if(!old_frame)
+            break;
+
+        rbp = (uint64_t*)old_frame;
+    }
+}

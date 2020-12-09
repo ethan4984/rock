@@ -85,13 +85,16 @@ extern void isr_handler_main(regs_t *stack) {
         uint64_t cr2;
         asm volatile ("mov %%cr2, %0" : "=a"(cr2));
         
-        kprintf("[KDEBUG]", "Kowalski analysis: \"%s\", Error: %x", exception_messages[stack->isr_number], stack->error_code);
-        kprintf("[KDEBUG]", "RAX: %a | RBX: %a | RCX: %a | RDX: %a", stack->rax, stack->rbx, stack->rcx, stack->rdx);
-        kprintf("[KDEBUG]", "RSI: %a | RDI: %a | RBP: %a | RSP: %a", stack->rsi, stack->rdi, stack->rbp, stack->rsp);
-        kprintf("[KDEBUG]", "r8:  %a | r9:  %a | r10: %a | r11: %a", stack->r8, stack->r9, stack->r10, stack->r11);
-        kprintf("[KDEBUG]", "r12: %a | r13: %a | r14: %a | r15: %a", stack->r12, stack->r13, stack->r14, stack->r15); 
-        kprintf("[KDEBUG]", "cs:  %a | ss:  %a | cr2: %a | rip: %a", stack->cs, stack->ss, cr2, stack->rip);
-        for(;;);
+        kvprintf("Kowalski analysis: \"%s\", Error: %x\n", exception_messages[stack->isr_number], stack->error_code);
+        kvprintf("RAX: %a | RBX: %a | RCX: %a | RDX: %a\n", stack->rax, stack->rbx, stack->rcx, stack->rdx);
+        kvprintf("RSI: %a | RDI: %a | RBP: %a | RSP: %a\n", stack->rsi, stack->rdi, stack->rbp, stack->rsp);
+        kvprintf("r8:  %a | r9:  %a | r10: %a | r11: %a\n", stack->r8, stack->r9, stack->r10, stack->r11);
+        kvprintf("r12: %a | r13: %a | r14: %a | r15: %a\n", stack->r12, stack->r13, stack->r14, stack->r15); 
+        kvprintf("cs:  %a | ss:  %a | cr2: %a | rip: %a\n", stack->cs, stack->ss, cr2, stack->rip);
+
+        stacktrace((uint64_t*)stack->rbp);
+
+        asm ("hlt");
     }
 
     if(isr_handlers[stack->isr_number] != NULL) {

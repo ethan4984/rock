@@ -13,6 +13,12 @@ SECTIONS {
         KEEP(*(.stivalehdr))
     }
 
+    symlist = .;
+
+    .symtab : ALIGN(4K) { 
+        *(.symtab*) 
+    }
+
     .text : ALIGN(4K) { 
         *(.text*)
     }

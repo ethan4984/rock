@@ -6,7 +6,7 @@ typedef struct {
 } fd_t;
 
 static fd_t *fd;
-static uint64_t max_fd = 0;
+static uint64_t max_fd = 0x200;
 
 static int alloc_fd() {
     for(uint64_t i = 0; i < max_fd; i++) {
@@ -33,7 +33,7 @@ static int is_valid_fd(int fd_idx) {
 int open(char *path, int flags) {
     int ret = alloc_fd();
     if(ret == -1) {
-        create_fd(0x1000);
+        create_fd(0x200);
         ret = alloc_fd();
     }
 
@@ -115,4 +115,8 @@ int dup2(int old_fd, int new_fd) {
 
     fd[new_fd] = fd[old_fd];
     return new_fd;
+}
+
+void init_fd() {
+    fd = kcalloc(sizeof(fd_t) * 0x200);
 }

@@ -50,4 +50,6 @@ void kpanic(const char *message, ...);
 
 void g_putchar(uint8_t c);
 
+void stacktrace(uint64_t *rbp);
+
 #endif

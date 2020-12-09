@@ -2,7 +2,7 @@
 #include <acpi/rsdp.h>
 #include <int/apic.h>
 #include <sched/scheduler.h>
-#include <fs/vfs.h>
+#include <fs/fd.h>
 #include <drivers/hpet.h>
 #include <drivers/ahci.h>
 #include <drivers/pci.h>
@@ -36,6 +36,8 @@ void kmain(stivale_t *stivale) {
 
     pci_init();
     ahci_init();
+
+    init_fd();
 
     partition_mount_all();
 

@@ -329,7 +329,6 @@ static int read_dir(partition_t *part, ext2_inode_t inode, dir_entry_t *ret, cha
                 inode = read_inode(part, dir->inode);
                 if(!(inode.permissions & 0x4000)) {
                     kprintf("[KDEBUG]", "%s is not a directory", sub_path);
-                    kfree(sub_path),
                     kfree(buffer);
                     return 0;
                 }
@@ -341,7 +340,6 @@ static int read_dir(partition_t *part, ext2_inode_t inode, dir_entry_t *ret, cha
                 i += dir->entry_size - 1;
             }
         }
-        kfree(sub_path);
         sub_path = strtok(NULL, "/");
         cnt++;
     }
@@ -350,7 +348,6 @@ static int read_dir(partition_t *part, ext2_inode_t inode, dir_entry_t *ret, cha
     kprintf("[KDEBUG]", "%s not found", path);
     return 0;
 end:
-    kfree(sub_path);
     kfree(buffer);
     return 1;
 }
