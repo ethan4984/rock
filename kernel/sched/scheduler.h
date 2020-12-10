@@ -32,12 +32,13 @@ typedef struct {
     regs_t regs;
     uint64_t kernel_stack;
     uint64_t user_stack;
+    uint64_t starting_addr;
+    int ks_page_cnt, us_page_cnt;
 } thread_t;
 
 typedef struct {
     int pid;
-    int ppid;
-    int thread_cnt;
+    int max_thread_cnt;
     int file_handle_cnt;
     int idle_cnt;
     int status;

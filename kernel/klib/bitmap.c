@@ -80,6 +80,13 @@ void *krealloc(void *addr, uint64_t size) {
     return new_addr;
 }
 
+void *krecalloc(void *addr, uint64_t size) {
+    uint64_t alloc_size = kfree(addr);
+    void *new_addr = kcalloc(size);
+    memcpy64((uint64_t*)new_addr, (uint64_t*)addr, (alloc_size * BLOCK_SIZE) / 8);
+    return new_addr;
+}
+
 void *kcalloc(uint64_t cnt) {
     uint8_t *ret = kmalloc(cnt);
     memset8(ret, 0, cnt);
