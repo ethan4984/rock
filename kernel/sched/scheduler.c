@@ -230,5 +230,12 @@ int kill_thread(int pid, int tid) {
         return -1; 
     }
 
+    thread_t *thread = &tasks[pid].threads[tid];
+
+    thread->exists = 0;
+
+    pmm_free(thread->kernel_stack, thread->ks_page_cnt);
+    pmm_free(thread->user_stack, thread->us_page_cnt);
+
     return 0;
 }

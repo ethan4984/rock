@@ -1,6 +1,7 @@
 #include <output.h>
 #include <graphics.h>
 #include <memutils.h>
+#include <sched/smp.h>
 
 static uint32_t x_pos = 0, y_pos = 0;
 

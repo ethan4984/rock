@@ -2,6 +2,7 @@
 #include <sched/scheduler.h>
 #include <int/idt.h>
 #include <int/apic.h>
+#include <sched/smp.h>
 #include <mm/vmm.h>
 
 static idt_entry_t idt[256];
