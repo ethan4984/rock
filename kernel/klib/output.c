@@ -29,6 +29,9 @@ const char *bash_colours[] = {  "\e[39m", "\e[30m", "\e[31m", "\e[32m",
                             };
 
 void kprintf(const char *prefix, const char *str, ...) {
+    static char lock = 0;
+    spin_lock(&lock);
+
     va_list arg;
     va_start(arg, str);
 
@@ -49,13 +52,20 @@ void kprintf(const char *prefix, const char *str, ...) {
     print_args(str, arg, serial_write);
 
     serial_write('\n'); 
+
+    spin_release(&lock);
 }
 
 void kvprintf(const char *str, ...) {
+    static char lock = 0;
+    spin_lock(&lock);
+
     va_list arg;
     va_start(arg, str);
 
     print_args(str, arg, g_putchar);
+
+    spin_release(&lock);
 }
 
 void kpanic(const char *message, ...) {

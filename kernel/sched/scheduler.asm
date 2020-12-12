@@ -7,8 +7,8 @@ start_task:
 
     push rdi ; ss
     push rsi ; rsp
-    push rdx ; cs
     pushfq
+    push rdx ; cs
     push rcx ; rip
 
     iretq
@@ -20,6 +20,6 @@ switch_task:
 
     mov rsp, rdi
     popall
-    add rsp, 24
+    add rsp, 16
 
     iretq

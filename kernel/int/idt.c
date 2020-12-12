@@ -82,6 +82,9 @@ static isr_handler_t isr_handlers[] = {
 
 extern void isr_handler_main(regs_t *stack) {
     if(stack->isr_number < 32) {
+        static char lock = 0;
+        spin_lock(&lock);
+
         uint64_t cr2;
         asm volatile ("mov %%cr2, %0" : "=a"(cr2));
         
@@ -92,7 +95,16 @@ extern void isr_handler_main(regs_t *stack) {
         kvprintf("r12: %a | r13: %a | r14: %a | r15: %a\n", stack->r12, stack->r13, stack->r14, stack->r15); 
         kvprintf("cs:  %a | ss:  %a | cr2: %a | rip: %a\n", stack->cs, stack->ss, cr2, stack->rip);
 
+        kprintf("[KDEBUG]", "Kowalski analysis: \"%s\", Error: %x", exception_messages[stack->isr_number], stack->error_code);
+        kprintf("[KDEBUG]", "RAX: %a | RBX: %a | RCX: %a | RDX: %a", stack->rax, stack->rbx, stack->rcx, stack->rdx);
+        kprintf("[KDEBUG]", "RSI: %a | RDI: %a | RBP: %a | RSP: %a", stack->rsi, stack->rdi, stack->rbp, stack->rsp);
+        kprintf("[KDEBUG]", "r8:  %a | r9:  %a | r10: %a | r11: %a", stack->r8, stack->r9, stack->r10, stack->r11);
+        kprintf("[KDEBUG]", "r12: %a | r13: %a | r14: %a | r15: %a", stack->r12, stack->r13, stack->r14, stack->r15); 
+        kprintf("[KDEBUG]", "cs:  %a | ss:  %a | cr2: %a | rip: %a", stack->cs, stack->ss, cr2, stack->rip);
+
         stacktrace((uint64_t*)stack->rbp);
+
+        spin_release(&lock);
 
         asm ("hlt");
     }

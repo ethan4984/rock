@@ -20,6 +20,7 @@ enum {
 typedef struct {
     int pid;
     int tid;
+    int core_index;
 } core_local_t;
 
 typedef struct {
@@ -61,6 +62,6 @@ int create_task_thread(int pid, uint64_t starting_addr);
 
 int kill_thread(int pid, int tid); 
 
-core_local_t *get_core_local();
+volatile core_local_t *get_core_local();
 
 #endif

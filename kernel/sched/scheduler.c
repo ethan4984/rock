@@ -7,72 +7,13 @@
 
 static int ready = 0, max_task_cnt = 0x200;
 static task_t *tasks;
-static core_local_t *core_local;
+static volatile core_local_t *core_local;
 static char lock = 0;
 
-core_local_t *get_core_local() {
+volatile core_local_t *get_core_local() {
     uint16_t core_index = 0;
     asm volatile ("mov %%gs, %0" : "=r"(core_index));
     return &core_local[core_index];
-}
-
-static void reschedule(regs_t *regs) {
-    core_local_t *local = get_core_local();
-
-    int pid = -1;
-    int tid = -1;
-
-    for(int i = 0, cnt = 0; i < max_task_cnt; i++) {
-        if((tasks[i].exists == 1) && (tasks[i].status == WAITING) && (cnt < ++tasks[i].idle_cnt)) {
-            cnt = tasks[i].idle_cnt;
-            pid = i;
-        }
-
-        if(tasks[i].status == WAITING_TO_START) {
-            pid = i;
-            break;
-        }
-    }
-
-    if(pid == -1) {
-        return; 
-    }
-
-    task_t *next_task = &tasks[pid];
-    next_task->idle_cnt = 0;
-
-    for(int i = 0, cnt = 0; i < next_task->max_thread_cnt; i++) {
-        if((next_task->exists == 1) && (next_task->threads[i].status == WAITING) && (cnt < ++next_task->threads[i].idle_cnt)) {
-            cnt = next_task->threads[i].idle_cnt;
-            tid = i;
-        }
-
-        if(next_task->threads[i].status == WAITING_TO_START) {
-            tid = i;
-            break;
-        }
-    }
-
-    if(tid == -1) {
-        return;
-    }
-
-    thread_t *next_thread = &next_task->threads[pid];
-    next_thread->idle_cnt = 0;
-
-    lapic_write(LAPIC_EOI, 0); 
-    spin_release(&lock);
-
-    switch(next_thread->status) {
-        case WAITING:
-            switch_task(next_thread->regs.rsp, next_thread->regs.ss);
-            break;
-        case WAITING_TO_START:
-            start_task(next_thread->regs.ss, next_thread->regs.rsp, next_thread->regs.cs, next_thread->starting_addr);
-            break;
-        default:
-            kprintf("[SCHED]", "Invalid thread %d/%d", pid, tid);
-    }
 }
 
 static int is_valid_pid(int pid) {
@@ -91,6 +32,88 @@ static int is_valid_tid(int pid, int tid) {
     return -1;
 }
 
+static void reschedule(regs_t *regs) {
+    volatile core_local_t *local = get_core_local();
+
+    int pid = -1, tid = -1;
+
+    for(int i = 0, cnt = 0; i < max_task_cnt; i++) {
+        if(tasks[i].exists != 1) 
+            continue;
+
+        if((tasks[i].status == WAITING) && (cnt < ++tasks[i].idle_cnt)) {
+            cnt = tasks[i].idle_cnt;
+            pid = i;
+            continue;
+        }
+
+        if(tasks[i].status == WAITING_TO_START) {
+            pid = i;
+            break;
+        }
+    }
+
+    if(pid == -1) {
+        return; 
+    }
+
+    task_t *next_task = &tasks[pid];
+
+    for(int i = 0, cnt = 0; i < next_task->max_thread_cnt; i++) {
+        if(next_task->threads[i].exists != 1)
+            continue;
+
+        if((next_task->threads[i].status == WAITING) && (cnt < ++next_task->threads[i].idle_cnt)) {
+            cnt = next_task->threads[i].idle_cnt;
+            tid = i;
+            continue; 
+        }
+
+        if(next_task->threads[i].status == WAITING_TO_START) {
+            tid = i;
+            break;
+        }
+    }
+
+    if(tid == -1) {
+        spin_release(&lock);
+        return;
+    }
+
+    if((local->tid != -1) && (local->pid != -1)) {
+        tasks[local->pid].threads[local->tid].regs = *regs;
+        tasks[local->pid].threads[local->tid].status = WAITING;
+        tasks[local->pid].status = WAITING;
+    }
+
+    local->pid = pid;
+    local->tid = tid;
+
+    thread_t *next_thread = &next_task->threads[tid];
+    next_thread->idle_cnt = 0;
+
+    switch(next_thread->status) {
+        case WAITING:
+            next_thread->status = RUNNING;
+
+            lapic_write(LAPIC_EOI, 0); 
+            spin_release(&lock);
+
+            switch_task((uint64_t)&next_thread->regs, next_thread->regs.ss);
+            break; 
+        case WAITING_TO_START:
+            next_thread->status = RUNNING;
+
+            lapic_write(LAPIC_EOI, 0); 
+            spin_release(&lock);
+
+            start_task(next_thread->regs.ss, next_thread->regs.rsp, next_thread->regs.cs, next_thread->starting_addr);
+            break;
+        default:
+            kprintf("[KDEBUG]", "Invalid thread %d/%d status = %d", pid, tid, next_thread->status);
+    }
+}
+
 void scheduler_main(regs_t *regs) {
     spin_lock(&lock);
 
@@ -100,13 +123,14 @@ void scheduler_main(regs_t *regs) {
     }
 
     reschedule(regs);
+    spin_release(&lock);
 }
 
 void scheduler_init() {
     tasks = kcalloc(sizeof(task_t) * 0x200); 
     core_local = kmalloc(sizeof(core_local_t) * madt_info.ent0cnt);
     for(uint8_t i = 0; i < madt_info.ent0cnt; i++) {
-        core_local[i] = (core_local_t) { -1, -1 };
+        core_local[i] = (core_local_t) { -1, -1, i };
     }
 
     kvprintf("[SCHED] the scheduler is now pogging\n");
@@ -118,6 +142,7 @@ int create_task(uint64_t start_addr) {
     for(int i = 0; i < max_task_cnt; i++) {
         if(tasks[i].exists == 0) {
             pid = i;
+            break;
         }
     }
 
@@ -130,9 +155,11 @@ int create_task(uint64_t start_addr) {
     tasks[pid] = (task_t) { .exists = 1,
                             .pid = pid,
                             .status = WAITING_TO_START,
-                            .max_thread_cnt = 32,
-                            .threads = kcalloc(sizeof(thread_t) * 32)
+                            .max_thread_cnt = 0x20,
+                            .threads = kcalloc(sizeof(thread_t) * 0x20)
                           };
+
+    create_task_thread(pid, start_addr);
 
     return pid;
 }
@@ -143,16 +170,17 @@ int create_task_thread(int pid, uint64_t starting) {
     }
 
     int tid = -1;
-    for(int i = 0; i < max_task_cnt; i++) {
-        if(tasks[i].exists == 0) {
-            pid = i;
+    for(int i = 0; i < tasks[pid].max_thread_cnt; i++) {
+        if(tasks[pid].threads[i].exists == 0) {
+            tid = i;
+            break;
         }
     }
 
     if(tid == -1) {
-        tasks[pid].max_thread_cnt += 0x1000;
+        tasks[pid].max_thread_cnt += 0x20;
         tasks[pid].threads = krecalloc(tasks[pid].threads, sizeof(thread_t) * tasks[pid].max_thread_cnt);
-        return create_task(starting);
+        return create_task_thread(pid, starting);
     }
 
     tasks[pid].threads[tid] = (thread_t) {  .exists = 1,
@@ -164,6 +192,11 @@ int create_task_thread(int pid, uint64_t starting) {
                                             .user_stack = pmm_alloc(4),
                                             .starting_addr = starting
                                          };
+
+    tasks[pid].threads[tid].regs = (regs_t) {   .cs = 0x8,
+                                                .ss = 0x10,
+                                                .rsp = tasks[pid].threads[tid].kernel_stack
+                                            };
 
     return tid; 
 }
