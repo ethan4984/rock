@@ -11,7 +11,8 @@ static void mmap_alloc(pagestruct_t *pagestruct, void *addr, uint64_t length) {
         pagestruct->bitmap = krecalloc(pagestruct->bitmap, pagestruct->bm_size);
     }
 
-    BM_SET(pagestruct->bitmap, index);
+    for(uint64_t i = 0; i < ROUNDUP(length, 0x1000); i++) 
+        BM_SET(pagestruct->bitmap, index);
 }
 
 static void mmap_free(pagestruct_t *pagestruct, void *addr, uint64_t length) {
@@ -20,7 +21,8 @@ static void mmap_free(pagestruct_t *pagestruct, void *addr, uint64_t length) {
         return;
     }
 
-    BM_CLEAR(pagestruct->bitmap, index);
+    for(uint64_t i = 0; i < ROUNDUP(length, 0x1000); i++) 
+        BM_CLEAR(pagestruct->bitmap, index);
 }
 
 static void *find_mmap_addr(pagestruct_t *pagestruct, uint64_t length) {

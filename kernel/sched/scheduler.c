@@ -275,3 +275,13 @@ task_t *get_current_task() {
 
     return &tasks[local->pid];
 }
+
+int getpid() {
+    task_t *task = get_current_task();
+    return task->pid;
+}
+
+int getppid() {
+    task_t *task = get_current_task();
+    return task->ppid;
+}

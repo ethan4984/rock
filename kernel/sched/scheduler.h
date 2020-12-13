@@ -37,7 +37,7 @@ typedef struct {
 } thread_t;
 
 typedef struct {
-    int pid;
+    int pid, ppid, pgid, uid;
     int max_thread_cnt;
     int file_handle_cnt;
     int idle_cnt;
@@ -62,6 +62,10 @@ int create_task(uint64_t starting_addr, uint16_t cs, uint16_t ss);
 int create_task_thread(int pid, uint64_t starting_addr);
 
 int kill_thread(int pid, int tid); 
+
+int getpid();
+
+int getppid();
 
 core_local_t *get_core_local();
 
