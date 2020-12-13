@@ -18,11 +18,12 @@
 
 void kmain(stivale_t *stivale) {
     pmm_init(stivale);
+
+    bitmap_init();
+
     vmm_init();
 
     init_graphics(stivale);
-
-    bitmap_init();
 
     rsdp_init((rsdp_t*)stivale->rsdp);
     madt_init();

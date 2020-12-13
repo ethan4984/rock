@@ -49,6 +49,7 @@ void *kmalloc(uint64_t size) {
             return (void*)((uint64_t)base + start + HIGH_VMA);
         }
     }
+
     kprintf("[KDEBUG]", "heap is full");
     return NULL;
 }

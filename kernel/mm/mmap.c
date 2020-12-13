@@ -65,13 +65,31 @@ void *mmap(void *addr, uint64_t length, int prot, int flags, int fd, int64_t off
         return (void*)-1;
     }
 
-    if(check_mmap_addr(current_task->pagestruct, addr, length) == -1) {
-        addr = find_mmap_addr(current_task->pagestruct, length);
+    switch(flags) {
+        case MAP_SHARED: // TODO acutally implement this shit
+            if(check_mmap_addr(current_task->pagestruct, addr, length) == -1) {
+                addr = find_mmap_addr(current_task->pagestruct, length);
+            }
+
+            map_range(current_task->pagestruct, (uint64_t)addr, ROUNDUP(length, 0x1000), 1 | flags); 
+            read(fd, addr, length);
+
+            break;
+        case MAP_PRIVATE:
+            if(check_mmap_addr(current_task->pagestruct, addr, length) == -1) {
+                addr = find_mmap_addr(current_task->pagestruct, length);
+            }
+
+            map_range(current_task->pagestruct, (uint64_t)addr, ROUNDUP(length, 0x1000), 1 | flags); 
+            read(fd, addr, length);
+            break;
+        case MAP_FIXED:
+            map_range(current_task->pagestruct, (uint64_t)addr, ROUNDUP(length, 0x1000), 1 | flags); 
+            read(fd, addr, length);
+            break;
+        default:
+            return (void*)-1; 
     }
-
-    map_range(current_task->pagestruct, (uint64_t)addr, ROUNDUP(length, 0x1000), flags); 
-
-    read(fd, addr, length);
 
     return addr;
 }
