@@ -13,6 +13,7 @@ build:
 	$(NASM) boot.asm -o bin/boot.o
 	$(NASM) int/isr.asm -o bin/isr.o
 	$(NASM) int/gdt.asm -o bin/gdt_asm.o
+	$(NASM) int/syscall.asm -o bin/syscall_asm.o
 	$(NASM) sched/scheduler.asm -o bin/scheduler_asm.o
 	nasm -fbin sched/smp.asm -o bin/smp_asm.bin
 	$(NASM) real.asm -o bin/real.o

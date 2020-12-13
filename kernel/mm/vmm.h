@@ -11,12 +11,14 @@
 
 typedef struct {
     uint64_t *pml4;
+    uint8_t *bitmap;
+    uint64_t bm_size;
     int lock;
 } pagestruct_t;
 
-void page_map(pagestruct_t *p, uint64_t paddr, uint64_t vaddr, uint64_t flags, uint64_t flags1);
+void map_range(pagestruct_t *p, uint64_t vaddr, uint64_t cnt, uint64_t flags);
 
-void page_unmap(pagestruct_t *p, uint64_t vaddr, uint64_t flags);
+void unmap_range(pagestruct_t *p, uint64_t vaddr, uint64_t cnt, uint64_t flags);
 
 void page_copy(pagestruct_t *in, pagestruct_t *out);
 

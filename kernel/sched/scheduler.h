@@ -26,7 +26,6 @@ typedef struct {
 typedef struct {
     int tid;
     int pid;
-    int lock;
     int idle_cnt;
     int status;
     int exists;
@@ -44,11 +43,13 @@ typedef struct {
     int idle_cnt;
     int status;
     int exists;
-    pagestruct_t *page;
+    uint16_t cs, ss;
+    pagestruct_t *pagestruct;
     thread_t *threads;
     int *file_handles;
-    char lock;
 } task_t;
+
+task_t *get_current_task();
 
 void scheduler_init();
 
@@ -56,12 +57,12 @@ void scheduler_main(regs_t *regs);
 
 int kill_task(int pid);
 
-int create_task(uint64_t starting_addr);
+int create_task(uint64_t starting_addr, uint16_t cs, uint16_t ss);
 
 int create_task_thread(int pid, uint64_t starting_addr);
 
 int kill_thread(int pid, int tid); 
 
-volatile core_local_t *get_core_local();
+core_local_t *get_core_local();
 
 #endif

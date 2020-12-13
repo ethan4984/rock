@@ -3,6 +3,13 @@
 
 #include <stdint.h>
 
+#define MSR_EFER 0xc0000080
+#define MSR_STAR 0xc0000081
+#define MSR_LSTAR 0xc0000082
+#define MSR_CSTAR 0xc0000083
+#define MSR_SFMASK 0xc0000084
+
+
 typedef struct {
     uint64_t r15;
     uint64_t r14;

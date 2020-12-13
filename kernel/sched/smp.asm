@@ -30,7 +30,7 @@ init_CS:
 
     mov ecx, 0xc0000080
     rdmsr
-    or eax, (1 << 0) | (1 << 8) ; set LME and SCE
+    or eax, (1 << 8) ; set LME 
     wrmsr
 
     mov eax, 0x80000011

@@ -2,12 +2,14 @@
 #include <bitmap.h> 
 #include <mm/vmm.h>
 #include <int/gdt.h>
+#include <int/syscall.h>
 #include <output.h>
 #include <mm/pmm.h>
 #include <drivers/hpet.h>
 #include <acpi/madt.h>
 #include <memutils.h>
 #include <int/idt.h>
+#include <asmutils.h>
 
 extern symbol smp_tramp_begin; 
 extern symbol smp_tramp_end;
@@ -22,7 +24,17 @@ static void prep_trampoline(uint64_t stack, uint64_t pml4, uint64_t entry_point,
     parameters[3] = idt;
 }
 
+static void init_cpu_features() {
+    wrmsr(MSR_EFER, rdmsr(MSR_EFER) | 1); // set SCE
+
+    wrmsr(MSR_STAR, 0x13000800000000);
+    wrmsr(MSR_LSTAR, (uint64_t)syscall_main_stub);
+    wrmsr(MSR_SFMASK, (uint64_t)~((uint32_t)0x002));
+}
+
 static void bootstrap_core() {
+    init_cpu_features();
+
     lapic_write(LAPIC_SINT, lapic_read(LAPIC_SINT) | 0x1ff);
 
     create_generic_tss();
@@ -31,10 +43,14 @@ static void bootstrap_core() {
 
     asm ("mov %0, %%gs\nsti" :: "r"(core_cnt++));
 
-    for(;;);
+    for(;;) {
+        asm ("pause");
+    }
 }
 
 void init_smp() {
+    init_cpu_features();
+
     memcpy8((uint8_t*)(0x1000), (uint8_t*)smp_tramp_begin, (uint64_t)smp_tramp_end - (uint64_t)smp_tramp_begin);
 
     static idtr_t idtr;
@@ -58,7 +74,7 @@ void init_smp() {
 void spin_lock(char *ptr) {
     volatile uint64_t cnt = 0;
     while(__atomic_test_and_set(ptr, __ATOMIC_ACQUIRE)) {
-        if(++cnt == 0x100000000) {
+        if(++cnt == 0x10000000) {
             kprintf("[KDEBUG]", "Possible deadlock");
         }
     }
