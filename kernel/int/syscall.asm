@@ -46,7 +46,7 @@ syscall_main_stub:
     call [syscall_list + rax * 8]
 
 .leave:
-    popall
+    syscall_popall ; does not pop rax cuz its the return value
 
     pop rcx ; rip
     pop r11 ; rflags
