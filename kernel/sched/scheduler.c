@@ -89,6 +89,8 @@ static void reschedule(regs_t *regs) {
         case WAITING:
             next_thread->status = RUNNING;
 
+            local->kernel_stack = next_thread->kernel_stack;
+
             lapic_write(LAPIC_EOI, 0); 
             spin_release(&lock);
 
@@ -96,6 +98,8 @@ static void reschedule(regs_t *regs) {
             break; 
         case WAITING_TO_START:
             next_thread->status = RUNNING;
+
+            local->kernel_stack = next_thread->kernel_stack;
 
             lapic_write(LAPIC_EOI, 0); 
             spin_release(&lock);

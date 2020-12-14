@@ -53,7 +53,7 @@ syscall_main_stub:
 
     mov rsp, qword [gs:16] ; user stack
 
-    o64 sysret ; ensure n64 bit operand size so we returned to 64 bit mode
+    o64 sysret ; ensure 64 bit operanh size so we returned to 64 bit mode
 
 .error:
     mov rax, -1
