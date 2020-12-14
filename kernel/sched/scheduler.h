@@ -5,9 +5,6 @@
 #include <asmutils.h>
 #include <memutils.h>
 
-#define FSBASE_MSR 0xc0000100
-#define GSBASE_MSR 0xc0000101
-
 extern void start_task(uint64_t ss, uint64_t rsp, uint64_t cs, uint64_t rip);
 extern void switch_task(uint64_t rsp, uint64_t ss);
 

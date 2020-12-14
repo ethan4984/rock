@@ -1,4 +1,6 @@
-global syscall_main_stub
+%include 'klib/asm_mac.inc'
+
+syscall_list:
 
 extern read
 dq read ; rax = 0
@@ -21,5 +23,38 @@ dq getpid ; rax = 8
 extern getppid
 dq getppid ; rax = 9
 
+.end:
+
+syscall_cnt equ ((syscall_list.end - syscall_list) / 8)
+
+global syscall_main_stub
+
 syscall_main_stub:
-    jmp $ 
+    mov qword [gs:16], rsp ; save user stack
+    mov rsp, qword [gs:8] ; init kernel stack
+
+    sti
+
+    push r11 ; rflags
+    push rcx ; rip
+
+    pushall
+
+    cmp rax, syscall_cnt
+    jae .error
+
+    call [syscall_list + rax * 8]
+
+.leave:
+    popall
+
+    pop rcx ; rip
+    pop r11 ; rflags
+
+    mov rsp, qword [gs:16] ; user stack
+
+    o64 sysret ; ensure n64 bit operand size so we returned to 64 bit mode
+
+.error:
+    mov rax, -1
+    jmp .leave
