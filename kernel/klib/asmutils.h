@@ -9,6 +9,8 @@
 #define MSR_CSTAR 0xc0000083
 #define MSR_SFMASK 0xc0000084
 
+#define MSR_FS_BASE 0xc0000100
+#define MSR_GS_BASE 0xc0000101
 
 typedef struct {
     uint64_t r15;

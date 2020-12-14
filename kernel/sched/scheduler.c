@@ -7,14 +7,7 @@
 
 static int ready = 0, max_task_cnt = 0x200;
 static task_t *tasks;
-static core_local_t *core_local;
 static char lock = 0;
-
-core_local_t *get_core_local() {
-    uint16_t core_index = 0;
-    asm volatile ("mov %%gs, %0" : "=r"(core_index));
-    return &core_local[core_index];
-}
 
 static int is_valid_pid(int pid) {
     if((pid >= 0) || (pid <= (int)max_task_cnt)) {
@@ -33,7 +26,7 @@ static int is_valid_tid(int pid, int tid) {
 }
 
 static void reschedule(regs_t *regs) {
-    core_local_t *local = get_core_local();
+    core_local_t *local = get_core_local(-1);
 
     int pid = -1, tid = -1;
 
@@ -107,8 +100,6 @@ static void reschedule(regs_t *regs) {
             lapic_write(LAPIC_EOI, 0); 
             spin_release(&lock);
 
-            kprintf("[KDEBUG]", "%x %x", next_thread->regs.ss, next_thread->regs.cs);
-
             start_task(next_thread->regs.ss, next_thread->regs.rsp, next_thread->regs.cs, next_thread->starting_addr);
             break;
         default:
@@ -132,11 +123,6 @@ void scheduler_main(regs_t *regs) {
 
 void scheduler_init() {
     tasks = kcalloc(sizeof(task_t) * 0x200); 
-    core_local = kmalloc(sizeof(core_local_t) * madt_info.ent0cnt);
-    for(uint8_t i = 0; i < madt_info.ent0cnt; i++) {
-        core_local[i] = (core_local_t) { -1, -1, i };
-    }
-
     kvprintf("[SCHED] the scheduler is now pogging\n");
     ready = 1;
 }
@@ -268,7 +254,7 @@ int kill_thread(int pid, int tid) {
 }
 
 task_t *get_current_task() {
-    core_local_t *local = get_core_local();
+    core_local_t *local = get_core_local(-1);
     if(is_valid_pid(local->pid) == -1) {
         return NULL;
     }

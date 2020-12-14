@@ -49,7 +49,6 @@ void kmain(stivale_t *stivale) {
     scheduler_init();
 
     lapic_timer_init(50);
-    asm ("mov %0, %%gs\nsti" :: "r"(0)); 
 
     for(;;)
         asm ("pause");

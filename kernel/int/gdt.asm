@@ -20,6 +20,8 @@ entry:
     mov es, ax
     mov gs, ax
     mov ss, ax
+    mov fs, ax
+    mov gs, ax
 
     ret
 

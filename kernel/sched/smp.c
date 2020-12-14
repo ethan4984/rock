@@ -14,7 +14,8 @@
 extern symbol smp_tramp_begin; 
 extern symbol smp_tramp_end;
 
-uint64_t core_cnt = 1;
+static uint64_t core_cnt = 0;
+static core_local_t *core_local;
 
 static void prep_trampoline(uint64_t stack, uint64_t pml4, uint64_t entry_point, uint64_t idt) {
     uint64_t *parameters = (uint64_t*)(0x500 + HIGH_VMA);
@@ -30,6 +31,8 @@ static void init_cpu_features() {
     wrmsr(MSR_STAR, 0x13000800000000);
     wrmsr(MSR_LSTAR, (uint64_t)syscall_main_stub);
     wrmsr(MSR_SFMASK, (uint64_t)~((uint32_t)0x002));
+
+    wrmsr(MSR_GS_BASE, (uint64_t)&core_local[core_cnt++]);
 }
 
 static void bootstrap_core() {
@@ -41,14 +44,17 @@ static void bootstrap_core() {
 
     lapic_timer_init(50);
 
-    asm ("mov %0, %%gs\nsti" :: "r"(core_cnt++));
-
     for(;;) {
         asm ("pause");
     }
 }
 
 void init_smp() {
+    core_local = kmalloc(sizeof(core_local_t) * madt_info.ent0cnt);
+    for(uint8_t i = 0; i < madt_info.ent0cnt; i++) {
+        core_local[i] = (core_local_t) { .pid = -1, .tid = -1, .core_index = i };
+    }
+
     init_cpu_features();
 
     memcpy8((uint8_t*)(0x1000), (uint8_t*)smp_tramp_begin, (uint64_t)smp_tramp_end - (uint64_t)smp_tramp_begin);
@@ -69,6 +75,13 @@ void init_smp() {
             ksleep(20); 
         }
     }
+}
+
+core_local_t *get_core_local(int64_t index) {
+    if(index == -1) {
+        asm volatile ("mov %%gs:0, %0" : "=r"(index));
+    }
+    return &core_local[index];
 }
 
 void spin_lock(char *ptr) {
