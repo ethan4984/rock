@@ -119,4 +119,6 @@ int dup2(int old_fd, int new_fd) {
 
 void init_fd() {
     fd = kcalloc(sizeof(fd_t) * 0x200);
+    open("stdin", 0);
+    open("stdout", 0);
 }

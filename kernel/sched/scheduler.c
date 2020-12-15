@@ -275,3 +275,26 @@ int getppid() {
     task_t *task = get_current_task();
     return task->ppid;
 }
+
+int setuid(int uid) {
+    task_t *task = get_current_task();
+    task->uid = uid;
+    return 0;
+}
+
+int setppid(int ppid) {
+    task_t *task = get_current_task();
+    task->ppid = ppid;
+    return 0;
+}
+
+int getpgrp(int pid) {
+    task_t *task;
+    if(is_valid_pid(pid) == -1) {
+        task = get_current_task();
+    } else {
+        task = &tasks[pid];
+    }
+
+    return task->pgrp;
+}

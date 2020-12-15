@@ -22,6 +22,12 @@ extern getpid
 dq getpid ; rax = 8
 extern getppid
 dq getppid ; rax = 9
+extern setuid
+dq setuid ; rax = 10
+extern setppid
+dq setppid ; rax = 11
+extern getpgrp 
+dq getpgrp ; rax = 12
 
 .end:
 

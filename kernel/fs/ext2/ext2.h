@@ -1,7 +1,7 @@
 #ifndef EXT2_SUPERBLOCK_H_
 #define EXT2_SUPERBLOCK_H_
 
-#include <fs/vfs.h>
+#include <fs/ext2/inode.h>
 
 ext2_fs_t *fs_check_ext2(partition_t part);
 
