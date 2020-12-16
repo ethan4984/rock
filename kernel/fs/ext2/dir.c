@@ -1,4 +1,5 @@
 #include <fs/ext2/dir.h>
+#include <memutils.h>
 #include <output.h>
 #include <bitmap.h>
 
@@ -9,14 +10,19 @@ void ext2_delete_dir_entry(partition_t *part, ext2_inode_t parent, char *name) {
     for(uint32_t i = 0; i < parent.size32l; i++) {
         ext2_dir_entry_t *dir = (ext2_dir_entry_t*)((uint64_t)buffer + i);
 
-        if((strncmp(dir->name, name, strlen(name)) == 0)) {
-            memset8((uint8_t*)dir, 0, dir->entry_size);
+        if((dir->inode != 0) && (strncmp(dir->name, name, strlen(name)) == 0)) {
+            dir->inode = 0;
             ext2_inode_write(part, parent, 0, parent.size32l, buffer);
             return; 
         }
 
-        if(dir->entry_size)
-            i += dir->entry_size - 1;
+        
+        uint32_t expected_size = ALIGN_UP(sizeof(ext2_dir_entry_t) + dir->name_length, 4);
+        if(dir->entry_size != expected_size) {
+            return;
+        }
+
+        i += dir->entry_size - 1;
     }
 }
 
@@ -32,8 +38,13 @@ int ext2_create_dir_entry(partition_t *part, ext2_inode_t parent, uint32_t inode
         if(found) {
             dir->name_length = strlen(name);
             dir->type = type;
-            dir->inode = inode; 
+            dir->inode = inode;
+            dir->entry_size = part->ext2_fs->block_size - i;
+        
+            memcpy8((uint8_t*)dir->name, (uint8_t*)name, strlen(name));
+
             ext2_inode_write(part, parent, 0, parent.size32l, buffer);
+            kfree(buffer);
             return 1; 
         } 
 
@@ -43,14 +54,15 @@ int ext2_create_dir_entry(partition_t *part, ext2_inode_t parent, uint32_t inode
             return 0;
         }
 
-        uint32_t expected_size = sizeof(ext2_dir_entry_t) + dir->name_length;
+        uint32_t expected_size = ALIGN_UP(sizeof(ext2_dir_entry_t) + dir->name_length, 4);
         if(expected_size != dir->entry_size) {
             i += expected_size - 1;
+            dir->entry_size = expected_size;
             found = 1;
             continue;
         }
         
-        i = dir->entry_size - 1;
+        i += dir->entry_size - 1;
     }
     kfree(buffer);
     return 1;
@@ -70,7 +82,12 @@ int ext2_read_dir_entry(partition_t *part, ext2_inode_t inode, ext2_dir_entry_t 
         for(uint32_t i = 0; i < inode.size32l; i++) {
             ext2_dir_entry_t *dir = (ext2_dir_entry_t*)((uint64_t)buffer + i);
 
-            if((strncmp(dir->name, sub_path, strlen(sub_path)) == 0) && cnt == parse_cnt) {
+            if((strncmp(dir->name, sub_path, strlen(sub_path)) == 0) && (cnt == parse_cnt)) {
+                if(dir->inode == 0) {
+                    kprintf("[KDEBUG]", "%s not found", path);
+                    kfree(buffer);
+                    return 0;
+                }
                 *ret = *dir;
                 goto end;
             }

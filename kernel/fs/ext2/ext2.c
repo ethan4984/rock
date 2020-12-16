@@ -1,6 +1,7 @@
 #include <fs/ext2/block.h>
 #include <fs/ext2/dir.h>
 #include <fs/ext2/inode.h>
+#include <fs/ext2/ext2.h>
 #include <memutils.h>
 #include <output.h>
 #include <bitmap.h>
@@ -42,7 +43,7 @@ int ext2_write(partition_t *part, char *path, uint64_t start, uint64_t cnt, void
     return cnt;
 }
 
-int ext2_mkdir(partition_t *part, char *parent, char *name, uint16_t permissions) {
+int ext2_mkdir(partition_t *part, ext2_inode_t parent, char *name, uint16_t permissions) {
     uint32_t inode_index = ext2_alloc_inode(part);
         
     ext2_inode_t inode = {  .permissions = 0x4000 | (0xfff & permissions),
@@ -51,12 +52,21 @@ int ext2_mkdir(partition_t *part, char *parent, char *name, uint16_t permissions
                          };
 
     ext2_inode_write_entry(part, inode_index, &inode);
+    ext2_create_dir_entry(part, parent, inode_index, name, 0);
 
     return 0;
 }
 
-int ext2_touch(partition_t *part, char *parent, char *name, uint16_t permissions) {
+int ext2_touch(partition_t *part, ext2_inode_t parent, char *name, uint16_t permissions) {
     uint32_t inode_index = ext2_alloc_inode(part);
-    ext2_inode_t inode = ext2_inode_read_entry(part, inode_index);
+
+    ext2_inode_t inode = {  .permissions = 0x8000 | (0xfff & permissions),
+                            .hard_link_cnt = 2,
+                            .size32l = part->ext2_fs->block_size
+                         };
+
+    ext2_inode_write_entry(part, inode_index, &inode);
+    ext2_create_dir_entry(part, parent, inode_index, name, 0);
+
     return 0;
 }

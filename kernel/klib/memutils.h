@@ -10,6 +10,13 @@
 #define BM_CLEAR(bitmap, location) (bitmap)[(location) / 8] = (bitmap)[(location) / 8] & (~(1 << ((location) % 8)));
 #define BM_TEST(bitmap, location) ((bitmap[(location) / 8] >> ((location) % 8)) & 0x1)
 
+#define ALIGN_UP(x, a) ({ \
+    typeof(x) value = x; \
+    typeof(a) align = a; \
+    value = ROUNDUP(value, align) * align; \
+    value; \
+})
+
 typedef void *symbol[];
 
 void memset8(uint8_t *src, uint8_t data, uint64_t count);

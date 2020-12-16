@@ -127,7 +127,6 @@ void ext2_inode_write(partition_t *part, ext2_inode_t inode, uint64_t start, uin
     }
 }
 
-
 ext2_inode_t ext2_inode_read_entry(partition_t *part, uint32_t index) {
     ext2_bgd_t bgd = ext2_read_bgd(part, index);
 
