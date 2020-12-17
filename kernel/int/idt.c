@@ -1,4 +1,5 @@
 #include <output.h>
+#include <drivers/ps2_keyboard.h>
 #include <sched/scheduler.h>
 #include <int/idt.h>
 #include <int/apic.h>
@@ -51,7 +52,7 @@ static isr_handler_t isr_handlers[] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 32
-    scheduler_main, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+    scheduler_main, ps2_keyboard_handler, NULL, NULL, NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 64

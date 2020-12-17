@@ -1,6 +1,7 @@
 %include 'klib/asm_mac.inc'
 
 extern isr_handler_main
+extern ps2_keyboard_handler
 
 isr_handler:
     cld
