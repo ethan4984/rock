@@ -9,9 +9,9 @@ int ext2_read(partition_t *part, char *path, uint64_t start, uint64_t cnt, void 
 
 int ext2_write(partition_t *part, char *path, uint64_t start, uint64_t cnt, void *buffer);
 
-int ext2_mkdir(partition_t *part, ext2_inode_t parent, char *name, uint16_t permissions);
+int ext2_mkdir(partition_t *part, char *parent, char *name, uint16_t permissions);
 
-int ext2_touch(partition_t *part, ext2_inode_t parent, char *name, uint16_t permissions);
+int ext2_touch(partition_t *part, char *parent, char *name, uint16_t permissions);
 
 void ext2_delete(partition_t *part, char *path);
 

@@ -37,6 +37,8 @@ static uint8_t partition_check_fs(partition_t *part) {
     if(part->ext2_fs != NULL) {
         part->read = ext2_read;
         part->write = ext2_write;
+        part->touch = ext2_touch;
+        part->mkdir = ext2_mkdir;
         return EXT2; 
     }
     return UNKNOWN;
@@ -80,6 +82,16 @@ int fs_read(char *path, uint64_t start, uint64_t cnt, void *buf) {
 int fs_write(char *path, uint64_t start, uint64_t cnt, void *buf) {
     partition_t *part = find_mount_point(path);
     return part->write(part, path, start, cnt, buf);
+}
+
+int fs_mkdir(char *path, uint16_t permissions) {
+    partition_t *part = find_mount_point(path);
+    return part->mkdir(part, "/", path, permissions);
+}
+
+int fs_touch(char *path, uint16_t permissions) {
+    partition_t *part = find_mount_point(path);
+    return part->touch(part, "/", path, permissions);
 }
 
 void partition_mount_all() {

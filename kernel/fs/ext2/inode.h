@@ -16,4 +16,8 @@ uint32_t ext2_alloc_inode(partition_t *part);
 
 void ext2_free_inode(partition_t *part, uint32_t index);
 
+void ext2_alloc_inode_block(partition_t *part, ext2_inode_t *inode, uint32_t inode_index, uint32_t block);
+
+void ext2_free_inode_block(partition_t *part, ext2_inode_t *inode, uint32_t inode_index, uint32_t block);
+
 #endif

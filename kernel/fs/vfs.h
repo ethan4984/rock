@@ -33,6 +33,8 @@ struct partition_t {
 
     int (*read)(partition_t*, char*, uint64_t, uint64_t, void*);
     int (*write)(partition_t*, char*, uint64_t, uint64_t, void*);
+    int (*mkdir)(partition_t*, char*, char*, uint16_t);
+    int (*touch)(partition_t*, char*, char*, uint16_t);
 };
 
 void partition_read(partition_t *partition, uint64_t start, uint64_t cnt, void *ret); 
@@ -42,6 +44,10 @@ void partition_write(partition_t *partition, uint64_t start, uint64_t cnt, void 
 int fs_write(char *path, uint64_t start, uint64_t cnt, void *buffer);
 
 int fs_read(char *path, uint64_t start, uint64_t cnt, void *buffer);
+
+int fs_touch(char *path, uint16_t permissions);
+
+int fs_mkdir(char *path, uint16_t permissions);
 
 void partition_mount_all();
 

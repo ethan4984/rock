@@ -18,11 +18,6 @@ static int alloc_fd() {
     return -1;
 }
 
-static void create_fd(uint64_t cnt) { 
-    max_fd += cnt;
-    fd = krealloc(fd, sizeof(fd_t) * max_fd);
-}
-
 static int is_valid_fd(int fd_idx) {
     if((fd_idx >= 0) || (fd_idx <= (int)max_fd)) {
         return 0;    
@@ -33,7 +28,8 @@ static int is_valid_fd(int fd_idx) {
 int open(char *path, int flags) {
     int ret = alloc_fd();
     if(ret == -1) {
-        create_fd(0x200);
+        max_fd += 0x200;
+        fd = krealloc(fd, sizeof(fd_t) * max_fd);
         ret = alloc_fd();
     }
 
@@ -42,6 +38,10 @@ int open(char *path, int flags) {
                         .fd_index = ret,
                         .exists = 1
                      };
+
+    if((flags & O_CREAT) == O_CREAT) {
+        fs_touch(path, 0);
+    }
 
     return ret;
 }
@@ -95,7 +95,8 @@ int lseek(int fd_idx, off_t offset, int whence) {
 int dup(int fd_idx) {
     int new_fd  = alloc_fd();
     if(new_fd == -1) {
-        create_fd(0x1000);
+        max_fd += 0x200; 
+        fd = krealloc(fd, sizeof(fd_t) * max_fd);
         new_fd = alloc_fd();
     }
 
@@ -117,8 +118,13 @@ int dup2(int old_fd, int new_fd) {
     return new_fd;
 }
 
+int mkdir(char *path, uint16_t permissions) {
+    return fs_mkdir(path, permissions);
+}
+
 void init_fd() {
     fd = kcalloc(sizeof(fd_t) * 0x200);
-    open("stdin", 0);
-    open("stdout", 0);
+    
+/*    open("stdin", O_CREAT);
+    open("stdout", O_CREAT);*/
 }

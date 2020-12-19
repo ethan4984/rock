@@ -5,7 +5,7 @@
 uint32_t ext2_alloc_inode(partition_t *part) {
     uint8_t *bitmap = kcalloc(part->ext2_fs->block_size);
 
-    for(uint32_t i = 0; i < part->ext2_fs->bgd_cnt; i++) {
+    for(uint32_t i = 3; i < part->ext2_fs->bgd_cnt; i++) {
         ext2_bgd_t bgd = ext2_read_bgd(part, i);
         if(!bgd.unallocated_inodes)
             continue; 
@@ -142,4 +142,12 @@ void ext2_inode_write_entry(partition_t *part, uint32_t index, ext2_inode_t *ino
 
     uint64_t inode_table_index = (index - 1) % part->ext2_fs->superblock.inodes_per_group;
     partition_read(part, (bgd.inode_table_block * part->ext2_fs->block_size) + (part->ext2_fs->superblock.inode_size * inode_table_index), sizeof(ext2_inode_t), inode);
+}
+
+void ext2_alloc_inode_block(partition_t *part, ext2_inode_t *inode, uint32_t inode_index, uint32_t block) {
+    
+}
+
+void ext2_free_inode_block(partition_t *part, ext2_inode_t *inode, uint32_t inode_index, uint32_t block) {
+
 }

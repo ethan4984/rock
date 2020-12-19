@@ -28,6 +28,8 @@ extern setppid
 dq setppid ; rax = 11
 extern getpgrp 
 dq getpgrp ; rax = 12
+extern mkdir
+dq mkdir ; rax = 13
 
 .end:
 

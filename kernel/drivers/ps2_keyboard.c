@@ -48,5 +48,5 @@ void ps2_keyboard_handler(regs_t *regs) {
             }
     }
 
-    write(1, &character, 1);
+//    write(1, &character, 1);
 }

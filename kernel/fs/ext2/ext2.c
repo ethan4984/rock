@@ -39,34 +39,67 @@ int ext2_write(partition_t *part, char *path, uint64_t start, uint64_t cnt, void
     if(ext2_read_dir_entry(part, part->ext2_fs->root_inode, &dir, path) != 1) { 
         return 0;
     }
+
+    kprintf("[KDBEUG]", "bruhr");
+
     ext2_inode_write(part, ext2_inode_read_entry(part, dir.inode), start, cnt, buffer);
     return cnt;
 }
 
-int ext2_mkdir(partition_t *part, ext2_inode_t parent, char *name, uint16_t permissions) {
+int ext2_mkdir(partition_t *part, char *parent, char *name, uint16_t permissions) {
+    ext2_inode_t parent_inode;
+    int parent_inode_index;
+
+    if(strcmp(parent, "/") != 0) {
+        ext2_dir_entry_t dir;
+        ext2_read_dir_entry(part, part->ext2_fs->root_inode, &dir, parent);
+        parent_inode = ext2_inode_read_entry(part, dir.inode);
+        parent_inode_index = dir.inode;
+    } else {
+        parent_inode = part->ext2_fs->root_inode;
+        parent_inode_index = 2; 
+    }
+
     uint32_t inode_index = ext2_alloc_inode(part);
-        
-    ext2_inode_t inode = {  .permissions = 0x4000 | (0xfff & permissions),
-                            .hard_link_cnt = 2,
-                            .size32l = part->ext2_fs->block_size
-                         };
 
-    ext2_inode_write_entry(part, inode_index, &inode);
-    ext2_create_dir_entry(part, parent, inode_index, name, 0);
+    ext2_inode_t new_inode = {  .permissions = 0x4000 | (0xfff & permissions),
+                                .hard_link_cnt = 2,
+                                .size32l = part->ext2_fs->block_size
+                             };
 
+    parent_inode.hard_link_cnt++;
+    ext2_inode_write_entry(part, parent_inode_index, &parent_inode);
+
+    ext2_inode_write_entry(part, inode_index, &new_inode);
+    ext2_create_dir_entry(part, parent_inode, inode_index, name, 0);
     return 0;
 }
 
-int ext2_touch(partition_t *part, ext2_inode_t parent, char *name, uint16_t permissions) {
+int ext2_touch(partition_t *part, char *parent, char *name, uint16_t permissions) {
+    ext2_inode_t parent_inode;
+    int parent_inode_index;
+
+    if(strcmp(parent, "/") != 0) {
+        ext2_dir_entry_t dir;
+        ext2_read_dir_entry(part, part->ext2_fs->root_inode, &dir, parent);
+        parent_inode = ext2_inode_read_entry(part, dir.inode);
+        parent_inode_index = dir.inode;
+    } else {
+        parent_inode = part->ext2_fs->root_inode;
+        parent_inode_index = 2; 
+    }
+
     uint32_t inode_index = ext2_alloc_inode(part);
 
-    ext2_inode_t inode = {  .permissions = 0x8000 | (0xfff & permissions),
-                            .hard_link_cnt = 2,
-                            .size32l = part->ext2_fs->block_size
-                         };
+    ext2_inode_t new_inode = {  .permissions = 0x8000 | (0xfff & permissions),
+                                .hard_link_cnt = 2,
+                                .size32l = part->ext2_fs->block_size
+                             };
 
-    ext2_inode_write_entry(part, inode_index, &inode);
-    ext2_create_dir_entry(part, parent, inode_index, name, 0);
+    parent_inode.hard_link_cnt++;
+    ext2_inode_write_entry(part, parent_inode_index, &parent_inode);
 
+    ext2_inode_write_entry(part, inode_index, &new_inode);
+    ext2_create_dir_entry(part, parent_inode, inode_index, name, 0);
     return 0;
 }
