@@ -4,9 +4,9 @@
 #include <fs/ext2/types.h>
 #include <fs/vfs.h>
 
-void ext2_inode_read(partition_t *part, ext2_inode_t inode, uint64_t start, uint64_t cnt, void *buffer);
+void ext2_inode_read(partition_t *part, ext2_inode_t *inode, uint64_t start, uint64_t cnt, void *buffer);
 
-void ext2_inode_write(partition_t *part, ext2_inode_t inode, uint64_t start, uint64_t cnt, void *buffer);
+void ext2_inode_write(partition_t *part, ext2_inode_t *inode, uint64_t start, uint64_t cnt, void *buffer);
 
 ext2_inode_t ext2_inode_read_entry(partition_t *part, uint32_t index);
 
