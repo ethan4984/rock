@@ -84,6 +84,7 @@ void ext2_inode_read(partition_t *part, ext2_inode_t *inode, uint64_t start, uin
                 partition_read(part, (inode->blocks[12] * block_size) + (block * sizeof(uint32_t)), sizeof(uint32_t), &block_index);
             }
         }
+
         partition_read(part, block_index * block_size + offset, size, (void*)((uint64_t)buffer + headway));
 
         headway += size;
@@ -91,9 +92,9 @@ void ext2_inode_read(partition_t *part, ext2_inode_t *inode, uint64_t start, uin
 }
 
 void ext2_inode_write(partition_t *part, ext2_inode_t *inode, uint64_t start, uint64_t cnt, void *buffer) {
-    if(inode->size32h > start + cnt) {
+    if(inode->size32l > start + cnt) {
         uint32_t previous_size = inode->size32h;
-        inode->size32h = start + cnt;
+        inode->size32l = start + cnt;
         inode_resize(part, inode, previous_size);     
     }
 

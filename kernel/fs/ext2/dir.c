@@ -78,7 +78,7 @@ static int find_dir_entry(partition_t *part, ext2_inode_t *inode, ext2_dir_entry
         if(strncmp(dir->name, path, strlen(path)) == 0) {
             if(dir->inode == 0) {
                 kfree(buffer);
-                return 0;
+                return -1;
             }
             *ret = *dir;
             kfree(buffer);
@@ -95,12 +95,16 @@ static int find_dir_entry(partition_t *part, ext2_inode_t *inode, ext2_dir_entry
 }
 
 int ext2_read_dir_entry(partition_t *part, ext2_inode_t *inode, ext2_dir_entry_t *ret, char *path) {
-    char *sub_path = strtok(path, "/");
-    while(sub_path != NULL) {
+    char *cpath = kmalloc(strlen(path));
+    strcpy(cpath, path);
+
+    char *sub_path, *save = cpath;
+    while((sub_path = strtok_r(save, "/", &save))) {
         if(find_dir_entry(part, inode, ret, sub_path) == -1) {
+            kfree(cpath);
             return -1;
         }
-        sub_path = strtok(NULL, "/");
     }
+    kfree(cpath);
     return 0;
 }
