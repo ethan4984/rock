@@ -76,21 +76,47 @@ static void fstab_mount(char *line) {
 
 int fs_read(char *path, uint64_t start, uint64_t cnt, void *buf) {
     partition_t *part = find_mount_point(path);
+    if(part == NULL) {
+        kprintf("[KDEBUG]", "Invalid mount point");
+        return -1; 
+    }
     return part->read(part, path, start, cnt, buf);
 }
 
 int fs_write(char *path, uint64_t start, uint64_t cnt, void *buf) {
     partition_t *part = find_mount_point(path);
+    if(part == NULL) {
+        kprintf("[KDEBUG]", "Invalid mount point");
+        return -1; 
+    }
     return part->write(part, path, start, cnt, buf);
 }
 
 int fs_mkdir(char *path, uint16_t permissions) {
     partition_t *part = find_mount_point(path);
+    if(part == NULL) {
+        kprintf("[KDEBUG]", "Invalid mount point");
+        return -1; 
+    }
     return part->mkdir(part, "/", path, permissions);
 }
 
 int fs_touch(char *path, uint16_t permissions) {
     partition_t *part = find_mount_point(path);
+    if(part == NULL) {
+        kprintf("[KDEBUG]", "Invalid mount point");
+        return -1; 
+    }
+
+    char *buffer = kmalloc(strlen(path));
+    strcpy(buffer, path);
+    
+    int index = find_last_char(buffer, '/');
+    if(index != 0) {
+        buffer[index] = '\0';
+        return part->touch(part, buffer, buffer + index + 1, permissions);
+    }
+
     return part->touch(part, "/", path, permissions);
 }
 
@@ -99,6 +125,7 @@ void partition_mount_all() {
 
     for(uint64_t i = 0; i < partition_cnt; i++) { 
         if(partitions[i].device_type == PRIMARY_DEVICE) {
+            partitions[i].mount_point = "/";
             partitions[i].read(&partitions[i], "/fstab", 0, 0x1000, fstab);
             char *line = strtok(fstab, "\n");
             while(line != NULL) {

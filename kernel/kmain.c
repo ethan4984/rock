@@ -50,6 +50,8 @@ void kmain(stivale_t *stivale) {
 
     lapic_timer_init(50);
 
+    asm ("sti");
+
     for(;;)
         asm ("pause");
 }

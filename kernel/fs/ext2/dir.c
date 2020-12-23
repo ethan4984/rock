@@ -85,8 +85,6 @@ static int find_dir_entry(partition_t *part, ext2_inode_t *inode, ext2_dir_entry
             return 0;
         }
 
-        //kprintf("[KDEBUG]", "%d %d", dir->entry_size, i);
-
         if(dir->entry_size != 0) {
             i += dir->entry_size - 1;
         }
@@ -98,13 +96,17 @@ int ext2_read_dir_entry(partition_t *part, ext2_inode_t *inode, ext2_dir_entry_t
     char *cpath = kmalloc(strlen(path));
     strcpy(cpath, path);
 
+    ext2_inode_t used_inode = *inode;
+
     char *sub_path, *save = cpath;
     while((sub_path = strtok_r(save, "/", &save))) {
-        if(find_dir_entry(part, inode, ret, sub_path) == -1) {
+        if(find_dir_entry(part, &used_inode, ret, sub_path) == -1) {
             kfree(cpath);
             return -1;
         }
+        used_inode = ext2_inode_read_entry(part, ret->inode);
     }
+
     kfree(cpath);
     return 0;
 }

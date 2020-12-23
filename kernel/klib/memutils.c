@@ -165,5 +165,14 @@ int atoi(char *str) {
     int ret = 0;
     for (uint64_t i = 0; i < strlen(str); i++)
         ret = ret * 10 + str[i] - '0';
-    return ret; }
+    return ret;
+}
 
+int find_last_char(char *str, char c) {
+    int last = -1;
+    for(uint64_t i = 0; i < strlen(str); i++) {
+        if(str[i] == c)
+            last = i;
+    }
+    return last;
+}

@@ -93,5 +93,5 @@ void apic_init() {
 
     lapic_write(LAPIC_SINT, lapic_read(LAPIC_SINT) | 0x1ff); // enable spurious interrupts
 
-    asm volatile("sti\nmov %0, %%cr8" :: "r"((uint64_t)0));
+    asm volatile("mov %0, %%cr8" :: "r"((uint64_t)0));
 }

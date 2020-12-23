@@ -124,7 +124,7 @@ int mkdir(char *path, uint16_t permissions) {
 
 void init_fd() {
     fd = kcalloc(sizeof(fd_t) * 0x200);
-    
-/*    open("stdin", O_CREAT);
-    open("stdout", O_CREAT);*/
+
+    open("/stdin", O_CREAT);
+    open("/stdout", O_CREAT);
 }
