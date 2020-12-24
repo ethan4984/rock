@@ -109,7 +109,7 @@ static void inode_resize(partition_t *part, ext2_inode_t *inode, uint32_t previo
 }
 
 void ext2_inode_write(partition_t *part, ext2_inode_t *inode, uint64_t start, uint64_t cnt, void *buffer) {
-    if(inode->size32l > start + cnt) {
+    if(inode->size32l < (start + cnt)) {
         uint32_t previous_size = inode->size32h;
         inode->size32l = start + cnt;
         inode_resize(part, inode, previous_size);
