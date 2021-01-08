@@ -12,7 +12,7 @@ void init_graphics(stivale_t *stivale) {
     fb_bpp = stivale->fb_bpp;
     fb_pitch = stivale->fb_pitch;
     fb_size = fb_height * fb_pitch;
-    double_buffer = (uint32_t*)(pmm_calloc(ROUNDUP(fb_height * fb_width * (fb_bpp / sizeof(uint32_t)), 0x1000)) + HIGH_VMA); 
+    double_buffer = (uint32_t*)(pmm_calloc(ROUNDUP(fb_height * fb_width * (fb_bpp / 8), 0x1000)) + HIGH_VMA); 
     clear_screen(0xffffff);
 }
 
