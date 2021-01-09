@@ -1,4 +1,5 @@
 #include <fs/fd.h>
+#include <vec.h>
 
 typedef struct fd_node {
     int flags;
@@ -14,42 +15,6 @@ static fd_node_t *fd_list = NULL;
 
 static uint8_t *free_fd_nodes;
 static uint64_t max_fd = 0x1000;
-
-static void fd_push_node(fd_node_t *head, fd_node_t *new_node) {
-    fd_node_t *tmp = head;
-    while(tmp->next != NULL)
-        tmp = tmp->next;
-    tmp->next = new_node;
-    new_node->last = tmp;
-}
-
-static void fd_remove_node(fd_node_t **head, fd_node_t *node) {
-    if(!*head || !node)
-        return;
-
-    if(*head == node) 
-        *head = node->next;
-
-    if(node->next != NULL) 
-        node->next->last = node->last;
-
-    if(node->last != NULL)
-        node->last->next = node->next;
-
-    kfree(node);
-}
-
-static fd_node_t *find_fd_node(fd_node_t *head, int fd) {
-    fd_node_t *node = head;
-
-    do {
-        if(node->fd == fd) 
-            return node;
-        node = node->next;
-    } while(node != NULL);
-
-    return NULL;
-}
 
 static int activate_fd() {
     for(uint64_t i = 0; i < max_fd; i++) {
@@ -80,23 +45,23 @@ int open(char *path, int flags) {
         fs_touch(path, 0);
     }
 
-    fd_push_node(fd_list, node); 
+    ddl_push(fd_node_t, fd_list, node); 
 
     return fd;
 }
 
 int close(int fd_idx) {
-    fd_node_t *fd = find_fd_node(fd_list, fd_idx);
+    fd_node_t *fd = ddl_search(fd_node_t, fd_list, fd, fd_idx);
     if(!fd)
         return -1;
 
     BM_CLEAR(free_fd_nodes, fd->fd);
-    fd_remove_node(&fd_list, fd); 
+    ddl_remove(fd_node_t, &fd_list, fd); 
     return 0;
 }
 
 int read(int fd_idx, void *buf, uint64_t cnt) {
-    fd_node_t *fd = find_fd_node(fd_list, fd_idx);
+    fd_node_t *fd = ddl_search(fd_node_t, fd_list, fd, fd_idx);
     if(!fd)
         return -1;
 
@@ -106,7 +71,7 @@ int read(int fd_idx, void *buf, uint64_t cnt) {
 } 
 
 int write(int fd_idx, void *buf, uint64_t cnt) {
-    fd_node_t *fd = find_fd_node(fd_list, fd_idx);
+    fd_node_t *fd = ddl_search(fd_node_t, fd_list, fd, fd_idx);
     if(!fd)
         return -1;
 
@@ -116,7 +81,7 @@ int write(int fd_idx, void *buf, uint64_t cnt) {
 }
 
 int lseek(int fd_idx, off_t offset, int whence) {
-    fd_node_t *fd = find_fd_node(fd_list, fd_idx);
+    fd_node_t *fd = ddl_search(fd_node_t, fd_list, fd, fd_idx);
     if(!fd)
         return -1;
 
@@ -137,7 +102,7 @@ int lseek(int fd_idx, off_t offset, int whence) {
 }
 
 int dup(int fd_idx) {
-    fd_node_t *fd = find_fd_node(fd_list, fd_idx);
+    fd_node_t *fd = ddl_search(fd_node_t, fd_list, fd, fd_idx);
     if(!fd)
         return -1;
 
@@ -151,11 +116,11 @@ int dup(int fd_idx) {
 }
 
 int dup2(int old_fd, int new_fd) {
-    fd_node_t *old_node = find_fd_node(fd_list, old_fd);
+    fd_node_t *old_node = ddl_search(fd_node_t, fd_list, fd, old_fd);
     if(!old_node)
         return -1;
 
-    fd_node_t *new_node = find_fd_node(fd_list, new_fd);
+    fd_node_t *new_node = ddl_search(fd_node_t, fd_list, fd, new_fd);
     if(new_node)
         close(new_fd);
     else 

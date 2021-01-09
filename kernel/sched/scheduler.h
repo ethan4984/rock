@@ -14,30 +14,35 @@ enum {
     RUNNING
 };
 
-typedef struct {
+typedef struct thread {
     int tid;
     int pid;
     int idle_cnt;
     int status;
-    int exists;
     regs_t regs;
     uint64_t kernel_stack;
     uint64_t user_stack;
     uint64_t starting_addr;
     int ks_page_cnt, us_page_cnt;
+    
+    struct thread *next;
+    struct thread *last;
 } thread_t;
 
-typedef struct {
+typedef struct task {
     int pid, ppid, pgrp, uid;
-    int max_thread_cnt;
+    int thread_cnt;
+    int tid_cnt;
     int file_handle_cnt;
     int idle_cnt;
     int status;
-    int exists;
     uint16_t cs, ss;
     pagestruct_t *pagestruct;
     thread_t *threads;
     int *file_handles;
+
+    struct task *next;
+    struct task *last;
 } task_t;
 
 task_t *get_current_task();
@@ -48,7 +53,7 @@ void scheduler_main(regs_t *regs);
 
 int kill_task(int pid);
 
-int create_task(uint64_t starting_addr, uint16_t cs, uint16_t ss);
+int create_task(uint64_t starting_addr, uint16_t cs);
 
 int create_task_thread(int pid, uint64_t starting_addr);
 

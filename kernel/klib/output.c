@@ -1,4 +1,5 @@
 #include <output.h>
+#include <vec.h>
 #include <graphics.h>
 #include <memutils.h>
 #include <sched/smp.h>
