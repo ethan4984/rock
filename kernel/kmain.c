@@ -11,10 +11,13 @@
 #include <sched/smp.h>
 #include <graphics.h>
 #include <int/gdt.h>
+#include <bmp.h>
 #include <output.h>
 #include <mm/pmm.h>
 #include <mm/vmm.h>
 #include <bitmap.h>
+
+#define COL 0xff
 
 void kmain(stivale_t *stivale) {
     pmm_init(stivale);
@@ -49,6 +52,31 @@ void kmain(stivale_t *stivale) {
     scheduler_init();
 
     lapic_timer_init(50);
+
+    background_image_t bmp;
+    bmp_draw("/background.bmp", &bmp, 0, 0);
+    kvprintf("[LMAO]");
+
+    uint32_t colour_buffer[] = {    COL, COL, COL, COL, COL, COL, COL,
+                                    COL, COL, COL, COL, COL, COL, COL,
+                                    COL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, COL,
+                                    COL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, COL,
+                                    COL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, COL,
+                                    COL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, COL,
+                                    COL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, COL,
+                                    COL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, COL,
+                                    COL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, UNUSED_PIXEL, COL,
+                                    COL, COL, COL, COL, COL, COL, COL,
+                                    COL, COL, COL, COL, COL, COL, COL
+                                };
+
+    shape_t shape = { .x = 100, .y = 100, .height = 11, .width = 7, .colour_buffer = colour_buffer, .backbuffer = kmalloc(sizeof(colour_buffer)) };
+
+    draw_shape(&shape); 
+
+    ksleep(1000);
+
+    redraw_shape(&shape, 300, 300);
 
     asm ("sti");
 

@@ -53,4 +53,11 @@ out: \
     node; \
 })
 
+#define create_vec(type, name) ({ \
+    staitc typedef struct { \
+        type *contents; \
+        size_t cnt; \
+    } name_t; \
+})
+
 #endif

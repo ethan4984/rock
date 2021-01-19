@@ -47,3 +47,48 @@ void render_char(uint32_t x, uint32_t y, uint32_t fg, char c) {
         }
     }
 }
+
+int draw_shape(shape_t *shape) {
+    for(uint32_t y = 0; y < shape->height; y++) {
+        for(uint32_t x = 0; x < shape->width; x++) { 
+            if(shape->colour_buffer[y * shape->width + x] == UNUSED_PIXEL)
+                continue; 
+            shape->backbuffer[y * shape->width + x] = get_pixel(shape->x + x, shape->y + y);
+            set_pixel(shape->x + x, shape->y + y, shape->colour_buffer[y * shape->width + x]);
+        }
+    }
+    return 0;
+}
+
+int redraw_shape(shape_t *shape, uint32_t new_x, uint32_t new_y) {
+    for(uint32_t x = 0; x < shape->width; x++) {
+        for(uint32_t y = 0; y < shape->height; y++) {
+            if(shape->colour_buffer[y * shape->width + x] == UNUSED_PIXEL)
+                continue; 
+            set_pixel(shape->x + x, shape->y + y, shape->backbuffer[y * shape->width + x]); 
+        }
+    }
+
+    shape->x = new_x; 
+    shape->y = new_y;
+
+    return draw_shape(shape);
+}
+
+int draw_window(window_t *win) {
+    for(uint32_t i = win->x; i < win->x + win->width; i++) {
+        for(uint32_t j = win->y; j < win->y + win->height; j++) {
+            set_pixel(i, j, win->background);
+        }
+    }
+    
+    for(uint32_t i = 0; i < win->shape_cnt; i++) {
+        draw_shape(&win->shapes[i]);
+    }
+
+    return 0;
+}
+
+int redraw_window(window_t *win, uint32_t new_x, uint32_t new_y) {
+        
+}

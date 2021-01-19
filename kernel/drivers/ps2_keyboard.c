@@ -47,6 +47,4 @@ void ps2_keyboard_handler(regs_t *regs) {
                 character = key_map[keycode];
             }
     }
-
-    write(0, &character, 1);
 }
