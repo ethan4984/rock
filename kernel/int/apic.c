@@ -3,11 +3,11 @@
 #include <int/apic.h>
 
 uint32_t lapic_read(uint16_t offset) {
-    return *(volatile uint32_t*)(madt_info.lapic_addr + HIGH_VMA + offset);    
+    return *(volatile uint32_t*)(madt->lapic_addr + HIGH_VMA + offset);    
 }
 
 void lapic_write(uint16_t offset, uint32_t data) {
-    *(volatile uint32_t*)(madt_info.lapic_addr + HIGH_VMA + offset) = data;
+    *(volatile uint32_t*)(madt->lapic_addr + HIGH_VMA + offset) = data;
 }
 
 void send_IPI(uint8_t ap, uint32_t ipi) {
@@ -25,25 +25,29 @@ void ioapic_write(uint64_t base, uint32_t reg, uint32_t data) {
     *(volatile uint32_t*)(base + 16 + HIGH_VMA) = data;
 }
 
-void write_redirection(uint32_t gsi, uint64_t data, uint64_t index) {
-    uint32_t reg = ((gsi - madt_info.ent1[index].gsi_base) * 2) + 16;
-    ioapic_write(madt_info.ent1[index].ioapic_addr, reg, (uint32_t)data);
-    ioapic_write(madt_info.ent1[index].ioapic_addr, reg + 1, (uint32_t)(data >> 32));
+void write_redirection(uint32_t gsi, uint64_t data, madt1_t *madt1_entry) {
+    uint32_t reg = ((gsi - madt1_entry->gsi_base) * 2) + 16;
+    ioapic_write(madt1_entry->ioapic_addr, reg, (uint32_t)data);
+    ioapic_write(madt1_entry->ioapic_addr, reg + 1, (uint32_t)(data >> 32));
 }
 
-uint64_t read_redirection(uint32_t gsi, uint64_t index) {
-    uint32_t reg = ((gsi - madt_info.ent1[index].gsi_base) * 2) + 16;
-    uint64_t data = (uint64_t)ioapic_read(madt_info.ent1[index].ioapic_addr, reg);
-    return data | ((uint64_t)(ioapic_read(madt_info.ent1[index].ioapic_addr, reg + 1)) << 32);
+uint64_t read_redirection(uint32_t gsi, madt1_t *madt1_entry) {
+    uint32_t reg = ((gsi - madt1_entry->gsi_base) * 2) + 16;
+    uint64_t data = (uint64_t)ioapic_read(madt1_entry->ioapic_addr, reg);
+    return data | ((uint64_t)(ioapic_read(madt1_entry->ioapic_addr, reg + 1)) << 32);
 }
 
 void mask_GSI(uint32_t gsi) {
-    write_redirection(gsi,  read_redirection(gsi, 0) | (1 << 16), 0);
+    madt1_t madt1_entry;
+    vec_search(madt1, 0, &madt1_entry);
+    write_redirection(gsi,  read_redirection(gsi, 0) | (1 << 16), &madt1_entry);
 }
 
 void unmask_GSI(uint32_t gsi) {
-    write_redirection(gsi, read_redirection(gsi, 0) & (1 << 16), 0);
-    write_redirection(gsi, gsi + 32, 0);
+    madt1_t madt1_entry;
+    vec_search(madt1, 0, &madt1_entry);
+    write_redirection(gsi, read_redirection(gsi, 0) & (1 << 16), &madt1_entry);
+    write_redirection(gsi, gsi + 32, &madt1_entry);
 }
 
 uint32_t get_max_GSI(uint64_t ioapic_base) {
@@ -79,14 +83,17 @@ void apic_init() {
     outb(0xa1, 0xff); 
     outb(0x21, 0xff);
 
-    for(uint8_t i = 0; i < madt_info.ent1cnt; i++) {
-        for(uint32_t j = madt_info.ent1[i].gsi_base; j < get_max_GSI(madt_info.ent1[i].ioapic_addr); j++) {
-            mask_GSI(j);
-        }
+    for(uint8_t i = 0; i < madt0.element_cnt; i++) {
+        madt1_t madt1_entry;
+        vec_search(madt1, i, &madt1_entry);
+        for(uint32_t j = madt1_entry.gsi_base; j < get_max_GSI(madt1_entry.ioapic_addr); j++)
+            mask_GSI(j);  
     }
 
+    madt1_t madt1_entry;
+    vec_search(madt1, 0, &madt1_entry);
     for(uint8_t i = 0; i < 16; i++) {
-        write_redirection(i, i + 32, 0);
+        write_redirection(i, i + 32, &madt1_entry);
     }
 
     mask_GSI(2);

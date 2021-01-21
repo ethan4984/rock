@@ -44,14 +44,13 @@ static void bootstrap_core() {
 
     lapic_timer_init(50);
 
-    for(;;) {
+    for(;;)
         asm ("pause");
-    }
 }
 
 void init_smp() {
-    core_local = kmalloc(sizeof(core_local_t) * madt_info.ent0cnt);
-    for(uint8_t i = 0; i < madt_info.ent0cnt; i++) {
+    core_local = kmalloc(sizeof(core_local_t) * madt0.element_cnt);
+    for(uint8_t i = 0; i < madt0.element_cnt; i++) {
         core_local[i] = (core_local_t) { .pid = -1, .tid = -1, .core_index = i };
     }
 
@@ -62,13 +61,15 @@ void init_smp() {
     static idtr_t idtr;
     asm volatile ("sidt %0" :: "m"(idtr));
 
-    for(uint64_t i = 1; i < madt_info.ent0cnt; i++) {
-        uint32_t coreID = madt_info.ent0[i].apic_ID;
+    for(uint64_t i = 1; i < madt0.element_cnt; i++) {
+        madt0_t madt0_entry;
+        vec_search(madt0, i, &madt0_entry);
+        uint32_t coreID = madt0_entry.apic_ID;
 
         kprintf("[SMP]", "Starting up core %d", i); 
         kvprintf("[SMP] Starting up core %d\n", i); 
 
-        if(madt_info.ent0[i].flags == 1) {
+        if(madt0_entry.flags == 1) {
             prep_trampoline(pmm_alloc(2) + 0x2000 + HIGH_VMA, grab_PML4(), (uint64_t)bootstrap_core, (uint64_t)&idtr);
             send_IPI(coreID, 0x500); // MT = 0b101 for init ipi
             send_IPI(coreID, 0x600 | 1); // MT = 0b11 for startup, vec = 1 for 0x1000
@@ -84,15 +85,15 @@ core_local_t *get_core_local(int64_t index) {
     return &core_local[index];
 }
 
-void spin_lock(char *ptr) {
+void spin_lock(void *ptr) {
     volatile uint64_t cnt = 0;
-    while(__atomic_test_and_set(ptr, __ATOMIC_ACQUIRE)) {
+    while(__atomic_test_and_set((char*)ptr, __ATOMIC_ACQUIRE)) {
         if(++cnt == 0x10000000) {
             kprintf("[KDEBUG]", "Possible deadlock");
         }
     }
 }
 
-void spin_release(char *ptr) {
-    __atomic_clear(ptr, __ATOMIC_RELEASE);
+void spin_release(void *ptr) {
+    __atomic_clear((char*)ptr, __ATOMIC_RELEASE);
 }

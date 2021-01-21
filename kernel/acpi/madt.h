@@ -2,6 +2,7 @@
 #define MADT_H_
 
 #include <acpi/tables.h>
+#include <vec.h>
 
 typedef struct {
     acpihdr_t acpihdr;
@@ -41,23 +42,22 @@ typedef struct {
     uint8_t lapic_override;
 } __attribute__((packed)) madt5_t;
 
-typedef struct { 
-    uint8_t ent0cnt;
-    uint8_t ent1cnt;
-    uint8_t ent2cnt;
-    uint8_t ent4cnt;
-    uint8_t ent5cnt;
+extern madt_t *madt;
 
-    madt0_t *ent0;
-    madt1_t *ent1;
-    madt2_t *ent2;
-    madt4_t *ent4;
-    madt5_t *ent5;
+vec_create(madt0_t, madt0);
+extern_vec(madt0);
 
-    uint32_t lapic_addr;
-} madt_info_t;
+vec_create(madt1_t, madt1);
+extern_vec(madt1);
 
-extern madt_info_t madt_info;
+vec_create(madt2_t, madt2);
+extern_vec(madt2);
+
+vec_create(madt4_t, madt4);
+extern_vec(madt4);
+
+vec_create(madt5_t, madt5);
+extern_vec(madt5);
 
 void madt_init();
 

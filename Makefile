@@ -15,11 +15,12 @@ build:
 	sudo cp kernel/bin/rock.elf diskImage/boot/
 	sudo cp kernel/limine.cfg diskImage/
 	sudo cp kernel/fs/fstab diskImage/
+	sudo cp assets/background.bmp diskImage
 	sync
 	sudo umount diskImage/
 	sudo losetup -d `cat loopback_dev`
 	rm -rf diskImage loopback_dev
-	cd tools/limine && ./limine-install limine.bin ../../rock.img 
+	limine-install rock.img 
 
 qemu: build
 	touch serial.log

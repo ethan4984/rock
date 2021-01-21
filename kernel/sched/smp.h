@@ -18,8 +18,8 @@ core_local_t *get_core_local(int64_t index);
 
 void init_smp();
 
-void spin_lock(char *lock);
+void spin_lock(void *lock);
 
-void spin_release(char *lock);
+void spin_release(void *lock);
 
 #endif
