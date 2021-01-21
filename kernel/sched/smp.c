@@ -62,8 +62,7 @@ void init_smp() {
     asm volatile ("sidt %0" :: "m"(idtr));
 
     for(uint64_t i = 1; i < madt0.element_cnt; i++) {
-        madt0_t madt0_entry;
-        vec_search(madt0, i, &madt0_entry);
+        madt0_t madt0_entry = *vec_search(madt0_t, madt0, i);
         uint32_t coreID = madt0_entry.apic_ID;
 
         kprintf("[SMP]", "Starting up core %d", i); 

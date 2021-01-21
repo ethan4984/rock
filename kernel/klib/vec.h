@@ -93,15 +93,14 @@ out: \
     spin_release(&name.lock); \
 })
 
-#define vec_search(name, index, value) ({ \
+#define vec_search(type, name, index) ({ \
     __label__ ret; \
-    int ret = 0; \
+    type *ret = NULL; \
     spin_lock(&name.lock); \
     if(name.element_cnt <= (index)) { \
-        ret = -1; \
         goto ret; \
     } \
-    *(value) = name.data[index]; \
+    ret = &name.data[index]; \
 ret: \
     spin_release(&name.lock); \
     ret; \
