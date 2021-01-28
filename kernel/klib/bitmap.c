@@ -8,7 +8,7 @@ typedef struct {
 
 static uint8_t *bitmap;
 static alloc_t *allocs;
-static uint64_t start, bitmap_size, allocation_size;
+static size_t start, bitmap_size, allocation_size;
 
 static int64_t first_free();
 static int64_t first_free_alloc();
@@ -26,27 +26,27 @@ void bitmap_init() {
     memset8((uint8_t*)allocs, 0, allocation_size);
 }
 
-void *kmalloc(uint64_t size) {
+void *kmalloc(size_t size) {
     uint32_t cnt = 0, block_count = ROUNDUP(size, BLOCK_SIZE);
     void *base = (void*)(first_free() * BLOCK_SIZE); 
 
-    for(uint64_t i = first_free(); i < bitmap_size; i++) {
+    for(size_t i = first_free(); i < bitmap_size; i++) {
         if(BM_TEST(bitmap, i)) {
-            base = (void*)((uint64_t)base + (cnt + 1) * BLOCK_SIZE);
+            base = (void*)((size_t)base + (cnt + 1) * BLOCK_SIZE);
             cnt = 0;
             continue;
         }
 
         if(++cnt == block_count) {
-            uint64_t slot = first_free_alloc();
+            size_t slot = first_free_alloc();
 
-            allocs[slot] = (alloc_t) { block_count, (uint32_t)((uint64_t)base / BLOCK_SIZE) };
+            allocs[slot] = (alloc_t) { block_count, (uint32_t)((size_t)base / BLOCK_SIZE) };
 
             for(int64_t j = 0; j < block_count; j++) {
-                BM_SET(bitmap, (uint64_t)base / BLOCK_SIZE + j);
+                BM_SET(bitmap, (size_t)base / BLOCK_SIZE + j);
             }
 
-            return (void*)((uint64_t)base + start + HIGH_VMA);
+            return (void*)((size_t)base + start + HIGH_VMA);
         }
     }
 
@@ -54,18 +54,21 @@ void *kmalloc(uint64_t size) {
     return NULL;
 }
 
-uint64_t kfree(void *addr) {
-    uint64_t bitmap_base = ((uint64_t)addr - HIGH_VMA - start) / BLOCK_SIZE, size = 0;
+size_t kfree(void *addr) {
+    size_t bitmap_base = ((size_t)addr - HIGH_VMA - start) / BLOCK_SIZE, size = 0;
 
     size_t i;
     for(i = 0; i < allocation_size; i++) {
         if(allocs[i].blk_idx == bitmap_base)
-            break;
+            goto found;
     }
+
+    return 0;
+found:
 
     size = allocs[i].blk_cnt;
 
-    for(uint64_t j = bitmap_base; j < bitmap_base + size; j++) {
+    for(size_t j = bitmap_base; j < bitmap_base + size; j++) {
         BM_CLEAR(bitmap, j);
     }
 
@@ -74,28 +77,28 @@ uint64_t kfree(void *addr) {
     return size;
 }
 
-void *krealloc(void *addr, uint64_t size) {
-    uint64_t alloc_size = kfree(addr);
+void *krealloc(void *addr, size_t size) {
+    size_t alloc_size = kfree(addr);
     void *new_addr = kmalloc(size);
-    memcpy64((uint64_t*)new_addr, (uint64_t*)addr, (alloc_size * BLOCK_SIZE) / 8);
+    memcpy64((size_t*)new_addr, (size_t*)addr, (alloc_size * BLOCK_SIZE) / 8);
     return new_addr;
 }
 
-void *krecalloc(void *addr, uint64_t size) {
-    uint64_t alloc_size = kfree(addr);
+void *krecalloc(void *addr, size_t size) {
+    size_t alloc_size = kfree(addr);
     void *new_addr = kcalloc(size);
-    memcpy64((uint64_t*)new_addr, (uint64_t*)addr, (alloc_size * BLOCK_SIZE) / 8);
+    memcpy64((size_t*)new_addr, (size_t*)addr, (alloc_size * BLOCK_SIZE) / 8);
     return new_addr;
 }
 
-void *kcalloc(uint64_t cnt) {
+void *kcalloc(size_t cnt) {
     uint8_t *ret = kmalloc(cnt);
     memset8(ret, 0, cnt);
     return ret;
 }
 
 static int64_t first_free() {
-    for(uint64_t i = 0; i < bitmap_size; i++) {
+    for(size_t i = 0; i < bitmap_size; i++) {
         if(!BM_TEST(bitmap, i))
             return i;
     }

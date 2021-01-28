@@ -1,18 +1,16 @@
-#ifndef EXT2_SUPERBLOCK_H_
-#define EXT2_SUPERBLOCK_H_
+#ifndef EXT2_H_
+#define EXT2_H_
 
-#include <fs/ext2/inode.h>
+#include <fs/ext2/ext2.h>
+#include <fs/vfs.h>
 
-ext2_fs_t *fs_check_ext2(partition_t part);
+int ext2_check_fs(devfs_node_t *devfs_node);
 
-int ext2_read(partition_t *part, char *path, uint64_t start, uint64_t cnt, void *buffer);
-
-int ext2_write(partition_t *part, char *path, uint64_t start, uint64_t cnt, void *buffer);
-
-int ext2_mkdir(partition_t *part, char *parent, char *name, uint16_t permissions);
-
-int ext2_touch(partition_t *part, char *parent, char *name, uint16_t permissions);
-
-void ext2_delete(partition_t *part, char *path);
+int ext2_read(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf);
+int ext2_write(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf);
+int ext2_mkdir(vfs_node_t *vfs_node, uint16_t perms);
+int ext2_open(vfs_node_t *vfs_node, int flags);
+int ext2_unlink(vfs_node_t *vfs_node);
+int ext2_refresh(vfs_node_t *vfs_node);
 
 #endif

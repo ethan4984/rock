@@ -35,21 +35,14 @@ enum {
 };
 
 uint8_t serial_read();
-
 void serial_write(uint8_t data);
-
 void serial_write_str(const char *str);
-
 void print_args(const char *str, va_list arg, void (*fp)(uint8_t));
-
 void kprintf(const char *prefix, const char *str, ...);
-
+void sprintf(char *buffer, const char *str, int null_term, ...);
 void kvprintf(const char *str, ...);
-
 void kpanic(const char *message, ...);
-
 void g_putchar(uint8_t c);
-
 void stacktrace(uint64_t *rbp);
 
 #endif

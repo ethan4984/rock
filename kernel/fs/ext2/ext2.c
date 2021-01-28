@@ -1,122 +1,130 @@
-#include <fs/ext2/block.h>
-#include <fs/ext2/dir.h>
-#include <fs/ext2/inode.h>
+#include <fs/device.h>
 #include <fs/ext2/ext2.h>
-#include <memutils.h>
-#include <output.h>
-#include <bitmap.h>
+#include <fs/ext2/inode.h>
+#include <fs/ext2/dir.h>
 
-ext2_fs_t *fs_check_ext2(partition_t part) {
-    ext2_fs_t *new_fs = kmalloc(sizeof(ext2_fs_t));
+int ext2_check_fs(devfs_node_t *devfs_node) {
+    ext2_fs_t *ext2 = kmalloc(sizeof(ext2_fs_t));
 
-    partition_read(&part, 0x400, sizeof(ext2_superblock_t), &new_fs->superblock);
-    if(new_fs->superblock.signature != 0xef53) {
-        kfree(new_fs);
-        return NULL;
-    }
-    
-    new_fs->block_size = 1024 << new_fs->superblock.block_size;
-    new_fs->frag_size = 1024 << new_fs->superblock.frag_size;
+    msd_raw_read(devfs_node, SECTOR_SIZE * 2, sizeof(ext2_superblock_t), &ext2->superblock);
 
-    part.ext2_fs = new_fs;
-    part.ext2_fs->root_inode = ext2_inode_read_entry(&part, 2);
-    part.ext2_fs->bgd_cnt = part.ext2_fs->superblock.block_cnt / part.ext2_fs->superblock.blocks_per_group;
-
-    return new_fs;
-}
-
-int ext2_read(partition_t *part, char *path, uint64_t start, uint64_t cnt, void *buffer) {
-    ext2_dir_entry_t dir;
-    if(ext2_read_dir_entry(part, &part->ext2_fs->root_inode, &dir, path) == -1) { 
-        kprintf("[KDEBUG]", "\"%s\" does not exist", path);
-        return 0;
+    if(ext2->superblock.signature != 0xef53) {
+        kfree(ext2);
+        return -1;
     }
 
-    ext2_inode_t inode = ext2_inode_read_entry(part, dir.inode);
-    ext2_inode_read(part, &inode, start, cnt, buffer);
-    return cnt;
-}
+    devfs_node->device->fs = kmalloc(sizeof(filesystem_t));
+    devfs_node->device->fs->ext2_fs = ext2;
 
-int ext2_write(partition_t *part, char *path, uint64_t start, uint64_t cnt, void *buffer) {
-    ext2_dir_entry_t dir;
-    if(ext2_read_dir_entry(part, &part->ext2_fs->root_inode, &dir, path) == -1) { 
-        kprintf("[KDEBUG]", "\"%s\" does not exist", path);
-        return 0;
-    }
+    ext2->block_size = 1024 << ext2->superblock.block_size;
+    ext2->frag_size = 1024 << ext2->superblock.frag_size;
+    ext2->bgd_cnt = ext2->superblock.block_cnt / ext2->superblock.blocks_per_group;
+    ext2->root_inode = ext2_inode_read_entry(devfs_node, 2);
 
-    ext2_inode_t inode = ext2_inode_read_entry(part, dir.inode);
-    ext2_inode_write(part, &inode, start, cnt, buffer);
-    return cnt;
-}
+    devfs_node->device->fs->read = ext2_read;
+    devfs_node->device->fs->write = ext2_write;
+    devfs_node->device->fs->mkdir = ext2_mkdir;
+    devfs_node->device->fs->open = ext2_open;
+    devfs_node->device->fs->unlink = ext2_unlink;
+    devfs_node->device->fs->refresh = ext2_refresh;
 
-int ext2_mkdir(partition_t *part, char *parent, char *name, uint16_t permissions) {
-    ext2_inode_t parent_inode;
-    int parent_inode_index;
-
-    if(strcmp(parent, "/") == 0) {
-        parent_inode = part->ext2_fs->root_inode;
-        parent_inode_index = 2; 
-    } else {
-        ext2_dir_entry_t dir;
-        if(ext2_read_dir_entry(part, &part->ext2_fs->root_inode, &dir, parent) == -1) {
-            kprintf("[KDEBUG]", "Invalid parent %s", parent);
-            return -1;
-        }
-        parent_inode = ext2_inode_read_entry(part, dir.inode);
-        parent_inode_index = dir.inode;
-    }
-
-    uint32_t inode_index = ext2_alloc_inode(part);
-
-    ext2_inode_t new_inode = {  .permissions = 0x4000 | (0xfff & permissions),
-                                .hard_link_cnt = 2,
-                                .size32l = part->ext2_fs->block_size
-                             };
-
-    new_inode.blocks[0] = ext2_alloc_block(part);
-
-    parent_inode.hard_link_cnt++;
-    ext2_inode_write_entry(part, parent_inode_index, &parent_inode);
-
-    ext2_inode_write_entry(part, inode_index, &new_inode);
-    ext2_create_dir_entry(part, &parent_inode, inode_index, name, 0);
     return 0;
 }
 
-int ext2_touch(partition_t *part, char *parent, char *name, uint16_t permissions) {
-    ext2_inode_t parent_inode;
-    int parent_inode_index;
-
-    if(*name == '/') 
-        name++;
-
-    if(strcmp(parent, "/") == 0) {
-        parent_inode = part->ext2_fs->root_inode;
-        parent_inode_index = 2; 
-    } else {
-        ext2_dir_entry_t dir;
-        if(ext2_read_dir_entry(part, &part->ext2_fs->root_inode, &dir, parent) == -1) {
-            kprintf("[KDEBUG]", "Invalid parent %s", parent);
-            return -1;
-        }
-        parent_inode = ext2_inode_read_entry(part, dir.inode);
-        parent_inode_index = dir.inode;
+int ext2_open(vfs_node_t *vfs_node, int flags) {
+    if(flags & O_CREAT) { // TODO create the file
+        return 0;
     }
 
-    uint32_t inode_index = ext2_alloc_inode(part);
+    ext2_dir_t dir;
+    if(ext2_find_dir(vfs_node->fs->devfs_node, &vfs_node->fs->ext2_fs->root_inode, &dir, vfs_node->relative_path) == -1)
+        return -1;
 
-    ext2_inode_t new_inode = {  .permissions = 0x8000 | (0xfff & permissions),
-                                .hard_link_cnt = 2,
-                                .size32l = part->ext2_fs->block_size
-                             };
-    
-    new_inode.blocks[0] = ext2_alloc_block(part);
+    return 0;
+}
 
-    parent_inode.hard_link_cnt++;
-    ext2_inode_write_entry(part, parent_inode_index, &parent_inode);
+int ext2_read(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf) {
+    devfs_node_t *devfs_node = vfs_node->fs->devfs_node;
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
 
-    ext2_inode_write_entry(part, inode_index, &new_inode);
-    ext2_create_dir_entry(part, &parent_inode, inode_index, name, 0);
+    ext2_dir_t dir;
+    if(ext2_find_dir(devfs_node, &ext2->root_inode, &dir, vfs_node->relative_path) == -1)
+        return -1;
 
+    ext2_inode_t inode = ext2_inode_read_entry(devfs_node, dir.inode);
+    ext2_inode_read(devfs_node, &inode, off, cnt, buf);
+    return cnt;
+}
+
+int ext2_write(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf) {
+    devfs_node_t *devfs_node = vfs_node->fs->devfs_node;
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+
+    ext2_dir_t dir;
+    if(ext2_find_dir(devfs_node, &ext2->root_inode, &dir, vfs_node->relative_path) == -1)
+        return -1;
+
+    ext2_inode_t inode = ext2_inode_read_entry(devfs_node, dir.inode);
+    ext2_inode_write(devfs_node, &inode, dir.inode, off, cnt, buf);
+    return cnt;
+}
+
+static void ext2_refresh_node(devfs_node_t *devfs_node, ext2_inode_t *inode, char *mount_gate) {
+    void *buffer = kcalloc(inode->size32l);
+    ext2_inode_read(devfs_node, inode, 0, inode->size32l, buffer);
+
+    for(uint32_t i = 0; i < inode->size32l; i++) {
+        ext2_dir_t *dir = (ext2_dir_t*)((uintptr_t)buffer + i);
+
+        char *dir_name = kmalloc(dir->name_length + 1);
+        strncpy(dir_name, dir->name, dir->name_length);
+        dir_name[dir->name_length] = '\0';
+
+        char *absolute_path = str_congregate(mount_gate, dir_name);
+        vfs_create_node_deep(&vfs_root_node, absolute_path);
+
+        if(strcmp(dir_name, ".") == 0 || strcmp(dir_name, "..") == 0) {
+            kfree(dir_name);
+            i += dir->entry_size - 1;
+            continue;
+        }
+
+        ext2_inode_t dir_inode = ext2_inode_read_entry(devfs_node, dir->inode);
+
+        if((dir_inode.permissions & 0x4000) == 0x4000) {
+            char *dir_path = str_congregate(absolute_path, "/");
+            kfree(absolute_path);
+            vfs_create_node_deep(&vfs_root_node, dir_path);
+            ext2_refresh_node(devfs_node, &dir_inode, dir_path);
+        }
+
+        uint32_t expected_size = ALIGN_UP(sizeof(ext2_dir_t) + dir->name_length, 4);
+        if(dir->entry_size != expected_size) {
+            return;
+        }
+
+        kfree(dir_name);
+        i += dir->entry_size - 1;
+    }
+}
+
+int ext2_refresh(vfs_node_t *vfs_node) {
+    devfs_node_t *devfs_node = vfs_node->fs->devfs_node;
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+
+    ext2_refresh_node(devfs_node, &ext2->root_inode, devfs_node->device->fs->mount_gate); 
+
+    return 0; 
+}
+
+int ext2_mkdir(vfs_node_t *vfs_node, uint16_t perms) {
+    return 0;
+}
+
+int ext2_touch(vfs_node_t *vfs_node, uint16_t perms) { 
+    return 0;
+}
+
+int ext2_unlink(vfs_node_t *vfs_node) {
     return 0;
 }

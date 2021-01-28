@@ -4,11 +4,11 @@
 #include <bitmap.h>
 #include <vec.h>
 
-vec(madt0);
-vec(madt1);
-vec(madt2);
-vec(madt4);
-vec(madt5);
+global_vec(madt0);
+global_vec(madt1);
+global_vec(madt2);
+global_vec(madt4);
+global_vec(madt5);
 
 madt_t *madt;
 

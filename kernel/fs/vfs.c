@@ -1,201 +1,241 @@
-#include <fs/ext2/ext2.h>
 #include <fs/vfs.h>
 #include <output.h>
 #include <bitmap.h>
 
-static partition_t *partitions;
-static uint64_t partition_cnt = 0;
+vfs_node_t vfs_root_node = { .absolute_path = "/",
+                             .name = "/",
+                           };
 
-typedef struct {
-    uint8_t drive_status;
-    uint8_t starting_chs[3];
-    uint8_t partition_type;
-    uint8_t ending_chs[3];
-    uint32_t starting_lba;
-    uint32_t sector_cnt;
-} __attribute__((packed)) mbr_partition_t;
-
-typedef struct {
-    uint64_t identifier;
-    uint32_t version;
-    uint32_t hdr_size;
-    uint32_t checksum;
-    uint32_t reserved0;
-    uint64_t hdr_lba;
-    uint64_t alt_hdr_lba;
-    uint64_t first_block;
-    uint64_t last_block;
-    uint64_t guid[2];
-    uint64_t guid_lba;
-    uint32_t partition_ent_cnt;
-    uint32_t partition_ent_size;
-    uint32_t crc32_partition_array;
-} __attribute__((packed)) gpt_partition_table_hdr;
-
-static uint8_t partition_check_fs(partition_t *part) {
-    part->ext2_fs = fs_check_ext2(*part);
-    if(part->ext2_fs != NULL) {
-        part->read = ext2_read;
-        part->write = ext2_write;
-        part->touch = ext2_touch;
-        part->mkdir = ext2_mkdir;
-        return EXT2; 
-    }
-    return UNKNOWN;
-}
-
-static void add_partition(partition_t *new_partition) {
-    if((partition_cnt + 1) % 4 == 0) {
-        partitions = krealloc(partitions, sizeof(partition_t) * (partition_cnt + 4));
+vfs_node_t *vfs_create_node(vfs_node_t *parent, char *name) {
+    char *absolute_path;
+    if(parent != &vfs_root_node)  {
+        char *dir_path = str_congregate(parent->absolute_path, "/");
+        absolute_path = str_congregate(dir_path, name);
+        kfree(dir_path);
+    } else {
+        absolute_path = str_congregate(parent->absolute_path, name);
     }
 
-    partitions[partition_cnt++] = *new_partition;
+    char *relative_path = NULL;
+    if(parent->fs != NULL && parent->fs->mount_gate != NULL)
+        relative_path = absolute_path + strlen(parent->fs->mount_gate);
+
+    vfs_node_t new_node = { .parent = parent,
+                            .absolute_path = absolute_path,
+                            .relative_path = relative_path,
+                            .name = name,
+                            .fs = parent->fs
+                          };
+
+    vec_push(vfs_node_t, parent->child_nodes, new_node);
+    
+    return vec_search(vfs_node_t, parent->child_nodes, parent->child_nodes.element_cnt - 1);
 }
 
-static partition_t *find_mount_point(char *path) {
-    for(uint64_t i = 0; i < partition_cnt; i++) {
-        if(strncmp(partitions[i].mount_point, path, strlen(partitions[i].mount_point)) == 0)
-            return &partitions[i];
+vfs_node_t *vfs_create_node_deep(vfs_node_t *parent, char *path) {
+    char *buffer = kmalloc(strlen(path));
+    strcpy(buffer, path);
+
+    vfs_node_t *node = &vfs_root_node;
+    vfs_node_t *node_parent;
+
+    char *sub_path, *save = buffer;
+    while((sub_path = strtok_r(save, "/", &save))) {
+        node_parent = node;
+        node = vfs_relative_path(parent, sub_path);
+        if(node == NULL) {
+            char *name = kmalloc(strlen(sub_path));
+            strcpy(name, sub_path);
+
+            if(strtok_r(save, "/", &save) == NULL) {
+                node = vfs_create_node(node_parent, name);
+            } else {
+                node = NULL;
+            }
+
+            kfree(name);
+            kfree(buffer);
+
+            return node;
+        }
     }
     return NULL;
 }
 
-static void fstab_mount(char *line) {
-    char *save = line;
-    char *drive_uid = strtok_r(save, " ", &save);
-    char *partition_index = strtok_r(save, " ", &save);
-    char *mount_point = strtok_r(save, " ", &save);
-
-    for(uint64_t i = 0; i < partition_cnt; i++) {
-        if(partitions[i].partition_index == atoi(partition_index)) { // TODO take into consdieration the device uid
-            partitions[i].mount_point = mount_point;
-            return;
-        }
-    }
-}
-
-int fs_read(char *path, uint64_t start, uint64_t cnt, void *buf) {
-    partition_t *part = find_mount_point(path);
-    if(part == NULL) {
-        kprintf("[KDEBUG]", "Invalid mount point");
-        return -1; 
-    }
-    return part->read(part, path, start, cnt, buf);
-}
-
-int fs_write(char *path, uint64_t start, uint64_t cnt, void *buf) {
-    partition_t *part = find_mount_point(path);
-    if(part == NULL) {
-        kprintf("[KDEBUG]", "Invalid mount point");
-        return -1; 
-    }
-    return part->write(part, path, start, cnt, buf);
-}
-
-int fs_mkdir(char *path, uint16_t permissions) {
-    partition_t *part = find_mount_point(path);
-    if(part == NULL) {
-        kprintf("[KDEBUG]", "Invalid mount point");
-        return -1; 
-    }
-    return part->mkdir(part, "/", path, permissions);
-}
-
-int fs_touch(char *path, uint16_t permissions) {
-    partition_t *part = find_mount_point(path);
-    if(part == NULL) {
-        kprintf("[KDEBUG]", "Invalid mount point");
-        return -1; 
-    }
+vfs_node_t *vfs_find_parent(char *path) {
+    if(strcmp(path, "/") == 0)
+        return &vfs_root_node;
 
     char *buffer = kmalloc(strlen(path));
     strcpy(buffer, path);
-    
-    int index = find_last_char(buffer, '/');
-    if(index != 0) {
-        buffer[index] = '\0';
-        return part->touch(part, buffer, buffer + index + 1, permissions);
-    }
 
-    return part->touch(part, "/", path, permissions);
+    vfs_node_t *node = &vfs_root_node;
+    vfs_node_t *parent = NULL;
+
+    char *sub_path, *save = buffer;
+    while((sub_path = strtok_r(save, "/", &save))) {
+        parent = node;
+        node = vfs_relative_path(node, sub_path);
+        if(node == NULL) {
+            kfree(buffer);
+            return NULL;
+        }
+    }
+   
+    kfree(buffer);
+    return parent;
 }
 
-void partition_mount_all() {
-    char *fstab = kmalloc(0x1000);
+vfs_node_t *vfs_absolute_path(char *path) {
+    if(strcmp(path, "/") == 0)
+        return &vfs_root_node;
 
-    for(uint64_t i = 0; i < partition_cnt; i++) { 
-        if(partitions[i].device_type == PRIMARY_DEVICE) {
-            partitions[i].mount_point = "/";
-            partitions[i].read(&partitions[i], "/fstab", 0, 0x1000, fstab);
-            char *line = strtok(fstab, "\n");
-            while(line != NULL) {
-                fstab_mount(line); 
-                line = strtok(NULL, "\n");
-            }
-            break; 
+    if(*path == '/')
+        path++;
+
+    char *buffer = kmalloc(strlen(path));
+    strcpy(buffer, path);
+
+    vfs_node_t *node = &vfs_root_node;
+
+    char *sub_path, *save = buffer;
+    while((sub_path = strtok_r(save, "/", &save))) {
+        node = vfs_relative_path(node, sub_path);
+        if(node == NULL) {
+            kfree(buffer);
+            return NULL;
         }
     }
 
-    kfree(fstab);
+    kfree(buffer);
+    return node;
 }
 
-static void scan_partitions(device_t *device) {
-    uint16_t mbr_signature;
-    device->read(device->device_index, 510, 2, &mbr_signature);
-
-    if(mbr_signature == 0xaa55) { // mbr partitioned drive detected
-        mbr_partition_t mbr_partitions[4];
-        device->read(device->device_index, 0x1be, sizeof(mbr_partitions), &mbr_partitions);
-
-        uint8_t uid[10];
-        device->read(device->device_index, 0x1b4, 10, &uid);
-        memcpy8((uint8_t*)device->uid, uid, 10);
-
-        for(uint8_t i = 0; i < 4; i++) {
-            if(mbr_partitions[i].partition_type == 0) // empty partition entry
-                continue;
-
-            partition_t partition = {   .device = device,
-                                        .device_offset = mbr_partitions[i].starting_lba * 0x200,
-                                        .sector_size = 512,
-                                        .fs_type = UNKNOWN,
-                                        .mount_point = (mbr_partitions[i].partition_type & (1 << 7 )) ? "/" : NULL,
-                                        .device_type = (mbr_partitions[i].partition_type & (1 << 7)) ? PRIMARY_DEVICE : SECONDARY_DEVICE,
-                                        .partition_index = i
-                                    };
-
-            partition.fs_type = partition_check_fs(&partition);
-
-            add_partition(&partition);
+vfs_node_t *vfs_relative_path(vfs_node_t *parent, char *name) {
+    for(size_t i = 0; i < parent->child_nodes.element_cnt; i++) {
+        vfs_node_t *node = vec_search(vfs_node_t, parent->child_nodes, i);
+        if(strcmp(node->name, name) == 0) {
+            return node;
         }
-        return; 
+    }
+    return NULL;
+}
+
+vfs_node_t *vfs_check_node(vfs_node_t *node) {
+    return vfs_absolute_path(node->absolute_path);
+}
+
+vfs_node_t *vfs_mkdir(vfs_node_t *parent, char *name) {
+    vfs_node_t *dir_node = vfs_create_node(parent, name);
+
+    vfs_create_node(dir_node, ".");
+    vfs_node_t *dotdot = vfs_create_node(dir_node, "..");
+    dotdot->parent = parent;
+
+    return dir_node;
+}
+
+static void vfs_remove_cluster(vfs_node_t *node) {
+    if(node->child_nodes.element_cnt != 0) {
+        for(size_t i = 0; i < node->child_nodes.element_cnt; i++) {
+            vfs_node_t *tmp = vec_search(vfs_node_t, node->child_nodes, i);
+            tmp->fs->unlink(tmp);
+            vfs_remove_cluster(tmp);
+        }
+        vec_delete(node->child_nodes);
+    } else {
+        node->fs->unlink(node);
+        vec_delete(node->child_nodes);
+    }
+}
+
+int vfs_remove_node(vfs_node_t *node) {
+    if(vfs_check_node(node) == NULL)
+        return -1;
+
+    vfs_remove_cluster(node);
+
+    return 0; 
+}
+
+int vfs_mount_dev(char *dev, char *mount_gate) {
+    vfs_node_t *mount_node = vfs_absolute_path(mount_gate);
+    if(mount_node == NULL) 
+        return -1;
+
+    devfs_node_t *devfs_node = path2devfs(dev);
+    if(devfs_node == NULL)
+        return -1;
+
+    if(devfs_node->device == NULL) 
+        return -1;
+
+    if(devfs_node->device->fs == NULL)
+        return -1;
+
+    kprintf("[FS]", "Mounting [%s] to [%s]", dev, mount_gate);
+
+    devfs_node->device->fs->mount_gate = mount_gate;
+    mount_node->fs = devfs_node->device->fs;
+
+    devfs_node->device->fs->refresh(mount_node);
+
+    return 0;
+}
+
+int vfs_mount_fs(filesystem_t *fs) {
+    vfs_node_t *vfs_node = vfs_absolute_path(fs->mount_gate);
+    if(vfs_node == NULL)
+        return -1;
+
+    vfs_node->fs = fs;
+
+    return 0;
+}
+
+int vfs_write(vfs_node_t *node, off_t off, off_t cnt, void *buf) {
+    if(node == NULL) {
+        return -1;
     }
 
-    gpt_partition_table_hdr gpt_hdr;
-    device->read(device->device_index, 512, sizeof(gpt_partition_table_hdr), &gpt_hdr);
+    return node->fs->write(node, off, cnt, buf);
+}
 
-    if(gpt_hdr.identifier == 0x4546492050415254) { // "EFI PART"
-        // TODO parse gpt partition tables
-        return;
+int vfs_read(vfs_node_t *node, off_t off, off_t cnt, void *buf) {
+    if(node == NULL) {
+        return -1;
     }
 
-    kprintf("[KDEBUG]", "Device detected with no partition table");
+    return node->fs->read(node, off, cnt, buf);
 }
 
-void partition_read(partition_t *partition, uint64_t start, uint64_t cnt, void *ret) {
-    partition->device->read(partition->device->device_index, start + partition->device_offset, cnt, ret);
+int vfs_open(char *path, int flags) {
+    vfs_node_t *node = vfs_absolute_path(path);
+    if(node == NULL && flags & O_CREAT) {
+        node = vfs_create_node_deep(&vfs_root_node, path);
+        if(node == NULL) 
+            return -1;
+        int ret = node->fs->open(node, flags);
+        if(ret == -1)
+            vfs_remove_node(node);
+        return ret;
+    } else if(node == NULL) {
+        return -1;
+    }
+
+    int ret = node->fs->open(node, flags);
+    if(ret == -1)
+        vfs_remove_node(node);
+
+    return ret;
 }
 
-void partition_write(partition_t *partition, uint64_t start, uint64_t cnt, void *ret) {
-    partition->device->write(partition->device->device_index, start + partition->device_offset, cnt, ret);
-}
+int vfs_unlink(char *path) {
+    vfs_node_t *node = vfs_absolute_path(path);
+    if(node == NULL)
+        return -1;
 
-void add_device(device_t *new_device) {
-    device_t *device = kmalloc(sizeof(device_t));
-    *device = *new_device; 
-    scan_partitions(device);
-}
+    vfs_remove_node(node);
 
-void vfs_init() {
-    partitions = kmalloc(sizeof(partition_t) * 4);
+    return 0;
 }

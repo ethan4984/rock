@@ -1,172 +1,208 @@
 #include <fs/ext2/inode.h>
 #include <fs/ext2/block.h>
-#include <bitmap.h>
 
-uint32_t ext2_alloc_inode(partition_t *part) {
-    uint8_t *bitmap = kcalloc(part->ext2_fs->block_size);
+uint32_t ext2_alloc_inode(devfs_node_t *devfs_node) {
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
 
-    for(uint32_t i = 3; i < part->ext2_fs->bgd_cnt; i++) {
-        ext2_bgd_t bgd = ext2_read_bgd(part, i);
+    uint8_t *bitmap = kcalloc(ext2->block_size);
+    for(uint32_t i = 3; i < ext2->bgd_cnt; i++) {
+        ext2_bgd_t bgd = ext2_read_bgd(devfs_node, i);
         if(!bgd.unallocated_inodes)
-            continue; 
+            continue;
 
-        partition_read(part, bgd.block_addr_inode, part->ext2_fs->block_size, bitmap);
-        for(uint32_t j = 0; j < part->ext2_fs->block_size; j++) {
+        msd_raw_read(devfs_node, bgd.block_addr_inode, ext2->block_size, bitmap);
+        for(uint32_t j = 0; j < ext2->block_size; j++) {
             if(!BM_TEST(bitmap, j)) {
                 BM_SET(bitmap, j);
-                partition_write(part, bgd.block_addr_inode, part->ext2_fs->block_size, bitmap);
+                msd_raw_write(devfs_node, bgd.block_addr_inode, ext2->block_size, bitmap);
 
                 bgd.unallocated_inodes--;
-                ext2_write_bgd(part, bgd, i);
+                ext2_write_bgd(devfs_node, &bgd, i);
 
-                return i * part->ext2_fs->superblock.inodes_per_group + j;
+                kfree(bitmap);
+                return i * ext2->superblock.inodes_per_group + j;
             }
         }
     }
+
+    kfree(ext2);
     return -1;
 }
 
+void ext2_free_inode(devfs_node_t *devfs_node, uint32_t index) {
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
 
-void ext2_free_inode(partition_t *part, uint32_t index) {
-    uint8_t *bitmap = kcalloc(part->ext2_fs->block_size);
-    uint32_t bgd_index = index / part->ext2_fs->superblock.inodes_per_group;
-    uint32_t bitmap_index = index - (index / part->ext2_fs->superblock.inodes_per_group);
+    uint8_t *bitmap = kcalloc(ext2->block_size);
+    uint32_t bgd_index = index / ext2->superblock.inodes_per_group;
+    uint32_t bitmap_index = index - (index / ext2->superblock.inodes_per_group);
 
-    ext2_bgd_t bgd = ext2_read_bgd(part, bgd_index);
+    ext2_bgd_t bgd = ext2_read_bgd(devfs_node, bgd_index);
 
-    partition_read(part, bgd.block_addr_inode, part->ext2_fs->block_size, bitmap);
-    if(!BM_TEST(bitmap, bitmap_index)) { 
+    msd_raw_read(devfs_node, bgd.block_addr_inode, ext2->block_size, bitmap);
+    if(!BM_TEST(bitmap, bitmap_index)) {
         kfree(bitmap);
         return;
     }
 
     BM_CLEAR(bitmap, bitmap_index);
-    partition_write(part, bgd.block_addr_inode, part->ext2_fs->block_size, bitmap);
+    msd_raw_write(devfs_node, bgd.block_addr_inode, ext2->block_size, bitmap);
+
     bgd.unallocated_inodes++;
-    ext2_write_bgd(part, bgd, bgd_index);
+    ext2_write_bgd(devfs_node, &bgd, bgd_index);
     kfree(bitmap);
 }
 
-void ext2_inode_read(partition_t *part, ext2_inode_t *inode, uint64_t start, uint64_t cnt, void *buffer) {
-    uint64_t block_size = part->ext2_fs->block_size, headway = 0;
+static uint32_t inode_get_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t iblock) {
+    uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size, block_index;
+    if(iblock < 12) { // direct
+        block_index = inode->blocks[iblock];
+    } else { 
+        iblock -= 12;
+        if(iblock * sizeof(uint32_t) >= block_size) { // double indirect
+            iblock -= block_size / sizeof(uint32_t);
+            uint32_t index = iblock / (block_size / sizeof(uint32_t));
+            if(index * sizeof(uint32_t) >= block_size) { // triple indirect
+                //TODO implement this
+            }
+            uint32_t indirect_offset = iblock % (block_size / sizeof(uint32_t));
+            uint32_t indirect_block;
+
+            msd_raw_read(devfs_node, inode->blocks[13] * block_size + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
+            msd_raw_read(devfs_node, (indirect_block * block_size) + (indirect_offset * sizeof(uint32_t)), sizeof(uint32_t), &block_index);
+        } else {
+            msd_raw_read(devfs_node, (inode->blocks[12] * block_size) + (iblock * sizeof(uint32_t)), sizeof(uint32_t), &block_index);
+        }
+    }
+    return block_index;
+}
+
+static int inode_set_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, uint32_t iblock, uint32_t disk_block) {
+    uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size;
+    if(iblock < 12) { // direct
+        inode->blocks[iblock] = disk_block;
+    } else { 
+        iblock -= 12;
+        if(iblock * sizeof(uint32_t) >= block_size) { // double indirect
+            iblock -= block_size / sizeof(uint32_t);
+            uint32_t index = iblock / (block_size / sizeof(uint32_t));
+            if(index * sizeof(uint32_t) >= block_size) { // triple indirect
+                //TODO implement this
+            }
+            uint32_t indirect_offset = iblock % (block_size / sizeof(uint32_t));
+            uint32_t indirect_block;
+
+            if(!inode->blocks[13]) {
+                uint32_t block = ext2_alloc_block(devfs_node);
+                if(block == (uint32_t)-1)
+                    return -1;
+
+                inode->blocks[13] = block;
+                ext2_inode_write_entry(devfs_node, inode, inode_index);
+            }
+
+            msd_raw_read(devfs_node, inode->blocks[13] * block_size + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
+            if(!indirect_block) {
+                uint32_t block = ext2_alloc_block(devfs_node);
+                if(block == (uint32_t)-1)
+                    return -1;
+                indirect_block = block;
+                msd_raw_write(devfs_node, inode->blocks[13] * block_size + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
+            }
+
+            msd_raw_write(devfs_node, (indirect_block * block_size) + (indirect_offset * sizeof(uint32_t)), sizeof(uint32_t), &disk_block);
+        } else {
+            if(!inode->blocks[12]) {
+                uint32_t block = ext2_alloc_block(devfs_node);
+                if(block == (uint32_t)-1)
+                    return -1;
+
+                inode->blocks[12] = block;
+                ext2_inode_write_entry(devfs_node, inode, inode_index);
+            }
+
+            msd_raw_write(devfs_node, (inode->blocks[12] * block_size) + (iblock * sizeof(uint32_t)), sizeof(uint32_t), &disk_block);
+        }
+    }
+    return 0;
+}
+
+static int inode_resize(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, off_t start, off_t cnt) {
+    if((start + cnt) < (inode->sector_cnt * SECTOR_SIZE))
+        return 0;
+
+    uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size;
+    uint32_t iblock_start = (inode->sector_cnt * SECTOR_SIZE) / block_size;
+    uint32_t iblock_end = ROUNDUP(start + cnt, block_size);
+
+    for(size_t i = iblock_start; i < iblock_end; i++) {
+        uint32_t disk_block = ext2_alloc_block(devfs_node);
+        if(disk_block == (uint32_t)-1)
+            return -1;
+
+        if(inode_set_block(devfs_node, inode, inode_index, i, disk_block) == -1)
+            return -1;
+    }
+
+    return 0;
+}
+
+void ext2_inode_read(devfs_node_t *devfs_node, ext2_inode_t *inode, off_t off, off_t cnt, void *buf) {
+    off_t headway = 0, block_size = devfs_node->device->fs->ext2_fs->block_size;
 
     while(headway < cnt) {
-        uint64_t block = (start + headway) / block_size;
+        uint32_t iblock = (off + headway) / block_size;
 
-        uint64_t size = cnt - headway;
-        uint64_t offset = (start + headway) % block_size;
+        size_t size = cnt - headway;
+        size_t offset = (off + headway) % block_size;
 
         if(size > block_size - offset)
             size = block_size - offset;
 
-        uint32_t block_index;
+        uint32_t disk_block = inode_get_block(devfs_node, inode, iblock);
 
-        if(block < 12) { // direct
-            block_index = inode->blocks[block];
-        } else { // indirect
-            block -= 12;
-            if(block * sizeof(uint32_t) >= block_size) { // double indirect
-                block -= block_size / sizeof(uint32_t);
-                uint32_t index = block / (block_size / sizeof(uint32_t));
-                if(index * sizeof(uint32_t) >= block_size) { // triple indirect
-                    
-                }
-                uint32_t offset = block % (block_size / sizeof(uint32_t));
-                uint32_t indirect_block;
+        msd_raw_read(devfs_node, disk_block * block_size + offset, size, (void*)((size_t)buf + headway));
 
-                partition_read(part, inode->blocks[13] * block_size + index * sizeof(uint32_t), sizeof(uint32_t), &indirect_block);
-                partition_read(part, indirect_block * block_size + offset * sizeof(uint32_t), sizeof(uint32_t), &block_index);
-            } else {
-                partition_read(part, (inode->blocks[12] * block_size) + (block * sizeof(uint32_t)), sizeof(uint32_t), &block_index);
-            }
-        }
+        headway += size;
+    }	
+}
 
-        partition_read(part, block_index * block_size + offset, size, (void*)((uint64_t)buffer + headway));
+void ext2_inode_write(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, off_t off, off_t cnt, void *buf) {
+    off_t headway = 0, block_size = devfs_node->device->fs->ext2_fs->block_size;
+
+    inode_resize(devfs_node, inode, inode_index, off, cnt);
+
+    while(headway < cnt) {
+        uint32_t iblock = (off + headway) / block_size;
+
+        size_t size = cnt - headway;
+        size_t offset = (off + headway) % block_size;
+
+        if(size > block_size - offset)
+            size = block_size - offset;
+
+        uint32_t disk_block = inode_get_block(devfs_node, inode, iblock);
+
+        msd_raw_write(devfs_node, disk_block * block_size + offset, size, (void*)((size_t)buf + headway));
 
         headway += size;
     }
 }
 
-static void inode_resize(partition_t *part, ext2_inode_t *inode, uint32_t previous_size) {
-    uint32_t block_size = part->ext2_fs->block_size;
-    uint32_t starting_block = ROUNDUP(previous_size, block_size);
-    uint32_t ending_block = ROUNDUP(inode->size32l, block_size);
+ext2_inode_t ext2_inode_read_entry(devfs_node_t *devfs_node, uint32_t index) {
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+    ext2_bgd_t bgd = ext2_read_bgd(devfs_node, index);
 
-    for(uint32_t block = starting_block; block < ending_block; block++) {
-        if(block < 12) { // direct
-            inode->blocks[block] = ext2_alloc_block(part);
-        } else { // indirect
-            block -= 12;
-            if(block * sizeof(uint32_t) >= block_size) { // double indirect 
-                block -= block_size / sizeof(uint32_t);
-                uint32_t index = block / (block_size / sizeof(uint32_t));
-                if(index * sizeof(uint32_t) >= block_size) { // triple indirect
-                    
-                }
-            } 
-        }
-    }
-}
-
-void ext2_inode_write(partition_t *part, ext2_inode_t *inode, uint64_t start, uint64_t cnt, void *buffer) {
-    if(inode->size32l < (start + cnt)) {
-        uint32_t previous_size = inode->size32h;
-        inode->size32l = start + cnt;
-        inode_resize(part, inode, previous_size);
-    }
-
-    uint64_t block_size = part->ext2_fs->block_size, headway = 0;
-
-    while(headway < cnt) {
-        uint64_t block = (start + headway) / block_size;
-
-        uint64_t size = cnt - headway;
-        uint64_t offset = (start + headway) % block_size;
-
-        if(size > block_size - offset)
-            size = block_size - offset;
-
-        uint32_t block_index;
-
-        if(block < 12) { // direct
-            block_index = inode->blocks[block];
-        } else { // indirect
-            block -= 12;
-            if(block * sizeof(uint32_t) >= block_size) { // double indirect
-                block -= block_size / sizeof(uint32_t);
-                uint32_t index = block / (block_size / sizeof(uint32_t));
-                if(index * sizeof(uint32_t) >= block_size) { // triple indirect
-                     
-                }
-                uint32_t offset = block % (block_size / sizeof(uint32_t));
-                uint32_t indirect_block;
-
-                partition_read(part, (inode->blocks[13] * block_size) + (index * sizeof(uint32_t)), sizeof(uint32_t), &indirect_block);
-                partition_read(part, indirect_block * block_size + offset, sizeof(uint32_t), &block_index);
-            } else {
-                partition_read(part, (inode->blocks[12] * block_size) + (block * sizeof(uint32_t)), sizeof(uint32_t), &block_index);
-            }
-        }
-
-        partition_write(part, block_index * block_size + offset, size, (void*)((uint64_t)buffer + headway));
-
-        headway += size;
-    }
-}
-
-ext2_inode_t ext2_inode_read_entry(partition_t *part, uint32_t index) {
-    ext2_bgd_t bgd = ext2_read_bgd(part, index);
-
-    uint64_t inode_table_index = (index - 1) % part->ext2_fs->superblock.inodes_per_group;
+    size_t inode_table_index = (index - 1) % ext2->superblock.inodes_per_group;
     ext2_inode_t inode;
 
-    partition_read(part, (bgd.inode_table_block * part->ext2_fs->block_size) + (part->ext2_fs->superblock.inode_size * inode_table_index), sizeof(ext2_inode_t), &inode);
+    msd_raw_read(devfs_node, (bgd.inode_table_block * ext2->block_size) + (ext2->superblock.inode_size * inode_table_index), sizeof(ext2_inode_t), &inode); 
     return inode;
 }
 
-void ext2_inode_write_entry(partition_t *part, uint32_t index, ext2_inode_t *inode) {
-    ext2_bgd_t bgd = ext2_read_bgd(part, index);
+void ext2_inode_write_entry(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t index) {
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+    ext2_bgd_t bgd = ext2_read_bgd(devfs_node, index);
 
-    uint64_t inode_table_index = (index - 1) % part->ext2_fs->superblock.inodes_per_group;
-    partition_read(part, (bgd.inode_table_block * part->ext2_fs->block_size) + (part->ext2_fs->superblock.inode_size * inode_table_index), sizeof(ext2_inode_t), inode);
+    size_t inode_table_index = (index - 1) % ext2->superblock.inodes_per_group;
+    msd_raw_write(devfs_node, (bgd.inode_table_block * ext2->block_size) + (ext2->superblock.inode_size * inode_table_index), sizeof(ext2_inode_t), &inode); 
 }

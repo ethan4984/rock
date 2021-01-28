@@ -1,6 +1,6 @@
 #include <drivers/ahci.h>
+#include <fs/device.h>
 #include <bitmap.h>
-#include <fs/vfs.h>
 #include <output.h>
 
 static uint64_t ahci_drive_cnt = 0;
@@ -146,9 +146,14 @@ static void init_sata_device(volatile port_regs_t *regs) {
 
     ahci_drives[ahci_drive_cnt] = (ahci_drive_t) { *(uint64_t*)((uint64_t)&identity[100]), regs };
 
-    add_device(&(device_t) {    .device_index = ahci_drive_cnt++,
-                                .read = ahci_read,
-                                .write = ahci_write } );
+    msd_t device = { .device_index = ahci_drive_cnt++,
+                     .read = ahci_read,
+                     .write = ahci_write
+                   };
+
+    size_t vec_id = vec_push(msd_t, msd_list, device);
+
+    scan_device_partitions(vec_search(msd_t, msd_list, vec_id));
 }
 
 static void ahci_RW(ahci_drive_t *drive, uint64_t start, uint64_t count, void *buffer, uint8_t w) {
@@ -189,5 +194,6 @@ static void ahci_RW(ahci_drive_t *drive, uint64_t start, uint64_t count, void *b
     cmdfis->countl = (uint8_t)count;
     cmdfis->counth = (uint8_t)(count >> 8);
     
-    send_command(drive->regs, cmd_slot);
+    send_command(drive->
+            regs, cmd_slot);
 }

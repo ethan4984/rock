@@ -56,26 +56,33 @@ out: \
     node; \
 })
 
-#define vec_create(type, name) \
-    static struct name##_vt { \
+#define create_vec_struct(type) \
+    struct { \
         type *data; \
         size_t lock; \
         size_t size; \
         size_t element_cnt; \
         size_t current; \
-    } name##_vt;
+    }
 
-#define vec(name) \
-    struct name##_vt name;
+#define uninit_vec(type, name) \
+    create_vec_struct(type) name;
 
-#define static_vec(name) \
-    static struct name##_vt name;
+#define vec(type, name) \
+    create_vec_struct(type) name = { 0 };
 
-#define extern_vec(name) \
-    extern struct name##_vt name;
-    
+#define extern_vec(type, name) \
+    extern create_vec_struct(type) name;
+
+#define global_vec(name) \
+    typeof(name) name = { 0 };
+
+#define static_vec(type, name) \
+    static create_vec_struct(type) name = { 0 };
+
 #define vec_push(type, name, element) ({ \
     spin_lock(&name.lock); \
+    int ret = 0; \
     if(name.data == NULL) { \
         name.data = kmalloc(sizeof(type) * 32); \
         name.size = 32; \
@@ -88,20 +95,22 @@ out: \
         name.size += 32; \
         name.data = tmp; \
     } \
+    ret = name.current; \
     name.data[name.current++] = element; \
     name.element_cnt++; \
     spin_release(&name.lock); \
+    ret; \
 })
 
 #define vec_search(type, name, index) ({ \
-    __label__ ret; \
+    __label__ lret; \
     type *ret = NULL; \
     spin_lock(&name.lock); \
     if(name.element_cnt <= (index)) { \
-        goto ret; \
+        goto lret; \
     } \
     ret = &name.data[index]; \
-ret: \
+lret: \
     spin_release(&name.lock); \
     ret; \
 })
@@ -127,5 +136,19 @@ ret: \
     spin_release(&name.lock); \
     ret; \
 })
+
+#define vec_addr_remove(type, name, addr) ({ \
+    int ret = -1; \
+    for(size_t i = 0; i < name.element_cnt; i++) { \
+        if(&name.data[i] == (addr)) { \
+            ret = vec_remove(type, name, i); \
+            break; \
+        } \
+    } \
+    ret; \
+})
+
+#define vec_delete(name) \
+    kfree(name.data);
 
 #endif

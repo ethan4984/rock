@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <strutils.h>
 
 #define ROUNDUP(a, b) (((a) + ((b) - 1)) / (b))
 
@@ -34,27 +35,5 @@ void memcpy16(uint16_t *dest, uint16_t *src, uint64_t count);
 void memcpy32(uint32_t *dest, uint32_t *src, uint64_t count);
 
 void memcpy64(uint64_t *dest, uint64_t *src, uint64_t count);
-
-uint64_t strlen(const char *str);
-
-int strcmp(const char *str0, const char *str1);
-
-int strncmp(const char *str0, const char *str1, uint64_t n);
-
-char *strcpy(char *dest, const char *src);
-
-char *strncpy(char *dest, const char *src, uint64_t n);
-
-int atoi(char *str);
-
-char *itob(uint64_t num, uint64_t base);
-
-char *strtok(char *str, const char *delim);
-
-char *strtok_r(char *__restrict s, const char *__restrict del, char **__restrict m);
-
-int character_cnt(const char *str, char c);
-
-int find_last_char(char *str, char c);
 
 #endif

@@ -1,5 +1,4 @@
 #include <sched/scheduler.h>
-#include <fs/fd.h>
 #include <acpi/madt.h>
 #include <vec.h>
 #include <bitmap.h>

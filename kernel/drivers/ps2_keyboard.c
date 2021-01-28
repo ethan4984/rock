@@ -1,5 +1,4 @@
 #include <drivers/ps2_keyboard.h>
-#include <fs/fd.h>
 
 static char key_map[] = {   ' ', ' ', '1', '2', '3',  '4', '5', '6',  '7', '8', '9', '0',
                             '-', '=', '\b', '\t', 'q',  'w', 'e', 'r',  't', 'y', 'u', 'i',

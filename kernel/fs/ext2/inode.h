@@ -1,23 +1,15 @@
-#ifndef _EXT2_INODE_H_
-#define _EXT2_INODE_H_
+#ifndef EXT2_INODE_H_
+#define EXT2_INODE_H_
 
+#include <fs/device.h>
 #include <fs/ext2/types.h>
-#include <fs/vfs.h>
 
-void ext2_inode_read(partition_t *part, ext2_inode_t *inode, uint64_t start, uint64_t cnt, void *buffer);
+uint32_t ext2_alloc_inode(devfs_node_t *devfs_node);
+void ext2_free_inode(devfs_node_t *devfs_node, uint32_t index);
+void ext2_inode_read(devfs_node_t *devfs_node, ext2_inode_t *inode, off_t off, off_t cnt, void *buf);
+void ext2_inode_write(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, off_t off, off_t cnt, void *buf);
 
-void ext2_inode_write(partition_t *part, ext2_inode_t *inode, uint64_t start, uint64_t cnt, void *buffer);
-
-ext2_inode_t ext2_inode_read_entry(partition_t *part, uint32_t index);
-
-void ext2_inode_write_entry(partition_t *part, uint32_t index, ext2_inode_t *inode);
-
-uint32_t ext2_alloc_inode(partition_t *part);
-
-void ext2_free_inode(partition_t *part, uint32_t index);
-
-void ext2_alloc_inode_block(partition_t *part, ext2_inode_t *inode, uint32_t inode_index, uint32_t block);
-
-void ext2_free_inode_block(partition_t *part, ext2_inode_t *inode, uint32_t inode_index, uint32_t block);
+ext2_inode_t ext2_inode_read_entry(devfs_node_t *devfs_node, uint32_t index);
+void ext2_inode_write_entry(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t index);
 
 #endif

@@ -58,6 +58,31 @@ void kprintf(const char *prefix, const char *str, ...) {
     spin_release(&lock);
 }
 
+static char *sprintf_buf;
+static size_t sprintf_loc = 0;
+
+static void sprintf_handler(uint8_t c) {
+    sprintf_buf[sprintf_loc++] = c;
+}
+
+void sprintf(char *buf, const char *str, int null_term, ...) {
+    static char lock = 0;
+    spin_lock(&lock);
+
+    va_list arg;
+    va_start(arg, null_term);
+
+    sprintf_buf = buf;
+    sprintf_loc = 0;
+
+    print_args(str, arg, sprintf_handler);
+
+    if(null_term)
+        sprintf_handler('\0');
+
+    spin_release(&lock);
+}
+
 void kvprintf(const char *str, ...) {
     static char lock = 0;
     spin_lock(&lock);

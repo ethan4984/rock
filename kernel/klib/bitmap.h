@@ -10,14 +10,10 @@
 
 void bitmap_init();
 
-void *kmalloc(uint64_t cnt); 
-
-void *kcalloc(uint64_t cnt); 
-
-uint64_t kfree(void *addr);
-
-void *krealloc(void *addr, uint64_t size);
-
-void *krecalloc(void *addr, uint64_t size);
+void *kmalloc(size_t cnt); 
+void *kcalloc(size_t cnt); 
+size_t kfree(void *addr);
+void *krealloc(void *addr, size_t size);
+void *krecalloc(void *addr, size_t size);
 
 #endif
