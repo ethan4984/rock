@@ -88,12 +88,8 @@ out: \
         name.size = 32; \
     } \
     if(name.current > name.size) { \
-        type *tmp = kmalloc(sizeof(type) * (name.size + 32)); \
-        for(size_t i = 0; i < name.size; i++) \
-            tmp[i] = name.data[i]; \
-        kfree(name.data); \
         name.size += 32; \
-        name.data = tmp; \
+        name.data = krealloc(name.data, name.size); \
     } \
     ret = name.current; \
     name.data[name.current++] = element; \
@@ -150,5 +146,89 @@ ret: \
 
 #define vec_delete(name) \
     kfree(name.data);
+
+#define create_hash_struct(type) \
+    struct { \
+        size_t hash_cnt; \
+        uninit_vec(type, data_map); \
+        uninit_vec(size_t, hash_map) \
+    }
+
+#define uninit_hash_table(type, name) \
+    create_hash_struct(type) name;
+
+#define hash_table(type, name) \
+    create_hash_struct(type) name = { 0 };
+
+#define static_hash_table(type, name) \
+    static create_hash_struct(type) name = { 0 };
+
+#define extern_hash_table(type, name) \
+    extern create_hash_struct(type) name = { 0 };
+
+#define global_hash(name) \
+    typeof(name) name = { 0 };
+
+#define hash_push(type, name, element) ({ \
+    size_t hash_index = name.hash_cnt; \
+    vec_push(type, name.data_map, element); \
+    vec_push(type, name.hash_map, name.hash_cnt++); \
+    hash_index; \
+})
+
+#define hash_search(type, name, hash_index) ({ \
+    __label__ lret; \
+    __label__ found; \
+    type *ret = NULL; \
+    size_t i = 0; \
+    for(; i < name.hash_map.element_cnt; i++) { \
+        size_t index = *vec_search(size_t, name.hash_map, i); \
+        if(index == hash_index) \
+            goto found; \
+    } \
+    goto lret; \
+found: \
+    ret = vec_search(type, name.data_map, i); \
+lret: \
+    ret; \
+})
+
+#define hash_remove(type, name, index) ({ \
+    __label__ lret; \
+    __label__ found; \
+    int ret = -1; \
+    size_t i = 0; \
+    for(; i < name.hash_map.element_cnt; i++) { \
+        size_t index = *vec_search(size_t, name.hash_map, i); \
+        if(index == hash_index) \
+            goto found; \
+    } \
+    goto lret; \
+found: \
+    vec_remove(type, name.data_map, i); \
+    vec_remove(type, name.hash_map, i); \
+    ret = 0; \
+lret: \
+    ret; \
+})
+
+#define hash_addr_remove(type, name, addr) ({ \
+    __label__ lret; \
+    __label__ found; \
+    int ret = -1; \
+    size_t i = 0; \
+    for(; i < name.data_map.element_cnt; i++) { \
+        type *index = vec_search(type, name.data_map, i); \
+        if(index == addr) \
+            goto found; \
+    } \
+    goto lret; \
+found: \
+    vec_remove(type, name.data_map, i); \
+    vec_remove(size_t, name.hash_map, i); \
+    ret = 0; \
+lret: \
+    ret; \
+})
 
 #endif

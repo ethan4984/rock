@@ -35,7 +35,7 @@ typedef struct vfs_node_t {
 extern vfs_node_t vfs_root_node;
 
 vfs_node_t *vfs_create_node(vfs_node_t *parent, char *name);
-vfs_node_t *vfs_create_node_deep(vfs_node_t *parent, char *path);
+vfs_node_t *vfs_create_node_deep(char *path);
 vfs_node_t *vfs_relative_path(vfs_node_t *parent, char *name);
 vfs_node_t *vfs_absolute_path(char *path);
 vfs_node_t *vfs_check_node(vfs_node_t *node);

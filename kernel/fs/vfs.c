@@ -32,34 +32,33 @@ vfs_node_t *vfs_create_node(vfs_node_t *parent, char *name) {
     return vec_search(vfs_node_t, parent->child_nodes, parent->child_nodes.element_cnt - 1);
 }
 
-vfs_node_t *vfs_create_node_deep(vfs_node_t *parent, char *path) {
+vfs_node_t *vfs_create_node_deep(char *path) {
     char *buffer = kmalloc(strlen(path));
     strcpy(buffer, path);
 
     vfs_node_t *node = &vfs_root_node;
-    vfs_node_t *node_parent;
+    vfs_node_t *parent;
 
     char *sub_path, *save = buffer;
     while((sub_path = strtok_r(save, "/", &save))) {
-        node_parent = node;
-        node = vfs_relative_path(parent, sub_path);
-        if(node == NULL) {
-            char *name = kmalloc(strlen(sub_path));
-            strcpy(name, sub_path);
-
-            if(strtok_r(save, "/", &save) == NULL) {
-                node = vfs_create_node(node_parent, name);
-            } else {
-                node = NULL;
-            }
-
-            kfree(name);
-            kfree(buffer);
-
-            return node;
-        }
+        parent = node;
+        node = vfs_relative_path(node, sub_path);
+        if(node == NULL)
+            goto found;
     }
-    return NULL;
+
+    kfree(buffer);
+    return NULL; 
+
+found:
+    do {
+        char *name = kmalloc(strlen(sub_path));
+        strcpy(name, sub_path);
+        parent = vfs_create_node(parent, name);
+    } while((sub_path = strtok_r(save, "/", &save)));
+
+    kfree(buffer);
+    return parent;
 }
 
 vfs_node_t *vfs_find_parent(char *path) {
@@ -69,16 +68,16 @@ vfs_node_t *vfs_find_parent(char *path) {
     char *buffer = kmalloc(strlen(path));
     strcpy(buffer, path);
 
-    vfs_node_t *node = &vfs_root_node;
+    vfs_node_t *tmp = &vfs_root_node;
     vfs_node_t *parent = NULL;
 
     char *sub_path, *save = buffer;
     while((sub_path = strtok_r(save, "/", &save))) {
-        parent = node;
-        node = vfs_relative_path(node, sub_path);
-        if(node == NULL) {
+        parent = tmp;
+        tmp = vfs_relative_path(tmp, sub_path);
+        if(tmp == NULL) {
             kfree(buffer);
-            return NULL;
+            return parent; 
         }
     }
    
@@ -177,7 +176,6 @@ int vfs_mount_dev(char *dev, char *mount_gate) {
 
     devfs_node->device->fs->mount_gate = mount_gate;
     mount_node->fs = devfs_node->device->fs;
-
     devfs_node->device->fs->refresh(mount_node);
 
     return 0;
@@ -210,9 +208,10 @@ int vfs_read(vfs_node_t *node, off_t off, off_t cnt, void *buf) {
 }
 
 int vfs_open(char *path, int flags) {
+    kprintf("[KDEBUG]", "%s", path);
     vfs_node_t *node = vfs_absolute_path(path);
     if(node == NULL && flags & O_CREAT) {
-        node = vfs_create_node_deep(&vfs_root_node, path);
+        node = vfs_create_node_deep(path);
         if(node == NULL) 
             return -1;
         int ret = node->fs->open(node, flags);
@@ -220,12 +219,16 @@ int vfs_open(char *path, int flags) {
             vfs_remove_node(node);
         return ret;
     } else if(node == NULL) {
+        kprintf("[KDEBUG]", "Here");
         return -1;
     }
+    
+    kprintf("[KDEBUG]", "Here");
 
     int ret = node->fs->open(node, flags);
-    if(ret == -1)
+    if(ret == -1) {
         vfs_remove_node(node);
+    }
 
     return ret;
 }

@@ -81,21 +81,23 @@ static void ext2_refresh_node(devfs_node_t *devfs_node, ext2_inode_t *inode, cha
         dir_name[dir->name_length] = '\0';
 
         char *absolute_path = str_congregate(mount_gate, dir_name);
-        vfs_create_node_deep(&vfs_root_node, absolute_path);
+        kfree(dir_name);
 
         if(strcmp(dir_name, ".") == 0 || strcmp(dir_name, "..") == 0) {
-            kfree(dir_name);
+            vfs_create_node_deep(absolute_path);
             i += dir->entry_size - 1;
             continue;
         }
 
         ext2_inode_t dir_inode = ext2_inode_read_entry(devfs_node, dir->inode);
 
-        if((dir_inode.permissions & 0x4000) == 0x4000) {
+        if(dir_inode.permissions & 0x4000) {
             char *dir_path = str_congregate(absolute_path, "/");
             kfree(absolute_path);
-            vfs_create_node_deep(&vfs_root_node, dir_path);
+            vfs_create_node_deep(dir_path);
             ext2_refresh_node(devfs_node, &dir_inode, dir_path);
+        } else { 
+            vfs_create_node_deep(absolute_path);
         }
 
         uint32_t expected_size = ALIGN_UP(sizeof(ext2_dir_t) + dir->name_length, 4);
@@ -103,7 +105,6 @@ static void ext2_refresh_node(devfs_node_t *devfs_node, ext2_inode_t *inode, cha
             return;
         }
 
-        kfree(dir_name);
         i += dir->entry_size - 1;
     }
 }
