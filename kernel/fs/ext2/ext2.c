@@ -120,14 +120,15 @@ int ext2_refresh(vfs_node_t *vfs_node) {
     return 0; 
 }
 
-int ext2_mkdir(vfs_node_t *vfs_node, uint16_t perms) {
-    return 0;
-}
-
-int ext2_touch(vfs_node_t *vfs_node, uint16_t perms) { 
-    return 0;
-}
-
 int ext2_unlink(vfs_node_t *vfs_node) {
+    devfs_node_t *devfs_node = vfs_node->fs->devfs_node;
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+
+    ext2_delete_dir(devfs_node, &ext2->root_inode, vfs_node->relative_path);
+
+    return 0;
+}
+
+int ext2_mkdir(vfs_node_t *vfs_node, uint16_t perms) {
     return 0;
 }

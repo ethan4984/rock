@@ -87,7 +87,7 @@ int ext2_create_dir(devfs_node_t *devfs_node, ext2_inode_t *parent, uint32_t par
     return -1;
 }
 
-int ext2_delete_dir(devfs_node_t *devfs_node, ext2_inode_t *parent, uint32_t parent_index, char *name) {
+static int ext2_delete_dir_entry(devfs_node_t *devfs_node, ext2_inode_t *parent, uint32_t parent_index, char *name) {
     void *buffer = kmalloc(parent->size32l);
     ext2_inode_read(devfs_node, parent, 0, parent->size32l, buffer);
 
@@ -114,4 +114,26 @@ int ext2_delete_dir(devfs_node_t *devfs_node, ext2_inode_t *parent, uint32_t par
         i += dir->entry_size;
     }
     return -1;
+}
+
+int ext2_delete_dir(devfs_node_t *devfs_node, ext2_inode_t *parent, char *path) {
+    char *cpath = kmalloc(strlen(path));
+    strcpy(cpath, path);
+
+    ext2_inode_t inode = *parent;
+    uint32_t inode_index;
+    ext2_dir_t dir;
+
+    char *sub_path, *save = cpath;
+    while((sub_path = strtok_r(save, "/", &save))) {
+        if(find_dir_relative(devfs_node, &inode, &dir, sub_path) == -1) {
+            kfree(cpath);
+            return -1;
+        }
+        inode = ext2_inode_read_entry(devfs_node, dir.inode);
+        inode_index = dir.inode;
+    }
+
+    kfree(cpath);
+    return ext2_delete_dir_entry(devfs_node, &inode, inode_index, path + last_char(path, '/'));
 }
