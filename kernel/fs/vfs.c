@@ -61,30 +61,6 @@ found:
     return parent;
 }
 
-vfs_node_t *vfs_find_parent(char *path) {
-    if(strcmp(path, "/") == 0)
-        return &vfs_root_node;
-
-    char *buffer = kmalloc(strlen(path));
-    strcpy(buffer, path);
-
-    vfs_node_t *tmp = &vfs_root_node;
-    vfs_node_t *parent = NULL;
-
-    char *sub_path, *save = buffer;
-    while((sub_path = strtok_r(save, "/", &save))) {
-        parent = tmp;
-        tmp = vfs_relative_path(tmp, sub_path);
-        if(tmp == NULL) {
-            kfree(buffer);
-            return parent; 
-        }
-    }
-   
-    kfree(buffer);
-    return parent;
-}
-
 vfs_node_t *vfs_absolute_path(char *path) {
     if(strcmp(path, "/") == 0)
         return &vfs_root_node;
@@ -163,13 +139,7 @@ int vfs_mount_dev(char *dev, char *mount_gate) {
         return -1;
 
     devfs_node_t *devfs_node = path2devfs(dev);
-    if(devfs_node == NULL)
-        return -1;
-
-    if(devfs_node->device == NULL) 
-        return -1;
-
-    if(devfs_node->device->fs == NULL)
+    if(devfs_node == NULL || devfs_node->device == NULL || devfs_node->device->fs == NULL)
         return -1;
 
     kprintf("[FS]", "Mounting [%s] to [%s]", dev, mount_gate);
@@ -208,7 +178,6 @@ int vfs_read(vfs_node_t *node, off_t off, off_t cnt, void *buf) {
 }
 
 int vfs_open(char *path, int flags) {
-    kprintf("[KDEBUG]", "%s", path);
     vfs_node_t *node = vfs_absolute_path(path);
     if(node == NULL && flags & O_CREAT) {
         node = vfs_create_node_deep(path);
@@ -219,12 +188,9 @@ int vfs_open(char *path, int flags) {
             vfs_remove_node(node);
         return ret;
     } else if(node == NULL) {
-        kprintf("[KDEBUG]", "Here");
         return -1;
     }
     
-    kprintf("[KDEBUG]", "Here");
-
     int ret = node->fs->open(node, flags);
     if(ret == -1) {
         vfs_remove_node(node);

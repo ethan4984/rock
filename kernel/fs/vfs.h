@@ -40,7 +40,6 @@ vfs_node_t *vfs_relative_path(vfs_node_t *parent, char *name);
 vfs_node_t *vfs_absolute_path(char *path);
 vfs_node_t *vfs_check_node(vfs_node_t *node);
 vfs_node_t *vfs_mkdir(vfs_node_t *parent, char *name);
-vfs_node_t *vfs_find_parent(char *path);
 int vfs_open(char *path, int flags);
 int vfs_touch(char *path, uint16_t perms);
 int vfs_mount_fs(filesystem_t *fs);

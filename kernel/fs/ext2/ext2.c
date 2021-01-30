@@ -28,6 +28,8 @@ int ext2_check_fs(devfs_node_t *devfs_node) {
     devfs_node->device->fs->unlink = ext2_unlink;
     devfs_node->device->fs->refresh = ext2_refresh;
 
+    //ext2_create_dir(devfs_node, &ext2->root_inode, 2, ext2_alloc_inode(devfs_node), 0, "bruh.txt");
+
     return 0;
 }
 
@@ -79,7 +81,7 @@ static void ext2_refresh_node(devfs_node_t *devfs_node, ext2_inode_t *inode, cha
         char *dir_name = kmalloc(dir->name_length + 1);
         strncpy(dir_name, dir->name, dir->name_length);
         dir_name[dir->name_length] = '\0';
-
+        
         char *absolute_path = str_congregate(mount_gate, dir_name);
         kfree(dir_name);
 
