@@ -19,11 +19,11 @@ static int find_dir_relative(devfs_node_t *devfs_node, ext2_inode_t *inode, ext2
             return 0;
         }
 
-        if(dir->entry_size != 0) {
-            i += dir->entry_size;
-        } else {
-            return -1;
-        }
+        uint32_t expected_size = ALIGN_UP(sizeof(ext2_dir_t) + dir->name_length, 4);
+        if(dir->entry_size != expected_size)
+            break;
+
+        i += dir->entry_size;
     }
     return -1;
 }
@@ -73,6 +73,7 @@ int ext2_create_dir(devfs_node_t *devfs_node, ext2_inode_t *parent, uint32_t par
 
             return 0;
         }
+
         uint32_t expected_size = ALIGN_UP(sizeof(ext2_dir_t) + dir->name_length, 4);
         if(dir->entry_size != expected_size) {
             dir->entry_size = expected_size;
@@ -83,5 +84,34 @@ int ext2_create_dir(devfs_node_t *devfs_node, ext2_inode_t *parent, uint32_t par
         i += dir->entry_size;
     }
 
+    return -1;
+}
+
+int ext2_delete_dir(devfs_node_t *devfs_node, ext2_inode_t *parent, uint32_t parent_index, char *name) {
+    void *buffer = kmalloc(parent->size32l);
+    ext2_inode_read(devfs_node, parent, 0, parent->size32l, buffer);
+
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+
+    for(uint32_t i = 0; i < parent->size32l;) {
+        ext2_dir_t *dir = (ext2_dir_t*)((uint64_t)buffer + i);
+
+        if(strncmp(dir->name, name, strlen(name)) == 0) {
+            memset8((uint8_t*)dir->name, 0, dir->name_length);
+            ext2_inode_t inode = ext2_inode_read_entry(devfs_node, dir->inode);
+            ext2_inode_delete(devfs_node, &inode, dir->inode);
+            dir->inode = 0;
+
+            ext2_inode_write(devfs_node, parent, parent_index, 0, parent->size32l, buffer);
+
+            return 0;
+        }
+
+        uint32_t expected_size = ALIGN_UP(sizeof(ext2_dir_t) + dir->name_length, 4);
+        if(dir->entry_size != expected_size)
+            break;
+
+        i += dir->entry_size;
+    }
     return -1;
 }

@@ -131,7 +131,7 @@ static int inode_resize(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t 
         return 0;
 
     uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size;
-    uint32_t iblock_start = (inode->sector_cnt * SECTOR_SIZE) / block_size;
+    uint32_t iblock_start = ROUNDUP(inode->sector_cnt * SECTOR_SIZE, block_size);
     uint32_t iblock_end = ROUNDUP(start + cnt, block_size);
 
     for(size_t i = iblock_start; i < iblock_end; i++) {
@@ -186,6 +186,15 @@ void ext2_inode_write(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t in
 
         headway += size;
     }
+}
+
+void ext2_inode_delete(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index) {
+    uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size;
+
+    for(size_t i = 0; i < ROUNDUP(inode->sector_cnt * SECTOR_SIZE, block_size); i++)
+        ext2_free_block(devfs_node, inode_get_block(devfs_node, inode, i));
+
+    ext2_free_inode(devfs_node, inode_index);
 }
 
 ext2_inode_t ext2_inode_read_entry(devfs_node_t *devfs_node, uint32_t index) {
