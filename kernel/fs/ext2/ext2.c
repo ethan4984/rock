@@ -1,7 +1,9 @@
 #include <fs/device.h>
 #include <fs/ext2/ext2.h>
 #include <fs/ext2/inode.h>
+#include <fs/ext2/block.h>
 #include <fs/ext2/dir.h>
+#include <output.h>
 
 int ext2_check_fs(devfs_node_t *devfs_node) {
     ext2_fs_t *ext2 = kmalloc(sizeof(ext2_fs_t));
@@ -28,13 +30,45 @@ int ext2_check_fs(devfs_node_t *devfs_node) {
     devfs_node->device->fs->unlink = ext2_unlink;
     devfs_node->device->fs->refresh = ext2_refresh;
 
-    //ext2_create_dir(devfs_node, &ext2->root_inode, 2, ext2_alloc_inode(devfs_node), 0, "bruh.txt");
-
     return 0;
 }
 
 int ext2_open(vfs_node_t *vfs_node, int flags) {
-    if(flags & O_CREAT) { // TODO create the file
+    devfs_node_t *devfs_node = vfs_node->fs->devfs_node;
+    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+
+    if(flags & O_CREAT) {
+        ext2_inode_t parent_inode;
+        uint32_t parent_inode_index;
+
+        ext2_inode_t new_inode;
+        uint32_t new_inode_index;
+
+        if(strcmp(vfs_node->parent->relative_path, "/") == 0) {
+            parent_inode = ext2->root_inode;
+            parent_inode_index = 2;
+        } else {
+            ext2_dir_t dir;
+            if(ext2_find_dir(devfs_node, &ext2->root_inode, &dir, vfs_node->parent->relative_path) == -1)
+                return -1;
+
+            parent_inode = ext2_inode_read_entry(devfs_node, dir.inode);
+            parent_inode_index = dir.inode;
+        }
+
+        new_inode_index = ext2_alloc_inode(devfs_node);
+        new_inode = ext2_inode_read_entry(devfs_node, new_inode_index);
+
+        if(inode_set_block(devfs_node, &new_inode, new_inode_index, 0, ext2_alloc_block(devfs_node)) == -1)
+            return -1;
+
+        new_inode.sector_cnt = (ext2->block_size / SECTOR_SIZE);
+        ext2_inode_write_entry(devfs_node, &new_inode, new_inode_index);
+    
+        ext2_create_dir(devfs_node, &parent_inode, parent_inode_index, new_inode_index, 0, vfs_node->absolute_path + last_char(vfs_node->absolute_path, '/'));
+        parent_inode.hard_link_cnt++;
+        ext2_inode_write_entry(devfs_node, &parent_inode, parent_inode_index);
+
         return 0;
     }
 
@@ -42,12 +76,21 @@ int ext2_open(vfs_node_t *vfs_node, int flags) {
     if(ext2_find_dir(vfs_node->fs->devfs_node, &vfs_node->fs->ext2_fs->root_inode, &dir, vfs_node->relative_path) == -1)
         return -1;
 
+    ext2_inode_t inode = ext2_inode_read_entry(devfs_node, dir.inode);
+    vfs_node->stat.st_size = inode.sector_cnt * SECTOR_SIZE;
+
     return 0;
 }
 
 int ext2_read(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf) {
     devfs_node_t *devfs_node = vfs_node->fs->devfs_node;
     ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+
+    if(off > vfs_node->stat.st_size)
+        return -1;
+
+    if((off + cnt) > vfs_node->stat.st_size)
+        cnt = vfs_node->stat.st_size - off;
 
     ext2_dir_t dir;
     if(ext2_find_dir(devfs_node, &ext2->root_inode, &dir, vfs_node->relative_path) == -1)
@@ -62,6 +105,11 @@ int ext2_write(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf) {
     devfs_node_t *devfs_node = vfs_node->fs->devfs_node;
     ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
 
+    if((off + cnt) > vfs_node->stat.st_size)
+        vfs_node->stat.st_size += off + cnt - vfs_node->stat.st_size;
+
+    kprintf("[KDEBUG]", "%s", vfs_node->relative_path);
+
     ext2_dir_t dir;
     if(ext2_find_dir(devfs_node, &ext2->root_inode, &dir, vfs_node->relative_path) == -1)
         return -1;
@@ -75,7 +123,7 @@ static void ext2_refresh_node(devfs_node_t *devfs_node, ext2_inode_t *inode, cha
     void *buffer = kcalloc(inode->size32l);
     ext2_inode_read(devfs_node, inode, 0, inode->size32l, buffer);
 
-    for(uint32_t i = 0; i < inode->size32l; i++) {
+    for(uint32_t i = 0; i < inode->size32l;) {
         ext2_dir_t *dir = (ext2_dir_t*)((uintptr_t)buffer + i);
 
         char *dir_name = kmalloc(dir->name_length + 1);
@@ -87,7 +135,7 @@ static void ext2_refresh_node(devfs_node_t *devfs_node, ext2_inode_t *inode, cha
 
         if(strcmp(dir_name, ".") == 0 || strcmp(dir_name, "..") == 0) {
             vfs_create_node_deep(absolute_path);
-            i += dir->entry_size - 1;
+            i += dir->entry_size;
             continue;
         }
 
@@ -107,7 +155,7 @@ static void ext2_refresh_node(devfs_node_t *devfs_node, ext2_inode_t *inode, cha
             return;
         }
 
-        i += dir->entry_size - 1;
+        i += dir->entry_size;
     }
 }
 

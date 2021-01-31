@@ -136,6 +136,6 @@ size_t last_char(char *str, char c) {
     size_t ret = 0;
     for(size_t i = 0; i < strlen(str); i++)
         if(str[i] == c)
-            ret = i;
+            ret = i + 1;
     return ret;
 } 

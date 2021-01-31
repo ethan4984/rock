@@ -13,4 +13,7 @@ void ext2_inode_delete(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t i
 ext2_inode_t ext2_inode_read_entry(devfs_node_t *devfs_node, uint32_t index);
 void ext2_inode_write_entry(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t index);
 
+int inode_set_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, uint32_t iblock, uint32_t disk_block);
+uint32_t inode_get_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t iblock);
+
 #endif

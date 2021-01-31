@@ -52,7 +52,7 @@ void ext2_free_inode(devfs_node_t *devfs_node, uint32_t index) {
     kfree(bitmap);
 }
 
-static uint32_t inode_get_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t iblock) {
+uint32_t inode_get_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t iblock) {
     uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size, block_index;
     if(iblock < 12) { // direct
         block_index = inode->blocks[iblock];
@@ -76,7 +76,7 @@ static uint32_t inode_get_block(devfs_node_t *devfs_node, ext2_inode_t *inode, u
     return block_index;
 }
 
-static int inode_set_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, uint32_t iblock, uint32_t disk_block) {
+int inode_set_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, uint32_t iblock, uint32_t disk_block) {
     uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size;
     if(iblock < 12) { // direct
         inode->blocks[iblock] = disk_block;
@@ -134,13 +134,17 @@ static int inode_resize(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t 
     uint32_t iblock_start = ROUNDUP(inode->sector_cnt * SECTOR_SIZE, block_size);
     uint32_t iblock_end = ROUNDUP(start + cnt, block_size);
 
+    if(inode->size32l < (start + cnt)) {
+        inode->size32l = start + cnt;
+    }
+
     for(size_t i = iblock_start; i < iblock_end; i++) {
         uint32_t disk_block = ext2_alloc_block(devfs_node);
         if(disk_block == (uint32_t)-1)
             return -1;
 
-        if(inode_set_block(devfs_node, inode, inode_index, i, disk_block) == -1)
-            return -1;
+        inode->sector_cnt += block_size / SECTOR_SIZE;
+        inode_set_block(devfs_node, inode, inode_index, i, disk_block);
     }
 
     return 0;

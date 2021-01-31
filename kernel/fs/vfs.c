@@ -4,6 +4,7 @@
 
 vfs_node_t vfs_root_node = { .absolute_path = "/",
                              .name = "/",
+                             .relative_path = "/"
                            };
 
 vfs_node_t *vfs_create_node(vfs_node_t *parent, char *name) {
@@ -17,8 +18,8 @@ vfs_node_t *vfs_create_node(vfs_node_t *parent, char *name) {
     }
 
     char *relative_path = NULL;
-    if(parent->fs != NULL && parent->fs->mount_gate != NULL)
-        relative_path = absolute_path + strlen(parent->fs->mount_gate);
+    if((parent->fs != NULL) && (parent->fs->mount_gate != NULL))
+        relative_path = absolute_path + (strlen(parent->fs->mount_gate));
 
     vfs_node_t new_node = { .parent = parent,
                             .absolute_path = absolute_path,
