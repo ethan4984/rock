@@ -5,232 +5,143 @@
 #include <output.h>
 #include <sched/smp.h>
 
-static int ready = 0, total_tasks = 0;
-static task_t *tasks;
-static char scheduler_lock = 0;
+static_hash_table(task_t, tasks);
+char sched_lock = 0;
+
+static thread_t *find_next_thread(task_t *task) {
+    thread_t *ret = NULL; 
+
+    for(size_t i = 0, cnt = 0; i < task->threads.hash_cnt; i++) {
+        thread_t *thread = vec_search(thread_t, task->threads.data_map, i);
+        thread->idle_cnt++;
+
+        if(thread->status == SCHED_WAITING && cnt < thread->idle_cnt) {
+            cnt = thread->idle_cnt;
+            ret = thread;
+        }
+    }
+
+    return ret;
+}
+
+static task_t *find_next_task() {
+    task_t *ret = NULL;
+
+    if(tasks.hash_cnt == 1) {
+        return vec_search(task_t, tasks.data_map, 0);
+    }
+
+    for(size_t i = 0, cnt = 0; i < tasks.hash_cnt; i++) {
+        task_t *task = vec_search(task_t, tasks.data_map, i);
+        task->idle_cnt++;
+
+        if(task->status == SCHED_WAITING && cnt < task->idle_cnt) {
+            cnt = task->idle_cnt;
+            ret = task;
+        }
+    }
+
+    return ret;
+}
 
 static void reschedule(regs_t *regs) {
-    core_local_t *local = get_core_local(-1);
-
-    task_t *next_task = NULL;
-    int pid = -1, tid = -1;
-
-    for(int i = 0, cnt = 0; i < total_tasks; i++) {
-        next_task = ddl_get_index(task_t, tasks, i);
-
-        if((next_task->status == WAITING) && (cnt < ++next_task->idle_cnt)) {
-            cnt = tasks->idle_cnt;
-            pid = i;
-            continue;
-        }
-
-        if(next_task->status == WAITING_TO_START) {
-            pid = i;
-            break;
-        }
-    }
-
-    if(next_task == NULL) {
-        return; 
-    }
-
-    next_task->pid = pid;
-    thread_t *next_thread = NULL;
-
-    for(int i = 0, cnt = 0; i < next_task->thread_cnt; i++) {
-        next_thread = ddl_get_index(thread_t, next_task->threads, i);
-
-        if((next_thread->status == WAITING) && (cnt < ++next_thread->idle_cnt)) {
-            cnt = next_thread->idle_cnt;
-            tid = i;
-            continue; 
-        }
-
-        if(next_thread->status == WAITING_TO_START) {
-            tid = i;
-            break;
-        }
-    }
-
-    if(tid == -1) {
+    core_local_t *local = get_core_local(CURRENT_CORE);
+    
+    task_t *next_task = find_next_task();
+    if(next_task == NULL)
         return;
-    }
 
-    if((local->tid != -1) && (local->pid != -1)) {
-        tasks[local->pid].threads[local->tid].regs = *regs;
-        tasks[local->pid].threads[local->tid].status = WAITING;
-        tasks[local->pid].status = WAITING;
+    thread_t *next_thread = find_next_thread(next_task);
+    if(next_thread == NULL)
+        return;
+
+    int tid = next_thread->tid;
+    int pid = next_task->pid;
+
+    kprintf("[KDEBUG]", "Running task %d/%d old task %d/%d", pid, tid, local->pid, local->tid);
+
+    if(local->tid != -1 && local->pid != -1) {
+        kprintf("[KDEBUG]", "saving state of %d/%d", local->pid, local->tid);
+        task_t *old_task = hash_search(task_t, tasks, local->pid);
+        if(old_task == NULL)
+            return;
+
+        thread_t *old_thread = hash_search(thread_t, old_task->threads, local->tid);
+        if(old_thread == NULL)
+            return;
+
+        old_thread->regs = *regs;
+        old_thread->status = SCHED_WAITING;
+        old_task->status = SCHED_WAITING;
     }
 
     local->pid = pid;
     local->tid = tid;
 
     next_thread->idle_cnt = 0;
+    next_task->idle_cnt = 0;
+    
+    next_thread->status = SCHED_RUNNING;
+    next_task->status = SCHED_RUNNING;
 
-    switch(next_thread->status) {
-        case WAITING:
-            next_thread->status = RUNNING;
+    lapic_write(LAPIC_EOI, 0);
+    spin_release(&sched_lock);
 
-            local->kernel_stack = next_thread->kernel_stack;
+    switch_task((uint64_t)&next_thread->regs);
+}
 
-            lapic_write(LAPIC_EOI, 0); 
-            spin_release(&scheduler_lock);
+task_t *sched_create_task(task_t *parent, pagestruct_t *pagestruct) {
+    task_t task = { .status = SCHED_WAITING };
 
-            switch_task((uint64_t)&next_thread->regs, next_thread->regs.ss);
-            break; 
-        case WAITING_TO_START:
-            next_thread->status = RUNNING;
-
-            local->kernel_stack = next_thread->kernel_stack;
-
-            lapic_write(LAPIC_EOI, 0); 
-            spin_release(&scheduler_lock);
-
-            start_task(next_thread->regs.ss, next_thread->regs.rsp, next_thread->regs.cs, next_thread->starting_addr);
-            break;
-        default:
-            kprintf("[KDEBUG]", "Invalid thread %d/%d status = %d", pid, tid, next_thread->status);
+    if(parent != NULL) {
+        task.ppid = parent->pid;
     }
+
+    if(pagestruct != NULL) {
+        task.pagestruct = pagestruct;
+    }
+
+    pid_t new_pid = hash_push(task_t, tasks, task);
+    task_t *new_task = hash_search(task_t, tasks, new_pid);
+    new_task->pid = new_pid;
+
+    return new_task;
+}
+
+thread_t *sched_create_thread(pid_t pid, uint64_t starting_addr, uint16_t cs) {
+    task_t *task = hash_search(task_t, tasks, pid);
+    if(task == NULL)
+        return NULL;
+
+    thread_t thread = { .status = SCHED_WAITING,
+                        .kernel_stack = pmm_alloc(4),
+                        .user_stack = pmm_alloc(4), 
+                        .kernel_stack_size = 4,
+                        .user_stack_size = 4
+                      };
+
+    tid_t new_tid = hash_push(thread_t, task->threads, thread);
+    thread_t *new_thread = hash_search(thread_t, task->threads, new_tid);
+    new_thread->tid = new_tid;
+
+    new_thread->regs.rip = starting_addr;
+    new_thread->regs.cs = cs;
+    new_thread->regs.ss = cs + 8;
+    new_thread->regs.rflags = 0x202;
+
+    if(cs & 0x3) {
+        new_thread->regs.rsp = new_thread->user_stack + HIGH_VMA;
+    } else {
+        new_thread->regs.rsp = new_thread->kernel_stack + HIGH_VMA;
+    }
+
+    return new_thread;
 }
 
 void scheduler_main(regs_t *regs) {
-    spin_lock(&scheduler_lock);
-
-    if(!ready) { 
-        spin_release(&scheduler_lock);
-        return;                 
-    }
+    spin_lock(&sched_lock);
 
     reschedule(regs);
 
-    lapic_write(LAPIC_EOI, 0); 
-    spin_release(&scheduler_lock);
-}
-
-int create_task(uint64_t start_addr, uint16_t cs) { 
-    spin_lock(&scheduler_lock);
-
-    static int pid_cnt = 0;
-
-    task_t *new_task = kmalloc(sizeof(task_t));
-    *new_task = (task_t) {  .cs = cs,
-                            .ss = cs + 8,
-                            .threads = kmalloc(sizeof(thread_t)),
-                            .status = WAITING_TO_START,
-                            .pid = pid_cnt++ // TODO limit of 2 billion :|
-                         };
-
-    ddl_push(task_t, tasks, new_task);
-
-    create_task_thread(new_task->pid, start_addr);
-
-    spin_release(&scheduler_lock);
-
-    return new_task->pid;
-}
-
-int create_task_thread(int pid, uint64_t starting) {
-    spin_lock(&scheduler_lock);
-
-    task_t *task = ddl_search(task_t, tasks, pid, pid);
-    if(task == NULL) 
-        return -1;
-
-    thread_t *new_thread = kmalloc(sizeof(thread_t));
-    *new_thread = (thread_t) {  .pid = pid,
-                                .status = WAITING_TO_START,
-                                .kernel_stack = pmm_alloc(4),
-                                .user_stack = pmm_alloc(4),
-                                .ks_page_cnt = 4, 
-                                .us_page_cnt = 4,
-                                .starting_addr = starting,
-                                .tid = task->tid_cnt++ // TODO limit of 2 billion :|
-                             };
-
-    ddl_push(thread_t, task->threads, new_thread);
-
-    spin_release(&scheduler_lock);
-
-    return new_thread->tid;
-}
-
-int kill_thread(int pid, int tid) {
-    spin_lock(&scheduler_lock);
-
-    task_t *task = ddl_search(task_t, tasks, pid, pid);
-    if(task == NULL) 
-        return -1;
-
-    thread_t *thread = ddl_search(thread_t, task->threads, tid, tid);
-    if(thread == NULL)
-        return -1;
-
-    pmm_free(thread->kernel_stack, thread->ks_page_cnt);
-    pmm_free(thread->user_stack, thread->us_page_cnt);
-   
-    spin_release(&scheduler_lock);
-
-    return 0;
-}
-
-int kill_task(int pid) {
-    spin_lock(&scheduler_lock);
-
-    task_t *task = ddl_search(task_t, tasks, pid, pid);
-    if(task == NULL) 
-        return -1;
-
-    for(int i = 0; i < task->thread_cnt; i++) {
-        thread_t *thread = ddl_get_index(thread_t, task->threads, i);
-        pmm_free(thread->kernel_stack, thread->ks_page_cnt);
-        pmm_free(thread->user_stack, thread->us_page_cnt);
-    }
-
-    kfree(task->threads);
-    kfree(task->file_handles);
-
-    spin_release(&scheduler_lock);
-
-    return 0;
-}
-
-void scheduler_init() {
-    tasks = kmalloc(sizeof(task_t));
-    ready = 1;
-}
-
-task_t *get_current_task() {
-    core_local_t *local = get_core_local(-1);
-    return ddl_search(task_t, tasks, pid, local->pid);
-}
-
-int getpid() {
-    task_t *task = get_current_task();
-    return task->pid;
-}
-
-int getppid() {
-    task_t *task = get_current_task();
-    return task->ppid;
-}
-
-int setuid(int uid) {
-    task_t *task = get_current_task();
-    task->uid = uid;
-    return 0;
-}
-
-int setppid(int ppid) {
-    task_t *task = get_current_task();
-    task->ppid = ppid;
-    return 0;
-}
-
-int getpgrp(int pid) {
-    task_t *task = ddl_search(task_t, tasks, pid, pid);
-    if(task == NULL) {
-        task = get_current_task();
-    } 
-
-    return task->pgrp;
+    spin_release(&sched_lock);
 }

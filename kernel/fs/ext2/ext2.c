@@ -108,8 +108,6 @@ int ext2_write(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf) {
     if((off + cnt) > vfs_node->stat.st_size)
         vfs_node->stat.st_size += off + cnt - vfs_node->stat.st_size;
 
-    kprintf("[KDEBUG]", "%s", vfs_node->relative_path);
-
     ext2_dir_t dir;
     if(ext2_find_dir(devfs_node, &ext2->root_inode, &dir, vfs_node->relative_path) == -1)
         return -1;

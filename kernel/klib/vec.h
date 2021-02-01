@@ -183,7 +183,7 @@ ret: \
     size_t i = 0; \
     for(; i < name.hash_map.element_cnt; i++) { \
         size_t index = *vec_search(size_t, name.hash_map, i); \
-        if(index == hash_index) \
+        if(index == (size_t)hash_index) \
             goto found; \
     } \
     goto lret; \

@@ -2,17 +2,6 @@
 
 syscall_list:
 
-extern getpid
-dq getpid ; rax = 8
-extern getppid
-dq getppid ; rax = 9
-extern setuid
-dq setuid ; rax = 10
-extern setppid
-dq setppid ; rax = 11
-extern getpgrp 
-dq getpgrp ; rax = 12
-
 .end:
 
 syscall_cnt equ ((syscall_list.end - syscall_list) / 8)

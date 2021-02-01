@@ -46,8 +46,6 @@ void kmain(stivale_t *stivale) {
 
     init_smp();
 
-    scheduler_init();
-
     lapic_timer_init(50);
 
     asm ("sti");
