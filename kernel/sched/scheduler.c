@@ -58,10 +58,7 @@ static void reschedule(regs_t *regs) {
     int tid = next_thread->tid;
     int pid = next_task->pid;
 
-    kprintf("[KDEBUG]", "Running task %d/%d old task %d/%d", pid, tid, local->pid, local->tid);
-
     if(local->tid != -1 && local->pid != -1) {
-        kprintf("[KDEBUG]", "saving state of %d/%d", local->pid, local->tid);
         task_t *old_task = hash_search(task_t, tasks, local->pid);
         if(old_task == NULL)
             return;

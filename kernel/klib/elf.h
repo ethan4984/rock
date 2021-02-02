@@ -69,6 +69,6 @@ typedef struct {
     uint64_t sh_entsize;
 } elf64_shdr_t;
 
-int elf64_load(int fd, void *loc);
+int elf64_load(pagestruct_t *pagestruct, int fd);
 
 #endif

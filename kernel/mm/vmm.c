@@ -16,10 +16,10 @@ typedef struct {
 static pagestruct_t kernel_mapping;
 
 static void get_page_indexes(uint64_t addr, uint64_t *pml4, page_index_t *ret) {
-    ret->pml4idx = (addr & ((uint64_t)0x1ff << 39)) >> 39;
-    ret->pml3idx = (addr & ((uint64_t)0x1ff << 30)) >> 30;
-    ret->pml2idx = (addr & ((uint64_t)0x1ff << 21)) >> 21;
-    ret->pml1idx = (addr & ((uint64_t)0x1ff << 12)) >> 12;
+    ret->pml4idx = (addr >> 39) & 0x1ff;
+    ret->pml3idx = (addr >> 30) & 0x1ff;
+    ret->pml2idx = (addr >> 21) & 0x1ff;
+    ret->pml1idx = (addr >> 12) & 0x1ff;
 
     ret->pml3 = (uint64_t*)((pml4[ret->pml4idx] & ~(0xfff)) + HIGH_VMA);
 
@@ -140,11 +140,7 @@ void pagestruct_init(pagestruct_t *in) {
 }
 
 void vmm_init() {
-    kernel_mapping = (pagestruct_t) {   .pml4 = (uint64_t*)(pmm_calloc(1) + HIGH_VMA),
-                                        .bitmap = kcalloc(0x1000),
-                                        .bm_size = 0x1000
-                                    };
-
+    kernel_mapping = (pagestruct_t) { .pml4 = (uint64_t*)(pmm_calloc(1) + HIGH_VMA) };
     page_copy(&kernel_mapping, &(pagestruct_t) { .pml4 = (uint64_t*)(grab_PML4() + HIGH_VMA) });
     pagestruct_init(&kernel_mapping);
 }
