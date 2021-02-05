@@ -21,19 +21,19 @@ void madt_init() {
 
         switch(entry_type) {
             case 0:
-                vec_push(madt0_t, madt0, ((madt0_t*)&(madt->entries))[0]);
+                vec_push(madt0_t, madt0, *(madt0_t*)&(madt->entries[i]));
                 break;
             case 1:
-                vec_push(madt1_t, madt1, ((madt1_t*)&(madt->entries))[0]);
+                vec_push(madt1_t, madt1, *(madt1_t*)&(madt->entries[i]));
                 break;
             case 2:
-                vec_push(madt2_t, madt2, ((madt2_t*)&(madt->entries))[0]);
+                vec_push(madt2_t, madt2, *(madt2_t*)&(madt->entries[i]));
                 break;
             case 4:
-                vec_push(madt4_t, madt4, ((madt4_t*)&(madt->entries))[0]);
+                vec_push(madt4_t, madt4, *(madt4_t*)&(madt->entries[i]));
                 break;
             case 5:
-                vec_push(madt5_t, madt5, ((madt5_t*)&(madt->entries))[0]);
+                vec_push(madt5_t, madt5, *(madt5_t*)&(madt->entries[i]));
         }
         i += entry_size - 3;
     }

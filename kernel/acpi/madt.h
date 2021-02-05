@@ -45,13 +45,9 @@ typedef struct {
 extern madt_t *madt;
 
 extern_vec(madt0_t, madt0);
-
 extern_vec(madt1_t, madt1);
-
 extern_vec(madt2_t, madt2);
-
 extern_vec(madt4_t, madt4);
-
 extern_vec(madt5_t, madt5);
 
 void madt_init();

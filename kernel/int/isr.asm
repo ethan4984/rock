@@ -10,7 +10,16 @@ isr_handler:
     call isr_handler_main
     popall
     add rsp, 16
+    cmp rax, 0x6969
+    je .lol
     iretq
+.lol:
+    pop rax
+    pop rbx
+    pop rcx
+    pop rdx
+    pop rsi
+    jmp $ 
 
 %macro isr 1
 

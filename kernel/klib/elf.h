@@ -3,7 +3,7 @@
 
 #include <fs/fd.h>
 
-#define ELF_SIGNATURE 0x7f454c46
+#define ELF_SIGNATURE 0x464C457F
 #define ELF64 2
 
 #define	EI_CLASS 4
@@ -30,7 +30,7 @@ typedef struct {
     uint16_t shdr_size;
     uint16_t sh_num;
     uint16_t shstrndx;
-} elf_hdr_t;
+} __attribute__((packed)) elf_hdr_t;
 
 #define PT_NULL 0
 #define PT_LOAD 1

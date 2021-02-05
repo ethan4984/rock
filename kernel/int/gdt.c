@@ -21,21 +21,20 @@ void gdt_init() {
     gdt.mem_segments[2].granularity = 0;
     gdt.mem_segments[2].base_high = 0;
 
-    // user code 64
+    // user data 64
     gdt.mem_segments[3].limit = 0;
     gdt.mem_segments[3].base_low = 0;
     gdt.mem_segments[3].base_mid = 0;
-    gdt.mem_segments[3].access = 0b11111101;
-    gdt.mem_segments[3].granularity = 0b10101111;
+    gdt.mem_segments[3].access = 0b11110010;
+    gdt.mem_segments[3].granularity = 0;
     gdt.mem_segments[3].base_high = 0;
 
-    // user data 64
+    // user code 64
     gdt.mem_segments[4].limit = 0;
     gdt.mem_segments[4].base_low = 0;
     gdt.mem_segments[4].base_mid = 0;
-    gdt.mem_segments[4].access = 0b11110011;
-    gdt.mem_segments[4].granularity = 0b11001111;
-    gdt.mem_segments[4].base_high = 0;
+    gdt.mem_segments[4].access = 0b11111010;
+    gdt.mem_segments[4].granularity = 0b00100000;
 
     gdt.gdtr.offset = (uint64_t)&gdt.mem_segments;
     gdt.gdtr.limit = sizeof(memory_segment_t) * 5 - 1;
@@ -61,9 +60,9 @@ void gdt_tss_segment(uint64_t tss_addr) {
 void create_generic_tss() {
     tss_t *tss = kmalloc(sizeof(tss_t));
 
-    tss->rsp0 = pmm_alloc(2) + 0x2000;
-    tss->rsp1 = pmm_alloc(2) + 0x2000;
-    tss->rsp2 = pmm_alloc(2) + 0x2000;
+    tss->rsp0 = pmm_alloc(2) + 0x2000 + HIGH_VMA;
+    tss->rsp1 = pmm_alloc(2) + 0x2000 + HIGH_VMA;
+    tss->rsp2 = pmm_alloc(2) + 0x2000 + HIGH_VMA;
 
     gdt_tss_segment((uint64_t)tss);
 }

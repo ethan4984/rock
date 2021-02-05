@@ -12,8 +12,6 @@ typedef struct {
     uint64_t core_index;
     uint64_t kernel_stack;
     uint64_t user_stack;
-    size_t pid_index;
-    size_t tid_index;
     pid_t pid;
     tid_t tid;
 } core_local_t;

@@ -45,31 +45,49 @@ static task_t *find_next_task() {
 }
 
 static void reschedule(regs_t *regs) {
+    if(regs->cs & 0x3)
+        swapgs();
+
     core_local_t *local = get_core_local(CURRENT_CORE);
     
     task_t *next_task = find_next_task();
-    if(next_task == NULL)
+    if(next_task == NULL) {
+        if(regs->cs & 0x3)
+            swapgs();
         return;
+    }
 
     thread_t *next_thread = find_next_thread(next_task);
-    if(next_thread == NULL)
+    if(next_thread == NULL) {
+        if(regs->cs & 0x3)
+            swapgs();
         return;
+    }
 
     int tid = next_thread->tid;
     int pid = next_task->pid;
 
     if(local->tid != -1 && local->pid != -1) {
         task_t *old_task = hash_search(task_t, tasks, local->pid);
-        if(old_task == NULL)
+        if(old_task == NULL) {
+            if(regs->cs & 0x3)
+                swapgs();
             return;
+        }
 
         thread_t *old_thread = hash_search(thread_t, old_task->threads, local->tid);
-        if(old_thread == NULL)
+        if(old_thread == NULL) {
+            if(regs->cs & 0x3)
+                swapgs();
             return;
+        }
 
         old_thread->regs = *regs;
         old_thread->status = SCHED_WAITING;
         old_task->status = SCHED_WAITING;
+
+        old_thread->user_gs_base = get_user_gs(); 
+        old_thread->user_fs_base = get_user_fs();
     }
 
     local->pid = pid;
@@ -81,6 +99,12 @@ static void reschedule(regs_t *regs) {
     next_thread->status = SCHED_RUNNING;
     next_task->status = SCHED_RUNNING;
 
+    set_user_fs(next_thread->user_fs_base);
+    set_user_gs(next_thread->user_gs_base);
+        
+    if(next_thread->regs.cs & 0x3)
+        swapgs();
+    
     lapic_write(LAPIC_EOI, 0);
     spin_release(&sched_lock);
 
@@ -114,7 +138,7 @@ thread_t *sched_create_thread(pid_t pid, uint64_t starting_addr, uint16_t cs) {
                         .kernel_stack = pmm_alloc(4),
                         .user_stack = pmm_alloc(4), 
                         .kernel_stack_size = 4,
-                        .user_stack_size = 4
+                        .user_stack_size = 4,
                       };
 
     tid_t new_tid = hash_push(thread_t, task->threads, thread);
@@ -123,7 +147,7 @@ thread_t *sched_create_thread(pid_t pid, uint64_t starting_addr, uint16_t cs) {
 
     new_thread->regs.rip = starting_addr;
     new_thread->regs.cs = cs;
-    new_thread->regs.ss = cs + 8;
+    new_thread->regs.ss = cs - 8;
     new_thread->regs.rflags = 0x202;
 
     if(cs & 0x3) {

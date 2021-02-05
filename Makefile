@@ -1,6 +1,7 @@
 QEMUFLAGS = -m 4G -vga vmware -serial file:serial.log -smp 4 -netdev user,id=n1 -device e1000,netdev=n1 
 
 build:
+	cd user && make
 	cd kernel && make build -j$(nproc)
 	rm -f rock.img
 	dd if=/dev/zero bs=1M count=0 seek=64 of=rock.img
@@ -14,6 +15,7 @@ build:
 	sudo mkdir diskImage/boot
 	sudo cp kernel/bin/rock.elf diskImage/boot/
 	sudo cp kernel/limine.cfg diskImage/
+	sudo cp user/test.elf diskImage/
 	sync
 	sudo umount diskImage/
 	sudo losetup -d `cat loopback_dev`

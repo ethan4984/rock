@@ -53,4 +53,32 @@ uint64_t rdmsr(uint64_t msr);
 
 void wrmsr(uint64_t msr, uint64_t data);
 
+static inline void set_kernel_gs(uintptr_t addr) {
+    wrmsr(0xc0000101, addr);
+}
+
+static inline uint64_t get_kernel_gs() {
+    return rdmsr(0xc0000101);
+}
+
+static inline void set_user_gs(uintptr_t addr) {
+    wrmsr(0xc0000102, addr);
+}
+
+static inline void set_user_fs(uintptr_t addr) {
+    wrmsr(0xc0000100, addr);
+}
+
+static inline uintptr_t get_user_gs(void) {
+    return rdmsr(0xc0000102);
+}
+
+static inline uintptr_t get_user_fs(void) {
+    return rdmsr(0xc0000100);
+}
+
+static inline void swapgs(void) {
+    asm volatile ("swapgs" ::: "memory");
+}
+
 #endif

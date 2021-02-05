@@ -1,16 +1,18 @@
 #include <elf.h>
 #include <mm/vmm.h>
+#include <output.h>
 
 static int elf64_validate(int fd, elf_hdr_t *hdr) {
-    read(fd, hdr, sizeof(hdr));
-    
+    read(fd, hdr, sizeof(elf_hdr_t));
+
     if(*(uint32_t*)hdr != ELF_SIGNATURE)
         return -1;
 
     if( hdr->ident[EI_OSABI] != ABI_SYSTEM_V ||
         hdr->ident[EI_DATA] != LITTLE_ENDIAN ||
         hdr->ident[EI_CLASS] != ELF64 ||
-        hdr->machine != MACH_X86_64) return -1;
+        (hdr->machine != MACH_X86_64 &&
+        hdr->machine != 0)) return -1;
 
     return 0;
 }

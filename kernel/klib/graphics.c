@@ -6,18 +6,19 @@
 uint32_t *framebuffer, fb_height, fb_width, fb_pitch, fb_bpp, *double_buffer, fb_size;
 
 void init_graphics(stivale_t *stivale) {
-    framebuffer = (uint32_t*)stivale->fb_addr;
+    framebuffer = (uint32_t*)(stivale->fb_addr + HIGH_VMA);
     fb_height = stivale->fb_height;
     fb_width = stivale->fb_width;
     fb_bpp = stivale->fb_bpp;
     fb_pitch = stivale->fb_pitch;
     fb_size = fb_height * fb_pitch;
+
     double_buffer = (uint32_t*)(pmm_calloc(ROUNDUP(fb_height * fb_width * (fb_bpp / 8), 0x1000)) + HIGH_VMA); 
     clear_screen(0xffffff);
 }
 
 inline void set_pixel(uint32_t x, uint32_t y, uint32_t colour) {
-    *(volatile uint32_t*)(((uint64_t)framebuffer + HIGH_VMA) + ((y * fb_pitch) + (x * fb_bpp / 8))) = colour;
+    *(volatile uint32_t*)(((uint64_t)framebuffer) + ((y * fb_pitch) + (x * fb_bpp / 8))) = colour;
     *(volatile uint32_t*)(((uint64_t)double_buffer) + ((y * fb_pitch) + (x * fb_bpp / 8))) = colour;
 }
 

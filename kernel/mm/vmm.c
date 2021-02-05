@@ -13,34 +13,34 @@ typedef struct {
     uint64_t *pml1;
 } page_index_t;
 
-static pagestruct_t kernel_mapping;
+pagestruct_t kernel_mapping;
 
-static void get_page_indexes(uint64_t addr, uint64_t *pml4, page_index_t *ret) {
-    ret->pml4idx = (addr >> 39) & 0x1ff;
-    ret->pml3idx = (addr >> 30) & 0x1ff;
-    ret->pml2idx = (addr >> 21) & 0x1ff;
-    ret->pml1idx = (addr >> 12) & 0x1ff;
+static void get_pt_index(pagestruct_t *pagestruct, uint64_t addr, page_index_t *ret) {
+    *ret = (page_index_t) { .pml4idx = (addr >> 39) & 0x1ff,
+                            .pml3idx = (addr >> 30) & 0x1ff,
+                            .pml2idx = (addr >> 21) & 0x1ff,
+                            .pml1idx = (addr >> 12) & 0x1ff
+                          };
 
-    ret->pml3 = (uint64_t*)((pml4[ret->pml4idx] & ~(0xfff)) + HIGH_VMA);
-
-    if((uint64_t)ret->pml3 != HIGH_VMA) {
-        ret->pml2 = (uint64_t*)((ret->pml3[ret->pml3idx] & ~(0xfff)) + HIGH_VMA);
-    } else {
-        ret->pml3 = NULL;
-        ret->pml2 = NULL;
-        ret->pml1 = NULL;
+    ret->pml3 = (uint64_t*)(pagestruct->pml4[ret->pml4idx] & ~(0xfff));
+    if(ret->pml3 == NULL) {
         return;
     }
 
-    if((uint64_t)ret->pml2 != HIGH_VMA)
-        ret->pml1 = (uint64_t*)((ret->pml2[ret->pml2idx] & ~(0xfff)) + HIGH_VMA);
-    else
-        ret->pml1 = NULL;
+    ret->pml3 = (uint64_t*)((uint64_t)ret->pml3 + HIGH_VMA);
+    ret->pml2 = (uint64_t*)(ret->pml3[ret->pml3idx] & ~(0xfff));
+    if(ret->pml2 == NULL)
+        return;
+
+    ret->pml2 = (uint64_t*)((uint64_t)ret->pml2 + HIGH_VMA);
+    ret->pml1 = (uint64_t*)(ret->pml2[ret->pml2idx] & ~(0xfff));
+    if(ret->pml1 != NULL)
+        ret->pml1 = (uint64_t*)((uint64_t)ret->pml1 + HIGH_VMA);
 }
 
 static void page_map(pagestruct_t *p, uint64_t paddr, uint64_t vaddr, uint64_t flags, uint64_t flags1) {
     page_index_t indexes;
-    get_page_indexes(vaddr, p->pml4, &indexes);
+    get_pt_index(p, vaddr, &indexes);
 
     if(indexes.pml3 == NULL) {
         indexes.pml3 = (uint64_t*)(pmm_calloc(1) + HIGH_VMA);
@@ -68,7 +68,7 @@ static void page_map(pagestruct_t *p, uint64_t paddr, uint64_t vaddr, uint64_t f
 
 static uint64_t page_unmap(pagestruct_t *p, uint64_t vaddr, uint64_t flags) { 
     page_index_t indexes;
-    get_page_indexes(vaddr, p->pml4, &indexes);
+    get_pt_index(p, vaddr, &indexes);
 
     if(flags & (1 << 7)) { // check for 2mb pages
         uint64_t save = indexes.pml2[indexes.pml2idx];
@@ -141,6 +141,18 @@ void pagestruct_init(pagestruct_t *in) {
 
 void vmm_init() {
     kernel_mapping = (pagestruct_t) { .pml4 = (uint64_t*)(pmm_calloc(1) + HIGH_VMA) };
-    page_copy(&kernel_mapping, &(pagestruct_t) { .pml4 = (uint64_t*)(grab_PML4() + HIGH_VMA) });
+
+    size_t phys = 0;
+    for(size_t i = 0; i < 0x200; i++) {
+        page_map(&kernel_mapping, phys, KERNEL_HIGH_VMA + phys, 0x3, 0x3 | (1 << 7));
+        phys += 0x200000;
+    }
+
+    phys = 0;
+    for(size_t i = 0; i < total_physical_mem / 0x200000; i++) { 
+        page_map(&kernel_mapping, phys, HIGH_VMA + phys, 0x3, 0x3 | (1 << 7));
+        phys += 0x200000;
+    }
+
     pagestruct_init(&kernel_mapping);
 }

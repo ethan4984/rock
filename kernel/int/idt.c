@@ -387,6 +387,6 @@ void idt_init() {
     set_idt_entry(0x8, 0, 0x8e, (uint64_t)isr254, 254);
     set_idt_entry(0x8, 0, 0x8e, (uint64_t)isr255, 255);
 
-    idtr_t idtr = { 256 * sizeof(idt_entry_t) - 1, (uint64_t)idt - KERNEL_HIGH_VMA };
+    idtr_t idtr = { 256 * sizeof(idt_entry_t) - 1, (uint64_t)idt };
     asm volatile ("lidtq %0" : "=m"(idtr));
 }

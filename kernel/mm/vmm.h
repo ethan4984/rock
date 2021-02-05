@@ -15,6 +15,8 @@ typedef struct {
     int lock;
 } pagestruct_t;
 
+extern pagestruct_t kernel_mapping;
+
 void map_range(pagestruct_t *p, uint64_t vaddr, uint64_t cnt, uint64_t flags);
 void unmap_range(pagestruct_t *p, uint64_t vaddr, uint64_t cnt, uint64_t flags);
 void page_copy(pagestruct_t *in, pagestruct_t *out);

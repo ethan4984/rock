@@ -28,11 +28,12 @@ static void prep_trampoline(uint64_t stack, uint64_t pml4, uint64_t entry_point,
 static void init_cpu_features() {
     wrmsr(MSR_EFER, rdmsr(MSR_EFER) | 1); // set SCE
 
-    wrmsr(MSR_STAR, 0x13000800000000);
+    wrmsr(MSR_STAR, 0x0013000800000000);
     wrmsr(MSR_LSTAR, (uint64_t)syscall_main_stub);
     wrmsr(MSR_SFMASK, (uint64_t)~((uint32_t)0x002));
 
-    wrmsr(MSR_GS_BASE, (uint64_t)&core_local[core_cnt++]);
+    set_kernel_gs((uint64_t)&core_local[core_cnt]);
+//    set_user_gs((uint64_t)&core_local[core_cnt++]);
 }
 
 static void bootstrap_core() {
@@ -51,12 +52,16 @@ static void bootstrap_core() {
 void init_smp() {
     core_local = kmalloc(sizeof(core_local_t) * madt0.element_cnt);
     for(uint8_t i = 0; i < madt0.element_cnt; i++) {
-        core_local[i] = (core_local_t) { .pid = -1, .tid = -1, .core_index = i };
+        core_local[i] = (core_local_t) {    .pid = -1,
+                                            .tid = -1,
+                                            .core_index = i,
+                                            .kernel_stack = pmm_alloc(4) + 0x4000 + HIGH_VMA
+                                       };
     }
 
     init_cpu_features();
 
-    memcpy8((uint8_t*)(0x1000), (uint8_t*)smp_tramp_begin, (uint64_t)smp_tramp_end - (uint64_t)smp_tramp_begin);
+    memcpy8((uint8_t*)(0x1000 + HIGH_VMA), (uint8_t*)smp_tramp_begin, (uint64_t)smp_tramp_end - (uint64_t)smp_tramp_begin);
 
     static idtr_t idtr;
     asm volatile ("sidt %0" :: "m"(idtr));
