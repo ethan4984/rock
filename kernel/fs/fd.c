@@ -24,6 +24,10 @@ int open(char *path, int flags) {
     return hash_push(fd_t, fd_list, fd);
 }
 
+void syscall_open(regs_t *regs) {
+    regs->rax = open((void*)regs->rdi, (int)regs->rsi);
+}
+
 int read(int fd, void *buf, size_t cnt) {
     fd_t *fd_entry = hash_search(fd_t, fd_list, (size_t)fd);
     if(fd_entry == NULL)
@@ -38,6 +42,10 @@ int read(int fd, void *buf, size_t cnt) {
     return ret;
 }
 
+void syscall_read(regs_t *regs) {
+    regs->rax = read((int)regs->rdi, (void*)regs->rsi, regs->rdx);
+}
+
 int write(int fd, void *buf, size_t cnt) {
     fd_t *fd_entry = hash_search(fd_t, fd_list, (size_t)fd);
     if(fd_entry == NULL)
@@ -50,6 +58,10 @@ int write(int fd, void *buf, size_t cnt) {
     *fd_entry->loc += cnt;
 
     return ret;
+}
+
+void syscall_write(regs_t *regs) {
+    regs->rax = write((int)regs->rdi, (void*)regs->rsi, regs->rdx);
 }
 
 int lseek(int fd, off_t off, int whence) {
@@ -69,12 +81,20 @@ int lseek(int fd, off_t off, int whence) {
     return -1;
 }
 
+void syscall_lseek(regs_t *regs) {
+    regs->rax = lseek((int)regs->rdi, (off_t)regs->rsi, (int)regs->rdx);
+}
+
 int close(int fd) {
     fd_t *fd_entry = hash_search(fd_t, fd_list, (size_t)fd);
     if(fd_entry == NULL)
         return -1;
     
     return hash_addr_remove(fd_t, fd_list, fd_entry);
+}
+
+void syscall_close(regs_t *regs) {
+    regs->rax = close((int)regs->rdi);
 }
 
 int dup(int fd) {
@@ -85,6 +105,10 @@ int dup(int fd) {
     fd_t new_fd = *fd_entry;
 
     return hash_push(fd_t, fd_list, new_fd);
+}
+
+void syscall_dup(regs_t *regs) {
+    regs->rax = dup((int)regs->rdi);
 }
 
 int dup2(int old_fd, int new_fd) {
@@ -100,4 +124,8 @@ int dup2(int old_fd, int new_fd) {
     fd_t fd = *old_fd_entry;
 
     return hash_push(fd_t, fd_list, fd);
+}
+
+void syscall_dup2(regs_t *regs) {
+    regs->rax = dup2((int)regs->rdi, (int)regs->rsi);
 }

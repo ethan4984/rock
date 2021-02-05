@@ -1,6 +1,22 @@
 %include 'klib/asm_mac.inc'
 
+extern syscall_open
+extern syscall_close
+extern syscall_write
+extern syscall_read
+extern syscall_lseek
+extern syscall_dup
+extern syscall_dup2
+
 syscall_list:
+
+dq syscall_open
+dq syscall_close
+dq syscall_write
+dq syscall_read
+dq syscall_lseek
+dq syscall_dup
+dq syscall_dup2
 
 .end:
 
@@ -15,19 +31,32 @@ syscall_main_stub:
     mov rsp, qword [gs:8] ; init kernel stack
 
     sti
+    cld
 
     push rcx ; rip
     push r11 ; rflags
+
+    push 0x1b ; ss
+    push qword [gs:16] ; rsp
+    push r11 ; rflags
+    push 0x23 ; cs
+    push rcx ; rip 
+
+    push 0
+    push 0
 
     pushall
 
     cmp rax, syscall_cnt
     jae .error
 
+    mov rdi, rsp
     call [syscall_list + rax * 8]
 
 .leave:
-    popall ; does not pop rax cuz its the return value
+    popall
+
+    add rsp, 56
 
     pop r11 ; rflags
     pop rcx ; rip
