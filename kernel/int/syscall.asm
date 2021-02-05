@@ -9,6 +9,7 @@ extern syscall_dup
 extern syscall_dup2
 extern syscall_fstat
 extern syscall_stat
+extern syscall_fcntl
 extern syscall_set_fs_base
 extern syscall_set_gs_base
 extern syscall_get_fs_base
@@ -31,6 +32,7 @@ dq syscall_dup
 dq syscall_dup2
 dq syscall_fstat
 dq syscall_stat
+dq syscall_fcntl
 dq syscall_set_fs_base
 dq syscall_set_gs_base
 dq syscall_get_fs_base

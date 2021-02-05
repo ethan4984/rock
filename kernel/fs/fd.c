@@ -158,3 +158,52 @@ void syscall_fstat(regs_t *regs) {
     *stat = fd_struct->vfs_node->stat; 
     regs->rax = 0;
 }
+
+#define F_DUPFD 1
+#define F_DUPFD_CLOEXEC 2
+#define F_GETFD 3
+#define F_SETFD 4
+#define F_GETFL 5
+#define F_SETFL 6
+#define F_GETLK 7
+#define F_SETLK 8
+#define F_SETLKW 9
+#define F_GETOWN 10
+#define F_SETOWN 11
+
+#define FD_CLOEXEC 1
+
+void syscall_fcntl(regs_t *regs) {
+    int fd = (int)regs->rdi;
+    int cmd = (int)regs->rsi;
+
+    fd_t *fd_struct = hash_search(fd_t, fd_list, fd);
+    if(fd_struct == NULL) {
+        regs->rax = -1;
+        return;
+    }
+
+    switch(cmd) {
+        case F_DUPFD: 
+            regs->rax = (size_t)dup2(fd, (int)regs->rdx);
+            return;
+        case F_GETFD:
+            regs->rax = (size_t)((regs->rdx & FD_CLOEXEC) ? O_CLOEXEC : 0);
+            return; 
+        case F_SETFD:
+            *fd_struct->flags = (int)((regs->rdx & FD_CLOEXEC) ? O_CLOEXEC : 0);
+            break;
+        case F_GETFL:
+            regs->rax = (size_t)fd_struct->flags; 
+            return;
+        case F_SETFL:
+            *fd_struct->flags = (int)regs->rdx;
+            break;
+        default:
+            regs->rax = -1;
+            return; 
+    }
+
+    regs->rax = 0;
+    return;
+}
