@@ -51,14 +51,16 @@ void kmain(void *stivale_phys) {
 
     vmm_init();
 
-    int fd = open("/test.elf", 0);
+    /*int fd = open("/test.elf", 0);
     if(fd == -1) 
         kprintf("[KDBEUG]", "bruh");
 
     elf64_load(&kernel_mapping, fd);
 
     task_t *task = sched_create_task(NULL, NULL);
-    sched_create_thread(task->pid, 0x1000, 0x23);
+    sched_create_thread(task->pid, 0x1000, 0x23);*/
+
+    sched_exec("/test.elf", NULL, NULL, SCHED_USER | SCHED_ELF);
 
     asm ("sti");
 

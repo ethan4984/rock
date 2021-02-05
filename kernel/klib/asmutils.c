@@ -41,3 +41,19 @@ void wrmsr(uint64_t msr, uint64_t data) {
     uint64_t rdx = data >> 32;
     asm volatile ("wrmsr" :: "a"(rax), "d"(rdx), "c"(msr));
 }
+
+void syscall_set_fs_base(regs_t *regs) {
+    set_user_fs(regs->rdi);    
+}
+
+void syscall_set_gs_base(regs_t *regs) {
+    set_user_gs(regs->rdi);
+}
+
+void syscall_get_fs_base(regs_t *regs) {
+    regs->rax = get_user_fs();
+}
+
+void syscall_get_gs_base(regs_t *regs) {
+    regs->rax = get_user_gs();
+}

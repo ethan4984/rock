@@ -139,6 +139,15 @@ void pagestruct_init(pagestruct_t *in) {
     asm volatile ("movq %0, %%cr3" :: "r" ((uint64_t)in->pml4 - HIGH_VMA) : "memory");
 }
 
+pagestruct_t *vmm_generic_pagestruct() {
+    pagestruct_t *pagestruct = kmalloc(sizeof(pagestruct_t));
+    *pagestruct = (pagestruct_t) { .pml4 = (uint64_t*)(pmm_calloc(1) + HIGH_VMA) };
+
+    page_copy(pagestruct, &kernel_mapping);
+
+    return pagestruct;
+}
+
 void vmm_init() {
     kernel_mapping = (pagestruct_t) { .pml4 = (uint64_t*)(pmm_calloc(1) + HIGH_VMA) };
 

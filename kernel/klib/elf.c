@@ -17,7 +17,7 @@ static int elf64_validate(int fd, elf_hdr_t *hdr) {
     return 0;
 }
 
-int elf64_load(pagestruct_t *pagestruct, int fd) {
+int elf64_load(pagestruct_t *pagestruct, elf_hdr_t *ret, int fd) {
     elf_hdr_t hdr;
     if(elf64_validate(fd, &hdr) == -1)
         return -1;
@@ -39,6 +39,7 @@ int elf64_load(pagestruct_t *pagestruct, int fd) {
         lseek(fd, phdr[i].p_offset, SEEK_SET);
         read(fd, (void*)(phdr[i].p_vaddr + misalignment), phdr[i].p_filesz);
     }
-
+    
+    *ret = hdr;
     return 0;
 }

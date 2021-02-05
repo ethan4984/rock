@@ -7,6 +7,13 @@ extern syscall_read
 extern syscall_lseek
 extern syscall_dup
 extern syscall_dup2
+extern syscall_set_fs_base
+extern syscall_set_gs_base
+extern syscall_get_fs_base
+extern syscall_get_gs_base
+extern syscall_getpid
+extern syscall_gettid
+extern syscall_getppid
 
 syscall_list:
 
@@ -17,6 +24,13 @@ dq syscall_read
 dq syscall_lseek
 dq syscall_dup
 dq syscall_dup2
+dq syscall_set_fs_base
+dq syscall_set_gs_base
+dq syscall_get_fs_base
+dq syscall_get_gs_base
+dq syscall_getpid
+dq syscall_gettid
+dq syscall_getppid
 
 .end:
 

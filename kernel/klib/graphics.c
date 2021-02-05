@@ -89,7 +89,3 @@ int draw_window(window_t *win) {
 
     return 0;
 }
-
-int redraw_window(window_t *win, uint32_t new_x, uint32_t new_y) {
-        
-}

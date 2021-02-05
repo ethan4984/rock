@@ -15,6 +15,10 @@ extern char sched_lock;
 #define SCHED_WAITING_TO_START 1
 #define SCHED_RUNNING 2
 
+#define SCHED_USER (1 << 1)
+#define SCHED_KERNEL (1 << 2)
+#define SCHED_ELF (1 << 3)
+
 typedef struct {
     tid_t tid;
     size_t idle_cnt, status;
@@ -39,5 +43,6 @@ typedef struct {
 void scheduler_main(regs_t *regs);
 task_t *sched_create_task(task_t *parent, pagestruct_t *pagestruct);
 thread_t *sched_create_thread(pid_t pid, uint64_t starting_addr, uint16_t cs);
+int sched_exec(char *path, char **argv, char **envp, int mode);
 
 #endif
