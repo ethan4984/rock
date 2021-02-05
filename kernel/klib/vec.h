@@ -193,7 +193,7 @@ lret: \
     ret; \
 })
 
-#define hash_remove(type, name, index) ({ \
+#define hash_remove(type, name, hash_index) ({ \
     __label__ lret; \
     __label__ found; \
     int ret = -1; \
@@ -206,7 +206,7 @@ lret: \
     goto lret; \
 found: \
     vec_remove(type, name.data_map, i); \
-    vec_remove(type, name.hash_map, i); \
+    vec_remove(size_t, name.hash_map, i); \
     ret = 0; \
 lret: \
     ret; \

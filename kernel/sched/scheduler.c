@@ -90,6 +90,8 @@ static void reschedule(regs_t *regs) {
 
         old_thread->user_gs_base = get_user_gs(); 
         old_thread->user_fs_base = get_user_fs();
+
+        local->pagestruct = old_task->pagestruct;
     }
 
     local->pid = pid;
@@ -124,6 +126,8 @@ task_t *sched_create_task(task_t *parent, pagestruct_t *pagestruct) {
 
     if(pagestruct != NULL) {
         task.pagestruct = pagestruct;
+    } else {
+        task.pagestruct = &kernel_mapping;
     }
 
     pid_t new_pid = hash_push(task_t, tasks, task);
@@ -131,6 +135,17 @@ task_t *sched_create_task(task_t *parent, pagestruct_t *pagestruct) {
     new_task->pid = new_pid;
 
     return new_task;
+}
+
+int sched_delete_thread(task_t *parent, int tid) {
+    thread_t *thread = hash_search(thread_t, parent->threads, tid);
+    if(thread == NULL)
+        return -1;
+    
+    pmm_free(thread->kernel_stack, thread->kernel_stack_size); 
+    pmm_free(thread->user_stack, thread->user_stack_size);
+
+    return hash_remove(thread_t, parent->threads, (size_t)tid);
 }
 
 thread_t *sched_create_thread(pid_t pid, uint64_t starting_addr, uint16_t cs) {
@@ -219,6 +234,8 @@ int sched_exec(char *path, char **argv, char **envp, int mode) {
     if(elf64_load(pagestruct, &elf_hdr, fd) == -1)
         return -1;
 
+    pagestruct_init(local->pagestruct);
+
     task_t *new_task = sched_create_task(parent, pagestruct);
     thread_t *new_thread = sched_create_thread(new_task->pid, elf_hdr.entry, cs);
 
@@ -227,4 +244,37 @@ int sched_exec(char *path, char **argv, char **envp, int mode) {
 
 void syscall_execve(regs_t *regs) {
     regs->rax = sched_exec((void*)regs->rdi, (void*)regs->rsi, (void*)regs->rdx, SCHED_USER | SCHED_ELF);
+}
+
+void yeild(regs_t *regs) {
+    reschedule(regs);    
+}
+
+void syscall_yeild(regs_t *regs) {
+    yeild(regs); 
+} 
+
+int sched_exit(regs_t *regs) {
+    core_local_t *local = get_core_local(CURRENT_CORE);
+    task_t *current_task = hash_search(task_t, tasks, local->pid);
+
+    for(size_t i = 0; i < current_task->fd_list.element_cnt; i++) {
+        int fd = *vec_search(int, current_task->fd_list, i);
+        close(fd);
+    }
+
+    vec_delete(current_task->fd_list);
+
+    for(size_t i = 0; i < current_task->threads.hash_cnt; i++) {
+        thread_t *thread = vec_search(thread_t, current_task->threads.data_map, i);
+        sched_delete_thread(current_task, thread->tid); 
+    }
+
+    yeild(regs);
+
+    return -1;
+}
+
+void syscall_exit(regs_t *regs) {
+    regs->rax = sched_exit(regs);
 }

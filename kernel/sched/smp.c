@@ -33,7 +33,6 @@ static void init_cpu_features() {
     wrmsr(MSR_SFMASK, (uint64_t)~((uint32_t)0x002));
 
     set_kernel_gs((uint64_t)&core_local[core_cnt]);
-//    set_user_gs((uint64_t)&core_local[core_cnt++]);
 }
 
 static void bootstrap_core() {
@@ -55,7 +54,8 @@ void init_smp() {
         core_local[i] = (core_local_t) {    .pid = -1,
                                             .tid = -1,
                                             .core_index = i,
-                                            .kernel_stack = pmm_alloc(4) + 0x4000 + HIGH_VMA
+                                            .kernel_stack = pmm_alloc(4) + 0x4000 + HIGH_VMA,
+                                            .pagestruct = &kernel_mapping
                                        };
     }
 

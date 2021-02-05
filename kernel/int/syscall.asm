@@ -14,6 +14,9 @@ extern syscall_get_gs_base
 extern syscall_getpid
 extern syscall_gettid
 extern syscall_getppid
+extern syscall_execve
+extern syscall_exit
+extern syscall_yeild
 
 syscall_list:
 
@@ -31,6 +34,9 @@ dq syscall_get_gs_base
 dq syscall_getpid
 dq syscall_gettid
 dq syscall_getppid
+dq syscall_execve
+dq syscall_exit
+dq syscall_yeild
 
 .end:
 
@@ -62,7 +68,7 @@ syscall_main_stub:
     pushall
 
     cmp rax, syscall_cnt
-    jae .error
+    jae .leave
 
     mov rdi, rsp
     call [syscall_list + rax * 8]
@@ -81,7 +87,3 @@ syscall_main_stub:
     swapgs
 
     o64 sysret ; ensure 64 bit operanh size so we returned to 64 bit mode
-
-.error:
-    mov rax, -1
-    jmp .leave

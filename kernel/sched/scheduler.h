@@ -36,7 +36,7 @@ typedef struct {
     pid_t ppid;
     size_t idle_cnt, status;
     uninit_hash_table(thread_t, threads);
-    uninit_vec(int, open_fds);
+    uninit_vec(int, fd_list);
     pagestruct_t *pagestruct;
 } task_t;
 

@@ -14,6 +14,7 @@ typedef struct {
     uint64_t user_stack;
     pid_t pid;
     tid_t tid;
+    pagestruct_t *pagestruct;
 } core_local_t;
 
 core_local_t *get_core_local(int64_t index);
