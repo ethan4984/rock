@@ -129,3 +129,32 @@ int dup2(int old_fd, int new_fd) {
 void syscall_dup2(regs_t *regs) {
     regs->rax = dup2((int)regs->rdi, (int)regs->rsi);
 }
+
+void syscall_stat(regs_t *regs) {
+    char *path = (void*)regs->rdi;
+    stat_t *stat = (void*)regs->rsi;
+
+    int fd = open(path, 0);
+    if(fd == -1) {
+        regs->rax = -1;
+        return;
+    }
+
+    fd_t *fd_struct = hash_search(fd_t, fd_list, (size_t)fd);
+    *stat = fd_struct->vfs_node->stat;
+    regs->rax = 0;
+}
+
+void syscall_fstat(regs_t *regs) {
+    int fd = (int)regs->rdi;
+    stat_t *stat = (void*)regs->rsi;
+
+    fd_t *fd_struct = hash_search(fd_t, fd_list, (size_t)fd);
+    if(fd_struct == NULL) {
+        regs->rax = -1;
+        return;
+    }
+    
+    *stat = fd_struct->vfs_node->stat; 
+    regs->rax = 0;
+}

@@ -7,6 +7,8 @@ extern syscall_read
 extern syscall_lseek
 extern syscall_dup
 extern syscall_dup2
+extern syscall_fstat
+extern syscall_stat
 extern syscall_set_fs_base
 extern syscall_set_gs_base
 extern syscall_get_fs_base
@@ -27,6 +29,8 @@ dq syscall_read
 dq syscall_lseek
 dq syscall_dup
 dq syscall_dup2
+dq syscall_fstat
+dq syscall_stat
 dq syscall_set_fs_base
 dq syscall_set_gs_base
 dq syscall_get_fs_base
