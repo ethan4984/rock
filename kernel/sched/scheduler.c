@@ -247,6 +247,7 @@ void syscall_execve(regs_t *regs) {
 }
 
 void yeild(regs_t *regs) {
+    swapgs();
     reschedule(regs);    
 }
 
@@ -269,6 +270,9 @@ int sched_exit(regs_t *regs) {
         thread_t *thread = vec_search(thread_t, current_task->threads.data_map, i);
         sched_delete_thread(current_task, thread->tid); 
     }
+
+    local->pid = -1;
+    local->tid = -1;
 
     yeild(regs);
 

@@ -1,6 +1,6 @@
 global _start
 
 _start:
-    mov rax, 0x6969
+    mov rax, 18
     syscall
     jmp $

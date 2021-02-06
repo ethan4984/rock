@@ -88,8 +88,10 @@ syscall_main_stub:
     pop rcx ; rip
 
     cli
-
+   
+    mov rdx, qword [gs:24] ; errno
     mov rsp, qword [gs:16] ; user stack
+
     swapgs
 
     o64 sysret ; ensure 64 bit operanh size so we returned to 64 bit mode
