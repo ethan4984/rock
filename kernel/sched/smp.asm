@@ -19,8 +19,6 @@ init_CS:
     or al, 2
     out 0x92, al
 
-    lgdt[GDT]
-
     mov eax, dword [0x500 + 8]
     mov cr3, eax
 
@@ -36,12 +34,14 @@ init_CS:
     mov eax, 0x80000011
     mov cr0, eax
 
-    jmp GDT.CODE64 - GDT.start:long_mode_code
+    lgdt [GDT]
+
+    jmp 0x8:long_mode_code
 
     bits 64
 
 long_mode_code: 
-    mov ax, GDT.DATA64 - GDT.start
+    mov ax, 0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
@@ -51,9 +51,12 @@ long_mode_code:
     mov rsp, qword [0x500] ; stack
     mov rbx, qword [0x500 + 16] ; entry point
     mov rcx, qword [0x500 + 24] ; idtr
-
+    mov rdx, qword [0x500 + 32] ; gdtr
+    
+    lgdt [rdx] 
     lidt [rcx]
-
+    
+    mov rdi, [0x500 + 40] ; core_index
     jmp rbx
 
 GDT:

@@ -4,7 +4,7 @@
 #include <fs/device.h>
 #include <types.h>
 
-typedef struct {
+struct stat {
     dev_t st_dev;
     ino_t st_ino;
     mode_t st_mode;
@@ -13,39 +13,39 @@ typedef struct {
     gid_t st_gid;
     dev_t st_rdev;
     off_t st_size;
-    timespec_t st_atim;
-    timespec_t st_mtim;
-    timespec_t st_ctim;
+    struct timespec st_atim;
+    struct timespec st_mtim;
+    struct timespec st_ctim;
     blksize_t st_blksize;
     blkcnt_t st_blocks;
-} stat_t;
+};
 
-typedef struct vfs_node_t {
+struct vfs_node {
     char *absolute_path;
     char *relative_path;
     char *name;
 
-    filesystem_t *fs;
-    stat_t stat;
+    struct filesystem *fs;
+    struct stat stat;
 
-    uninit_vec(struct vfs_node_t, child_nodes);
-    struct vfs_node_t *parent;
-} vfs_node_t;
+    uninit_vec(struct vfs_node, child_nodes);
+    struct vfs_node *parent;
+};
 
-extern vfs_node_t vfs_root_node;
+extern struct vfs_node vfs_root_node;
 
-vfs_node_t *vfs_create_node(vfs_node_t *parent, char *name);
-vfs_node_t *vfs_create_node_deep(char *path);
-vfs_node_t *vfs_relative_path(vfs_node_t *parent, char *name);
-vfs_node_t *vfs_absolute_path(char *path);
-vfs_node_t *vfs_check_node(vfs_node_t *node);
-vfs_node_t *vfs_mkdir(vfs_node_t *parent, char *name);
+struct vfs_node *vfs_create_node(struct vfs_node *parent, char *name);
+struct vfs_node *vfs_create_node_deep(char *path);
+struct vfs_node *vfs_relative_path(struct vfs_node *parent, char *name);
+struct vfs_node *vfs_absolute_path(char *path);
+struct vfs_node *vfs_check_node(struct vfs_node *node);
+struct vfs_node *vfs_mkdir(struct vfs_node *parent, char *name);
 int vfs_open(char *path, int flags);
 int vfs_touch(char *path, uint16_t perms);
-int vfs_mount_fs(filesystem_t *fs);
+int vfs_mount_fs(struct filesystem *fs);
 int vfs_mount_dev(char *dev, char *mount_gate);
-int vfs_write(vfs_node_t *node, off_t off, off_t cnt, void *buf);
-int vfs_read(vfs_node_t *node, off_t off, off_t cnt, void *buf);
+int vfs_write(struct vfs_node *node, off_t off, off_t cnt, void *buf);
+int vfs_read(struct vfs_node *node, off_t off, off_t cnt, void *buf);
 int vfs_unlink(char *path);
 int vfs_destory_node(char *absolute_path);
 

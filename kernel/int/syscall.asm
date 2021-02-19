@@ -1,4 +1,4 @@
-%include 'klib/asm_mac.inc'
+%include 'lib/asm_macros.inc'
 
 extern syscall_open
 extern syscall_close
@@ -20,6 +20,9 @@ extern syscall_getppid
 extern syscall_execve
 extern syscall_exit
 extern syscall_yeild
+extern syscall_log
+extern syscall_mmap
+extern syscall_chdir
 
 syscall_list:
 
@@ -43,14 +46,17 @@ dq syscall_getppid
 dq syscall_execve
 dq syscall_exit
 dq syscall_yeild
+dq syscall_log
+dq syscall_mmap
+dq syscall_chdir
 
 .end:
 
 syscall_cnt equ ((syscall_list.end - syscall_list) / 8)
 
-global syscall_main_stub
+global syscall_main
 
-syscall_main_stub:
+syscall_main:
     swapgs
 
     mov qword [gs:16], rsp ; save user stack

@@ -1,8 +1,8 @@
-global smp_tramp_begin
-global smp_tramp_end
+global smp_core_init_begin
+global smp_core_init_end
 
-smp_tramp_begin:
+smp_core_init_begin:
 
 incbin 'bin/smp_asm.bin'
 
-smp_tramp_end:
+smp_core_init_end:

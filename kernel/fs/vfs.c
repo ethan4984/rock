@@ -1,13 +1,14 @@
+#include <sched/scheduler.h>
 #include <fs/vfs.h>
-#include <output.h>
-#include <bitmap.h>
+#include <debug.h>
+#include <vec.h>
 
-vfs_node_t vfs_root_node = { .absolute_path = "/",
+struct vfs_node vfs_root_node = { .absolute_path = "/",
                              .name = "/",
                              .relative_path = "/"
                            };
 
-vfs_node_t *vfs_create_node(vfs_node_t *parent, char *name) {
+struct vfs_node *vfs_create_node(struct vfs_node *parent, char *name) {
     char *absolute_path;
     if(parent != &vfs_root_node)  {
         char *dir_path = str_congregate(parent->absolute_path, "/");
@@ -21,24 +22,24 @@ vfs_node_t *vfs_create_node(vfs_node_t *parent, char *name) {
     if((parent->fs != NULL) && (parent->fs->mount_gate != NULL))
         relative_path = absolute_path + (strlen(parent->fs->mount_gate));
 
-    vfs_node_t new_node = { .parent = parent,
-                            .absolute_path = absolute_path,
-                            .relative_path = relative_path,
-                            .name = name,
-                            .fs = parent->fs
-                          };
+    struct vfs_node new_node = {    .parent = parent,
+                                    .absolute_path = absolute_path,
+                                    .relative_path = relative_path,
+                                    .name = name,
+                                    .fs = parent->fs
+                               };
 
-    vec_push(vfs_node_t, parent->child_nodes, new_node);
+    vec_push(struct vfs_node, parent->child_nodes, new_node);
     
-    return vec_search(vfs_node_t, parent->child_nodes, parent->child_nodes.element_cnt - 1);
+    return vec_search(struct vfs_node, parent->child_nodes, parent->child_nodes.element_cnt - 1);
 }
 
-vfs_node_t *vfs_create_node_deep(char *path) {
+struct vfs_node *vfs_create_node_deep(char *path) {
     char *buffer = kmalloc(strlen(path));
     strcpy(buffer, path);
 
-    vfs_node_t *node = &vfs_root_node;
-    vfs_node_t *parent;
+    struct vfs_node *node = &vfs_root_node;
+    struct vfs_node *parent;
 
     char *sub_path, *save = buffer;
     while((sub_path = strtok_r(save, "/", &save))) {
@@ -62,7 +63,7 @@ found:
     return parent;
 }
 
-vfs_node_t *vfs_absolute_path(char *path) {
+struct vfs_node *vfs_absolute_path(char *path) {
     if(strcmp(path, "/") == 0)
         return &vfs_root_node;
 
@@ -72,7 +73,7 @@ vfs_node_t *vfs_absolute_path(char *path) {
     char *buffer = kmalloc(strlen(path));
     strcpy(buffer, path);
 
-    vfs_node_t *node = &vfs_root_node;
+    struct vfs_node *node = &vfs_root_node;
 
     char *sub_path, *save = buffer;
     while((sub_path = strtok_r(save, "/", &save))) {
@@ -87,9 +88,9 @@ vfs_node_t *vfs_absolute_path(char *path) {
     return node;
 }
 
-vfs_node_t *vfs_relative_path(vfs_node_t *parent, char *name) {
+struct vfs_node *vfs_relative_path(struct vfs_node *parent, char *name) {
     for(size_t i = 0; i < parent->child_nodes.element_cnt; i++) {
-        vfs_node_t *node = vec_search(vfs_node_t, parent->child_nodes, i);
+        struct vfs_node *node = vec_search(struct vfs_node, parent->child_nodes, i);
         if(strcmp(node->name, name) == 0) {
             return node;
         }
@@ -97,24 +98,20 @@ vfs_node_t *vfs_relative_path(vfs_node_t *parent, char *name) {
     return NULL;
 }
 
-vfs_node_t *vfs_check_node(vfs_node_t *node) {
-    return vfs_absolute_path(node->absolute_path);
-}
-
-vfs_node_t *vfs_mkdir(vfs_node_t *parent, char *name) {
-    vfs_node_t *dir_node = vfs_create_node(parent, name);
+struct vfs_node *vfs_mkdir(struct vfs_node *parent, char *name) {
+    struct vfs_node *dir_node = vfs_create_node(parent, name);
 
     vfs_create_node(dir_node, ".");
-    vfs_node_t *dotdot = vfs_create_node(dir_node, "..");
+    struct vfs_node *dotdot = vfs_create_node(dir_node, "..");
     dotdot->parent = parent;
 
     return dir_node;
 }
 
-static void vfs_remove_cluster(vfs_node_t *node) {
+static void vfs_remove_cluster(struct vfs_node *node) {
     if(node->child_nodes.element_cnt != 0) {
         for(size_t i = 0; i < node->child_nodes.element_cnt; i++) {
-            vfs_node_t *tmp = vec_search(vfs_node_t, node->child_nodes, i);
+            struct vfs_node *tmp = vec_search(struct vfs_node, node->child_nodes, i);
             tmp->fs->unlink(tmp);
             vfs_remove_cluster(tmp);
         }
@@ -125,8 +122,8 @@ static void vfs_remove_cluster(vfs_node_t *node) {
     }
 }
 
-int vfs_remove_node(vfs_node_t *node) {
-    if(vfs_check_node(node) == NULL)
+int vfs_remove_node(struct vfs_node *node) {
+    if(vfs_absolute_path(node->absolute_path) == NULL)
         return -1;
 
     vfs_remove_cluster(node);
@@ -135,25 +132,25 @@ int vfs_remove_node(vfs_node_t *node) {
 }
 
 int vfs_mount_dev(char *dev, char *mount_gate) {
-    vfs_node_t *mount_node = vfs_absolute_path(mount_gate);
+    struct vfs_node *mount_node = vfs_absolute_path(mount_gate);
     if(mount_node == NULL) 
         return -1;
 
-    devfs_node_t *devfs_node = path2devfs(dev);
+    struct devfs_node *devfs_node = path2devfs(dev);
     if(devfs_node == NULL || devfs_node->device == NULL || devfs_node->device->fs == NULL)
         return -1;
-
-    kprintf("[FS]", "Mounting [%s] to [%s]", dev, mount_gate);
 
     devfs_node->device->fs->mount_gate = mount_gate;
     mount_node->fs = devfs_node->device->fs;
     devfs_node->device->fs->refresh(mount_node);
 
+    kprintf("[FS] [%s] mounted to [%s]\n", dev, mount_gate);
+
     return 0;
 }
 
-int vfs_mount_fs(filesystem_t *fs) {
-    vfs_node_t *vfs_node = vfs_absolute_path(fs->mount_gate);
+int vfs_mount_fs(struct filesystem *fs) {
+    struct vfs_node *vfs_node = vfs_absolute_path(fs->mount_gate);
     if(vfs_node == NULL)
         return -1;
 
@@ -162,7 +159,7 @@ int vfs_mount_fs(filesystem_t *fs) {
     return 0;
 }
 
-int vfs_write(vfs_node_t *node, off_t off, off_t cnt, void *buf) {
+int vfs_write(struct vfs_node *node, off_t off, off_t cnt, void *buf) {
     if(node == NULL) {
         return -1;
     }
@@ -170,7 +167,7 @@ int vfs_write(vfs_node_t *node, off_t off, off_t cnt, void *buf) {
     return node->fs->write(node, off, cnt, buf);
 }
 
-int vfs_read(vfs_node_t *node, off_t off, off_t cnt, void *buf) {
+int vfs_read(struct vfs_node *node, off_t off, off_t cnt, void *buf) {
     if(node == NULL) {
         return -1;
     }
@@ -179,7 +176,7 @@ int vfs_read(vfs_node_t *node, off_t off, off_t cnt, void *buf) {
 }
 
 int vfs_open(char *path, int flags) {
-    vfs_node_t *node = vfs_absolute_path(path);
+    struct vfs_node *node = vfs_absolute_path(path);
     if(node == NULL && flags & O_CREAT) {
         node = vfs_create_node_deep(path);
         if(node == NULL) 
@@ -189,6 +186,7 @@ int vfs_open(char *path, int flags) {
             vfs_remove_node(node);
         return ret;
     } else if(node == NULL) {
+        set_errno(ENOENT);
         return -1;
     }
     
@@ -201,11 +199,21 @@ int vfs_open(char *path, int flags) {
 }
 
 int vfs_unlink(char *path) {
-    vfs_node_t *node = vfs_absolute_path(path);
+    struct vfs_node *node = vfs_absolute_path(path);
     if(node == NULL)
         return -1;
 
     vfs_remove_node(node);
 
     return 0;
+}
+
+void syscall_chdir(struct regs *regs) {
+    struct core_local *local = get_core_local(CURRENT_CORE);
+    struct task *current_task = hash_search(struct task, tasks, local->pid);
+
+    struct vfs_node *working_dir = vfs_absolute_path((void*)regs->rdi);
+    current_task->working_dir = working_dir;
+
+    regs->rax = 0;
 }

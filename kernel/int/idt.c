@@ -1,12 +1,11 @@
-#include <output.h>
-#include <drivers/ps2_keyboard.h>
-#include <sched/scheduler.h>
+#include <mm/vmm.h>
+#include <debug.h>
 #include <int/idt.h>
 #include <int/apic.h>
 #include <sched/smp.h>
-#include <mm/vmm.h>
+#include <sched/scheduler.h>
 
-static idt_entry_t idt[256];
+static struct idt_entry idt[256];
 
 static const char *exception_messages[] = { "Divide by zero",
                                             "Debug",
@@ -45,14 +44,14 @@ static const char *exception_messages[] = { "Divide by zero",
                                             "FPU error"
                                          };
 
-typedef void (*isr_handler_t)(regs_t *regs); 
+typedef void (*isr_handler_t)(struct regs *regs); 
 
 static isr_handler_t isr_handlers[] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 32
-    scheduler_main, ps2_keyboard_handler, NULL, NULL, NULL, NULL, NULL, NULL, 
+    scheduler_main, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 64
@@ -82,51 +81,44 @@ static isr_handler_t isr_handlers[] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, // 256
 };
 
-extern void isr_handler_main(regs_t *stack) {
-    if(stack->isr_number < 32) {
+extern void isr_handler_main(struct regs *regs) {
+    if(regs->isr_number < 32) {
         static char lock = 0;
         spin_lock(&lock);
 
         uint64_t cr2;
         asm volatile ("mov %%cr2, %0" : "=a"(cr2));
         
-        kvprintf("Kowalski analysis: \"%s\", Error: %x\n", exception_messages[stack->isr_number], stack->error_code);
-        kvprintf("RAX: %a | RBX: %a | RCX: %a | RDX: %a\n", stack->rax, stack->rbx, stack->rcx, stack->rdx);
-        kvprintf("RSI: %a | RDI: %a | RBP: %a | RSP: %a\n", stack->rsi, stack->rdi, stack->rbp, stack->rsp);
-        kvprintf("r8:  %a | r9:  %a | r10: %a | r11: %a\n", stack->r8, stack->r9, stack->r10, stack->r11);
-        kvprintf("r12: %a | r13: %a | r14: %a | r15: %a\n", stack->r12, stack->r13, stack->r14, stack->r15); 
-        kvprintf("cs:  %a | ss:  %a | cr2: %a | rip: %a\n", stack->cs, stack->ss, cr2, stack->rip);
+        kprintf("[KDEBUG] Kowalski analysis: \"%s\", Error: %x\n", exception_messages[regs->isr_number], regs->error_code);
+        kprintf("[KDEBUG] RAX: %x | RBX: %x | RCX: %x | RDX: %x\n", regs->rax, regs->rbx, regs->rcx, regs->rdx);
+        kprintf("[KDEBUG] RSI: %x | RDI: %x | RBP: %x | RSP: %x\n", regs->rsi, regs->rdi, regs->rbp, regs->rsp);
+        kprintf("[KDEBUG] r8:  %x | r9:  %x | r10: %x | r11: %x\n", regs->r8, regs->r9, regs->r10, regs->r11);
+        kprintf("[KDEBUG] r12: %x | r13: %x | r14: %x | r15: %x\n", regs->r12, regs->r13, regs->r14, regs->r15); 
+        kprintf("[KDEBUG] cs:  %x | ss:  %x | cr2: %x | rip: %x\n", regs->cs, regs->ss, cr2, regs->rip);
 
-        kprintf("[KDEBUG]", "Kowalski analysis: \"%s\", Error: %x", exception_messages[stack->isr_number], stack->error_code);
-        kprintf("[KDEBUG]", "RAX: %a | RBX: %a | RCX: %a | RDX: %a", stack->rax, stack->rbx, stack->rcx, stack->rdx);
-        kprintf("[KDEBUG]", "RSI: %a | RDI: %a | RBP: %a | RSP: %a", stack->rsi, stack->rdi, stack->rbp, stack->rsp);
-        kprintf("[KDEBUG]", "r8:  %a | r9:  %a | r10: %a | r11: %a", stack->r8, stack->r9, stack->r10, stack->r11);
-        kprintf("[KDEBUG]", "r12: %a | r13: %a | r14: %a | r15: %a", stack->r12, stack->r13, stack->r14, stack->r15); 
-        kprintf("[KDEBUG]", "cs:  %a | ss:  %a | cr2: %a | rip: %a", stack->cs, stack->ss, cr2, stack->rip);
-
-        stacktrace((uint64_t*)stack->rbp);
+        stacktrace(regs->rbp);
 
         spin_release(&lock);
 
         asm ("hlt");
     }
 
-    if(isr_handlers[stack->isr_number] != NULL) {
-        isr_handlers[stack->isr_number](stack); 
+    if(isr_handlers[regs->isr_number] != NULL) {
+        isr_handlers[regs->isr_number](regs); 
     }
     
     lapic_write(LAPIC_EOI, 0);    
 }
 
 void set_idt_entry(uint16_t cs, uint8_t ist, uint8_t attributes, uint64_t offset, uint8_t index) {
-    idt[index] = (idt_entry_t) {    (uint16_t)offset, // offset low
-                                    cs,
-                                    ist,
-                                    attributes,
-                                    (uint16_t)(offset >> 16), // offset mid
-                                    (uint32_t)(offset >> 32), // offset high
-                                    0
-                               };
+    idt[index] = (struct idt_entry) {   (uint16_t)offset, // offset low
+                                        cs,
+                                        ist,
+                                        attributes,
+                                        (uint16_t)(offset >> 16), // offset mid
+                                        (uint32_t)(offset >> 32), // offset high
+                                        0
+                                    };
 }
 
 void idt_init() {
@@ -387,6 +379,6 @@ void idt_init() {
     set_idt_entry(0x8, 0, 0x8e, (uint64_t)isr254, 254);
     set_idt_entry(0x8, 0, 0x8e, (uint64_t)isr255, 255);
 
-    idtr_t idtr = { 256 * sizeof(idt_entry_t) - 1, (uint64_t)idt };
+    struct idtr idtr = { 256 * sizeof(struct idt_entry) - 1, (uint64_t)idt };
     asm volatile ("lidtq %0" : "=m"(idtr));
 }

@@ -1,9 +1,9 @@
 #ifndef IDT_H_
 #define IDT_H_
 
-#include <asmutils.h>
+#include <cpu.h>
 
-typedef struct {
+struct idt_entry {
     uint16_t offset_low;
     uint16_t cs;
     uint8_t ist;
@@ -11,15 +11,14 @@ typedef struct {
     uint16_t offset_mid;
     uint32_t offset_high;
     uint32_t zero;
-} __attribute__((packed)) idt_entry_t;
+} __attribute__((packed));
 
-typedef struct { 
+struct idtr { 
     uint16_t limit;
     uint64_t offset;
-} __attribute__((packed)) idtr_t;
+} __attribute__((packed));
 
 void set_idt_entry(uint16_t cs, uint8_t ist, uint8_t attributes, uint64_t offset, uint8_t index);
-
 void idt_init();
 
 extern void isr0();

@@ -1,12 +1,12 @@
 #include <fs/ext2/inode.h>
 #include <fs/ext2/block.h>
 
-uint32_t ext2_alloc_inode(devfs_node_t *devfs_node) {
-    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+uint32_t ext2_alloc_inode(struct devfs_node *devfs_node) {
+    struct ext2_fs *ext2 = devfs_node->device->fs->ext2_fs;
 
     uint8_t *bitmap = kcalloc(ext2->block_size);
     for(uint32_t i = 3; i < ext2->bgd_cnt; i++) {
-        ext2_bgd_t bgd = ext2_read_bgd(devfs_node, i);
+        struct ext2_bgd bgd = ext2_read_bgd(devfs_node, i);
         if(!bgd.unallocated_inodes)
             continue;
 
@@ -29,14 +29,14 @@ uint32_t ext2_alloc_inode(devfs_node_t *devfs_node) {
     return -1;
 }
 
-void ext2_free_inode(devfs_node_t *devfs_node, uint32_t index) {
-    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
+void ext2_free_inode(struct devfs_node *devfs_node, uint32_t index) {
+    struct ext2_fs *ext2 = devfs_node->device->fs->ext2_fs;
 
     uint8_t *bitmap = kcalloc(ext2->block_size);
     uint32_t bgd_index = index / ext2->superblock.inodes_per_group;
     uint32_t bitmap_index = index - (index / ext2->superblock.inodes_per_group);
 
-    ext2_bgd_t bgd = ext2_read_bgd(devfs_node, bgd_index);
+    struct ext2_bgd bgd = ext2_read_bgd(devfs_node, bgd_index);
 
     msd_raw_read(devfs_node, bgd.block_addr_inode, ext2->block_size, bitmap);
     if(!BM_TEST(bitmap, bitmap_index)) {
@@ -52,7 +52,7 @@ void ext2_free_inode(devfs_node_t *devfs_node, uint32_t index) {
     kfree(bitmap);
 }
 
-uint32_t inode_get_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t iblock) {
+uint32_t inode_get_block(struct devfs_node *devfs_node, struct ext2_inode *inode, uint32_t iblock) {
     uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size, block_index;
     if(iblock < 12) { // direct
         block_index = inode->blocks[iblock];
@@ -76,7 +76,7 @@ uint32_t inode_get_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t
     return block_index;
 }
 
-int inode_set_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, uint32_t iblock, uint32_t disk_block) {
+int inode_set_block(struct devfs_node *devfs_node, struct ext2_inode *inode, uint32_t inode_index, uint32_t iblock, uint32_t disk_block) {
     uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size;
     if(iblock < 12) { // direct
         inode->blocks[iblock] = disk_block;
@@ -126,13 +126,13 @@ int inode_set_block(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inod
     return 0;
 }
 
-static int inode_resize(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, off_t start, off_t cnt) {
+static int inode_resize(struct devfs_node *devfs_node, struct ext2_inode *inode, uint32_t inode_index, off_t start, off_t cnt) {
     if((start + cnt) < (inode->sector_cnt * SECTOR_SIZE))
         return 0;
 
     uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size;
-    uint32_t iblock_start = ROUNDUP(inode->sector_cnt * SECTOR_SIZE, block_size);
-    uint32_t iblock_end = ROUNDUP(start + cnt, block_size);
+    uint32_t iblock_start = DIV_ROUNDUP(inode->sector_cnt * SECTOR_SIZE, block_size);
+    uint32_t iblock_end = DIV_ROUNDUP(start + cnt, block_size);
 
     if(inode->size32l < (start + cnt)) {
         inode->size32l = start + cnt;
@@ -150,7 +150,7 @@ static int inode_resize(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t 
     return 0;
 }
 
-void ext2_inode_read(devfs_node_t *devfs_node, ext2_inode_t *inode, off_t off, off_t cnt, void *buf) {
+void ext2_inode_read(struct devfs_node *devfs_node, struct ext2_inode *inode, off_t off, off_t cnt, void *buf) {
     off_t headway = 0, block_size = devfs_node->device->fs->ext2_fs->block_size;
 
     while(headway < cnt) {
@@ -170,7 +170,7 @@ void ext2_inode_read(devfs_node_t *devfs_node, ext2_inode_t *inode, off_t off, o
     }	
 }
 
-void ext2_inode_write(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index, off_t off, off_t cnt, void *buf) {
+void ext2_inode_write(struct devfs_node *devfs_node, struct ext2_inode *inode, uint32_t inode_index, off_t off, off_t cnt, void *buf) {
     off_t headway = 0, block_size = devfs_node->device->fs->ext2_fs->block_size;
 
     inode_resize(devfs_node, inode, inode_index, off, cnt);
@@ -192,30 +192,30 @@ void ext2_inode_write(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t in
     }
 }
 
-void ext2_inode_delete(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t inode_index) {
+void ext2_inode_delete(struct devfs_node *devfs_node, struct ext2_inode *inode, uint32_t inode_index) {
     uint32_t block_size = devfs_node->device->fs->ext2_fs->block_size;
 
-    for(size_t i = 0; i < ROUNDUP(inode->sector_cnt * SECTOR_SIZE, block_size); i++)
+    for(size_t i = 0; i < DIV_ROUNDUP(inode->sector_cnt * SECTOR_SIZE, block_size); i++)
         ext2_free_block(devfs_node, inode_get_block(devfs_node, inode, i));
 
     ext2_free_inode(devfs_node, inode_index);
 }
 
-ext2_inode_t ext2_inode_read_entry(devfs_node_t *devfs_node, uint32_t index) {
-    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
-    ext2_bgd_t bgd = ext2_read_bgd(devfs_node, index);
+struct ext2_inode ext2_inode_read_entry(struct devfs_node *devfs_node, uint32_t index) {
+    struct ext2_fs *ext2 = devfs_node->device->fs->ext2_fs;
+    struct ext2_bgd bgd = ext2_read_bgd(devfs_node, index);
 
     size_t inode_table_index = (index - 1) % ext2->superblock.inodes_per_group;
-    ext2_inode_t inode;
+    struct ext2_inode inode;
 
-    msd_raw_read(devfs_node, (bgd.inode_table_block * ext2->block_size) + (ext2->superblock.inode_size * inode_table_index), sizeof(ext2_inode_t), &inode); 
+    msd_raw_read(devfs_node, (bgd.inode_table_block * ext2->block_size) + (ext2->superblock.inode_size * inode_table_index), sizeof(struct ext2_inode), &inode); 
     return inode;
 }
 
-void ext2_inode_write_entry(devfs_node_t *devfs_node, ext2_inode_t *inode, uint32_t index) {
-    ext2_fs_t *ext2 = devfs_node->device->fs->ext2_fs;
-    ext2_bgd_t bgd = ext2_read_bgd(devfs_node, index);
+void ext2_inode_write_entry(struct devfs_node *devfs_node, struct ext2_inode *inode, uint32_t index) {
+    struct ext2_fs *ext2 = devfs_node->device->fs->ext2_fs;
+    struct ext2_bgd bgd = ext2_read_bgd(devfs_node, index);
 
     size_t inode_table_index = (index - 1) % ext2->superblock.inodes_per_group;
-    msd_raw_write(devfs_node, (bgd.inode_table_block * ext2->block_size) + (ext2->superblock.inode_size * inode_table_index), sizeof(ext2_inode_t), &inode); 
+    msd_raw_write(devfs_node, (bgd.inode_table_block * ext2->block_size) + (ext2->superblock.inode_size * inode_table_index), sizeof(struct ext2_inode), &inode); 
 }

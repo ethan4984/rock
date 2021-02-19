@@ -22,7 +22,7 @@
 
 #include <drivers/pci.h>
 
-typedef struct {
+struct port_regs {
     uint32_t clb;
     uint32_t clbu;
     uint32_t fb;
@@ -43,9 +43,9 @@ typedef struct {
     uint32_t devslp;
     uint32_t reserved1[11];
     uint32_t vs[10];
-} port_regs_t;
+};
 
-typedef struct {
+struct GHC {
     uint32_t cap;
     uint32_t ghc;
     uint32_t is; 
@@ -59,10 +59,10 @@ typedef struct {
     uint32_t bohc;
     uint32_t reserved[29];
     uint32_t vendor[24];
-    volatile port_regs_t port[];
-} GHC_t;
+    volatile struct port_regs port[];
+};
 
-typedef struct {
+struct hba_cmd {
     uint8_t cfl:5;
     uint8_t a:1;
     uint8_t w:1;
@@ -77,9 +77,9 @@ typedef struct {
     uint32_t ctba;
     uint32_t ctbau;
     uint32_t rsv1[4];
-} hba_cmd_t;
+};
 
-typedef struct {
+struct fis_h2d {
     uint8_t fisType;
 
     uint8_t pmport:4;
@@ -105,9 +105,9 @@ typedef struct {
     uint8_t control;
 
     uint32_t reserved1;
-} fis_h2d_t;
+};
 
-typedef struct {
+struct fis_d2h {
     uint8_t fisType;
  
     uint8_t pmport:4;
@@ -133,33 +133,31 @@ typedef struct {
     uint16_t reserved3;
     
     uint32_t reserved4;
-} fis_d2h_t;
+};
 
-typedef struct {
+struct hba_prdt {
     uint32_t dba;
     uint32_t dbau;
     uint32_t reserved0;
     uint32_t dbc:22;
     uint32_t reserved1:9;
     uint32_t i:1;
-} hba_prdt_t;
+};
 
-typedef struct {
+struct hba_command_table {
     uint8_t cfis[64];
     uint8_t acmd[16];
     uint8_t reserved[48];
-    hba_prdt_t PRDT[1];   
-} hba_command_table_t;
+    struct hba_prdt PRDT[1];   
+};
 
-typedef struct {
+struct ahci_drive {
     uint64_t sector_cnt;
-    volatile port_regs_t *regs;
-} ahci_drive_t;
+    volatile struct port_regs *regs;
+};
 
 void ahci_init();
-
 int ahci_read(int drive_index, uint64_t start, uint64_t cnt, void *buf);
-
 int ahci_write(int drive_index, uint64_t start, uint64_t cnt, void *buf);
 
 #endif

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct {
+struct ext2_bgd {
     uint32_t block_addr_bitmap;
     uint32_t block_addr_inode;
     uint32_t inode_table_block;
@@ -11,9 +11,9 @@ typedef struct {
     uint16_t unallocated_inodes;
     uint16_t dir_cnt;
     uint16_t reserved[7];
-} __attribute__((packed)) ext2_bgd_t;
+} __attribute__((packed));
 
-typedef struct { 
+struct ext2_superblock { 
     uint32_t inode_cnt;
     uint32_t block_cnt;
     uint32_t sb_reserved;
@@ -49,9 +49,9 @@ typedef struct {
     uint64_t uuid[2];
     uint64_t volume_name[2];
     uint64_t last_mnt_path[8];
-} __attribute__((packed)) ext2_superblock_t;
+} __attribute__((packed));
 
-typedef struct {
+struct ext2_inode {
     uint16_t permissions;
     uint16_t user_id;
     uint32_t size32l;
@@ -69,22 +69,22 @@ typedef struct {
     uint32_t eab;
     uint32_t size32h;
     uint32_t frag_addr;
-} __attribute__((packed)) ext2_inode_t;
+} __attribute__((packed));
 
-typedef struct {
+struct ext2_dir {
     uint32_t inode;
     uint16_t entry_size;
     uint8_t name_length;
     uint8_t type;
     char name[];
-} __attribute__((packed)) ext2_dir_t;
+} __attribute__((packed));
 
-typedef struct {
-    ext2_superblock_t superblock;
-    ext2_inode_t root_inode;
+struct ext2_fs {
+    struct ext2_superblock superblock;
+    struct ext2_inode root_inode;
     uint64_t block_size;
     uint64_t frag_size;
     uint32_t bgd_cnt;
-} ext2_fs_t;
+};
 
 #endif

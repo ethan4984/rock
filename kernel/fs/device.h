@@ -9,16 +9,16 @@
 #define DEVFS_PERMS 0x555
 #define DEV_NAME_MAX 32
 
-typedef struct {
+struct mbr_partition {
     uint8_t drive_status;
     uint8_t starting_chs[3];
     uint8_t partition_type;
     uint8_t ending_chs[3];
     uint32_t starting_lba;
     uint32_t sector_cnt;
-} __attribute__((packed)) mbr_partition_t;
+} __attribute__((packed));
 
-typedef struct {
+struct gpt_partition_table_hdr {
     uint64_t identifier;
     uint32_t version;
     uint32_t hdr_size;
@@ -33,49 +33,49 @@ typedef struct {
     uint32_t partition_ent_cnt;
     uint32_t partition_ent_size;
     uint32_t crc32_partition_array;
-} __attribute__((packed)) gpt_partition_table_hdr;
+} __attribute__((packed));
 
-struct filesystem_t;
+struct filesystem;
 
-typedef struct {
-    struct filesystem_t *fs;
+struct msd {
+    struct filesystem *fs;
     size_t device_index;
     size_t partition_cnt;
     int (*read)(int, uint64_t, uint64_t, void*);
     int (*write)(int, uint64_t, uint64_t, void*);
-} msd_t;
+};
 
-typedef struct {
+struct devfs_node {
     size_t devfs_id;
     char *dev_name;
     size_t partition_offset;
-    msd_t *device;
-} devfs_node_t;
+    struct msd *device;
+};
 
-struct vfs_node_t;
+struct vfs_node;
 
-typedef struct filesystem_t {
-    devfs_node_t *devfs_node;
+struct filesystem {
+    struct devfs_node *devfs_node;
 
-    ext2_fs_t *ext2_fs;
+    struct ext2_fs *ext2_fs;
     char *mount_gate;
 
-    int (*read)(struct vfs_node_t*, off_t, off_t, void*);
-    int (*write)(struct vfs_node_t*, off_t, off_t, void*);
-    int (*mkdir)(struct vfs_node_t*, uint16_t);
-    int (*refresh)(struct vfs_node_t*);
-    int (*open)(struct vfs_node_t*, int flags);
-    int (*unlink)(struct vfs_node_t*);
-} filesystem_t;
+    int (*read)(struct vfs_node*, off_t, off_t, void*);
+    int (*write)(struct vfs_node*, off_t, off_t, void*);
+    int (*mkdir)(struct vfs_node*, uint16_t);
+    int (*refresh)(struct vfs_node*);
+    int (*open)(struct vfs_node*, int flags);
+    int (*unlink)(struct vfs_node*);
+};
 
-void msd_raw_read(devfs_node_t *dev, uint64_t start, uint64_t cnt, void *ret);
-void msd_raw_write(devfs_node_t *dev, uint64_t start, uint64_t cnt, void *ret);
-void scan_device_partitions(msd_t *device);
-void init_devfs();
-int devfs_add_device(devfs_node_t node);
-devfs_node_t *path2devfs(char *path);
+void msd_raw_read(struct devfs_node *dev, uint64_t start, uint64_t cnt, void *ret);
+void msd_raw_write(struct devfs_node *dev, uint64_t start, uint64_t cnt, void *ret);
+void scan_device_partitions(struct msd *device);
+void devfs_init();
+int devfs_add_device(struct devfs_node node);
+struct devfs_node *path2devfs(char *path);
 
-extern_vec(msd_t, msd_list);
-extern_vec(filesystem_t, filesystem_list);
+extern_vec(struct msd, msd_list);
+extern_vec(struct filesystem, filesystem_list);
 
 #endif

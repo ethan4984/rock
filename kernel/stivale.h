@@ -4,20 +4,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct {
+struct stivale_module_t {
     uint64_t begin;
     uint64_t end;
     char string[128];
-} __attribute__((packed)) stivale_module_t;
+} __attribute__((packed));
 
-typedef struct {
+struct stivale_mmap {
     uint64_t addr;
     uint64_t len;
     uint32_t type;
     uint32_t unused;
-} __attribute__((packed)) stivale_mmap_t;
+} __attribute__((packed));
 
-typedef struct {
+struct stivale {
     char *cmdline;
     uint64_t mmap_addr;
     uint64_t mmap_cnt;
@@ -28,7 +28,7 @@ typedef struct {
     uint16_t fb_bpp;
     uint64_t rsdp;
     uint64_t module_cnt;
-    stivale_module_t modules[];
-} __attribute__((packed)) stivale_t;
+    struct stivale_module_t modules[];
+} __attribute__((packed));
 
 #endif

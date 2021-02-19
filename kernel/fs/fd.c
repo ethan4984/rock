@@ -1,19 +1,20 @@
 #include <fs/fd.h>
 #include <types.h>
+#include <debug.h>
 
-static_hash_table(fd_t, fd_list);
+static_hash_table(struct fd, fd_list);
 
 int open(char *path, int flags) {
     if(vfs_open(path, flags) == -1)
         return -1;
 
-    vfs_node_t *node = vfs_absolute_path(path);
+    struct vfs_node *node = vfs_absolute_path(path);
 
     if(node == NULL) {
         return -1;
     }
 
-    fd_t fd = { .vfs_node = node,
+    struct fd fd = { .vfs_node = node,
                 .flags = kmalloc(sizeof(int)),
                 .loc = kmalloc(sizeof(size_t))
               };
@@ -21,35 +22,41 @@ int open(char *path, int flags) {
     *fd.flags = flags;
     *fd.loc = 0;
 
-    return hash_push(fd_t, fd_list, fd);
+    return hash_push(struct fd, fd_list, fd);
 }
 
-void syscall_open(regs_t *regs) {
-    regs->rax = open((void*)regs->rdi, (int)regs->rsi);
+void syscall_open(struct regs *regs) {
+    int fd = open((void*)regs->rdi, (int)regs->rsi);
+    regs->rax = fd;
 }
 
 int read(int fd, void *buf, size_t cnt) {
-    fd_t *fd_entry = hash_search(fd_t, fd_list, (size_t)fd);
-    if(fd_entry == NULL)
+    struct fd *fd_entry = hash_search(struct fd, fd_list, (size_t)fd);
+    if(fd_entry == NULL) {
+        set_errno(EBADF);
         return -1;
+    }
 
     int ret = vfs_read(fd_entry->vfs_node, *fd_entry->loc, cnt, buf);
-    if(ret == -1) 
+    if(ret == -1) {
         return -1;
+    }
 
     *fd_entry->loc += cnt;
 
     return ret;
 }
 
-void syscall_read(regs_t *regs) {
+void syscall_read(struct regs *regs) {
     regs->rax = read((int)regs->rdi, (void*)regs->rsi, regs->rdx);
 }
 
 int write(int fd, void *buf, size_t cnt) {
-    fd_t *fd_entry = hash_search(fd_t, fd_list, (size_t)fd);
-    if(fd_entry == NULL)
+    struct fd *fd_entry = hash_search(struct fd, fd_list, (size_t)fd);
+    if(fd_entry == NULL) {
+        set_errno(EBADF);
         return -1;
+    }
 
     int ret = vfs_write(fd_entry->vfs_node, *fd_entry->loc, cnt, buf);
     if(ret == -1) 
@@ -60,14 +67,16 @@ int write(int fd, void *buf, size_t cnt) {
     return ret;
 }
 
-void syscall_write(regs_t *regs) {
+void syscall_write(struct regs *regs) {
     regs->rax = write((int)regs->rdi, (void*)regs->rsi, regs->rdx);
 }
 
 int lseek(int fd, off_t off, int whence) {
-    fd_t *fd_entry = hash_search(fd_t, fd_list, (size_t)fd);
-    if(fd_entry == NULL)
+    struct fd *fd_entry = hash_search(struct fd, fd_list, (size_t)fd);
+    if(fd_entry == NULL) {
+        set_errno(EBADF);
         return -1;
+    }
 
     switch(whence) {
         case SEEK_SET:
@@ -81,58 +90,64 @@ int lseek(int fd, off_t off, int whence) {
     return -1;
 }
 
-void syscall_lseek(regs_t *regs) {
+void syscall_lseek(struct regs *regs) {
     regs->rax = lseek((int)regs->rdi, (off_t)regs->rsi, (int)regs->rdx);
 }
 
 int close(int fd) {
-    fd_t *fd_entry = hash_search(fd_t, fd_list, (size_t)fd);
-    if(fd_entry == NULL)
+    struct fd *fd_entry = hash_search(struct fd, fd_list, (size_t)fd);
+    if(fd_entry == NULL) {
+        set_errno(EBADF);
         return -1;
+    }
     
-    return hash_addr_remove(fd_t, fd_list, fd_entry);
+    return hash_remove(struct fd, fd_list, (size_t)fd);
 }
 
-void syscall_close(regs_t *regs) {
+void syscall_close(struct regs *regs) {
     regs->rax = close((int)regs->rdi);
 }
 
 int dup(int fd) {
-    fd_t *fd_entry = hash_search(fd_t, fd_list, (size_t)fd);
-    if(fd_entry == NULL)
+    struct fd *fd_entry = hash_search(struct fd, fd_list, (size_t)fd);
+    if(fd_entry == NULL) {
+        set_errno(EBADF);
         return -1;
+    }
 
-    fd_t new_fd = *fd_entry;
+    struct fd new_fd = *fd_entry;
 
-    return hash_push(fd_t, fd_list, new_fd);
+    return hash_push(struct fd, fd_list, new_fd);
 }
 
-void syscall_dup(regs_t *regs) {
+void syscall_dup(struct regs *regs) {
     regs->rax = dup((int)regs->rdi);
 }
 
 int dup2(int old_fd, int new_fd) {
-    fd_t *old_fd_entry = hash_search(fd_t, fd_list, (size_t)old_fd);
-    if(old_fd_entry == NULL)
+    struct fd *old_fd_entry = hash_search(struct fd, fd_list, (size_t)old_fd);
+    if(old_fd_entry == NULL) { 
+        set_errno(EBADF);
         return -1;
+    }
 
-    fd_t *new_fd_entry = hash_search(fd_t, fd_list, (size_t)new_fd);
+    struct fd *new_fd_entry = hash_search(struct fd, fd_list, (size_t)new_fd);
     if(new_fd_entry != NULL) {
         close(new_fd);
     }
 
-    fd_t fd = *old_fd_entry;
+    struct fd fd = *old_fd_entry;
 
-    return hash_push(fd_t, fd_list, fd);
+    return hash_push(struct fd, fd_list, fd);
 }
 
-void syscall_dup2(regs_t *regs) {
+void syscall_dup2(struct regs *regs) {
     regs->rax = dup2((int)regs->rdi, (int)regs->rsi);
 }
 
-void syscall_stat(regs_t *regs) {
+void syscall_stat(struct regs *regs) {
     char *path = (void*)regs->rdi;
-    stat_t *stat = (void*)regs->rsi;
+    struct stat *stat = (void*)regs->rsi;
 
     int fd = open(path, 0);
     if(fd == -1) {
@@ -140,16 +155,16 @@ void syscall_stat(regs_t *regs) {
         return;
     }
 
-    fd_t *fd_struct = hash_search(fd_t, fd_list, (size_t)fd);
+    struct fd *fd_struct = hash_search(struct fd, fd_list, (size_t)fd);
     *stat = fd_struct->vfs_node->stat;
     regs->rax = 0;
 }
 
-void syscall_fstat(regs_t *regs) {
+void syscall_fstat(struct regs *regs) {
     int fd = (int)regs->rdi;
-    stat_t *stat = (void*)regs->rsi;
+    struct stat *stat = (void*)regs->rsi;
 
-    fd_t *fd_struct = hash_search(fd_t, fd_list, (size_t)fd);
+    struct fd *fd_struct = hash_search(struct fd, fd_list, (size_t)fd);
     if(fd_struct == NULL) {
         regs->rax = -1;
         return;
@@ -173,11 +188,11 @@ void syscall_fstat(regs_t *regs) {
 
 #define FD_CLOEXEC 1
 
-void syscall_fcntl(regs_t *regs) {
+void syscall_fcntl(struct regs *regs) {
     int fd = (int)regs->rdi;
     int cmd = (int)regs->rsi;
 
-    fd_t *fd_struct = hash_search(fd_t, fd_list, fd);
+    struct fd *fd_struct = hash_search(struct fd, fd_list, fd);
     if(fd_struct == NULL) {
         regs->rax = -1;
         return;

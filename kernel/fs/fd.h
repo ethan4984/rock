@@ -3,14 +3,14 @@
 
 #include <fs/vfs.h>
 
-typedef struct {
+struct fd {
     int fd;
-    vfs_node_t *vfs_node;
+    struct vfs_node *vfs_node;
     void *buf;
     size_t *loc;
     int *flags;
     int mode;
-} fd_t;
+};
 
 int open(char *path, int flags);
 int close(int fd);

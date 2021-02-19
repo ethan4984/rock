@@ -1,4 +1,4 @@
-%include 'klib/asm_mac.inc'
+%include 'lib/asm_macros.inc'
 
 global start_task
 

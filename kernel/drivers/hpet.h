@@ -3,8 +3,8 @@
 
 #include <acpi/rsdp.h>
 
-typedef struct {
-    acpihdr_t acpihdr;
+struct hpet_table {
+    struct acpihdr acpihdr;
     uint8_t hardware_rev_ID;
     uint8_t info;
     uint16_t pci_ID;
@@ -16,9 +16,9 @@ typedef struct {
     uint8_t hpet_num;
     uint16_t minim_ticks;
     uint8_t page_protection;
-} __attribute__((packed)) hpet_table_t;
+} __attribute__((packed));
 
-typedef struct {
+struct hpet {
     uint64_t capabilities;
     uint64_t unused0;
     uint64_t general_config;
@@ -28,10 +28,9 @@ typedef struct {
     uint64_t unused3[24];
     uint64_t counter_value;
     uint64_t unused4;
-} __attribute__((packed)) hpet_t;
+} __attribute__((packed));
 
-void ksleep(uint64_t ms);
-
+void ksleep(size_t ms);
 void init_hpet();
 
 #endif

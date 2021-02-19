@@ -4,51 +4,51 @@
 #include <acpi/tables.h>
 #include <vec.h>
 
-typedef struct {
-    acpihdr_t acpihdr;
+struct madt {
+    struct acpihdr acpihdr;
     uint32_t lapic_addr;
     uint32_t flags;
     uint8_t entries[];
-} __attribute__((packed)) madt_t;
+} __attribute__((packed));
 
-typedef struct {
+struct madt0 {
     uint8_t acpi_ID;
     uint8_t apic_ID;
     uint32_t flags;
-} __attribute__((packed)) madt0_t;
+} __attribute__((packed));
 
-typedef struct {
+struct madt1 {
     uint8_t ioapic_ID;
     uint8_t reserved;
     uint32_t ioapic_addr;
     uint32_t gsi_base;
-} __attribute__((packed)) madt1_t;
+} __attribute__((packed));
 
-typedef struct {
+struct madt2 {
     uint8_t bus_src;
     uint8_t irq_src;
     uint32_t gsi;
     uint16_t flags;
-} __attribute__((packed)) madt2_t;
+} __attribute__((packed));
 
-typedef struct {
+struct madt4 {
     uint8_t acpi_ID;
     uint16_t flags; 
     uint8_t lint;
-} __attribute__((packed)) madt4_t;
+} __attribute__((packed));
 
-typedef struct {
+struct madt5 {
     uint16_t reserved;
     uint8_t lapic_override;
-} __attribute__((packed)) madt5_t;
+} __attribute__((packed));
 
-extern madt_t *madt;
+extern struct madt *madt;
 
-extern_vec(madt0_t, madt0);
-extern_vec(madt1_t, madt1);
-extern_vec(madt2_t, madt2);
-extern_vec(madt4_t, madt4);
-extern_vec(madt5_t, madt5);
+extern_vec(struct madt0, madt0);
+extern_vec(struct madt1, madt1);
+extern_vec(struct madt2, madt2);
+extern_vec(struct madt4, madt4);
+extern_vec(struct madt5, madt5);
 
 void madt_init();
 

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct {
+struct acpihdr {
     char signature[4];
     uint32_t length;
     uint8_t revision;
@@ -13,9 +13,9 @@ typedef struct {
     uint32_t OEM_revision;
     uint32_t creator_ID;
     uint32_t creator_revision;
-} __attribute__((packed)) acpihdr_t;
+} __attribute__((packed));
 
-typedef struct {
+struct rsdp {
     char signature[8];
     uint8_t checksum;
     char OEMID[6];
@@ -25,16 +25,16 @@ typedef struct {
     uint64_t xsdt_addr;
     uint8_t ext_checksum;
     uint8_t reserved[3];
-} __attribute__((packed)) rsdp_t;
+} __attribute__((packed));
 
-typedef struct {
-    acpihdr_t acpihdr;
+struct rsdt {
+    struct acpihdr acpihdr;
     uint32_t acpiptr[];
-} __attribute((packed)) rsdt_t;
+} __attribute((packed));
 
-typedef struct {
-    acpihdr_t acpihdr;
+struct xsdt {
+    struct acpihdr acpihdr;
     uint64_t acpiptr[];
-} __attribute__((packed)) xsdt_t;
+} __attribute__((packed));
 
 #endif

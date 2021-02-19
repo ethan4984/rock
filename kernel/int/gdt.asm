@@ -12,7 +12,6 @@ entry:
     mov es, ax
     mov gs, ax
     mov ss, ax
-    xor ax, ax 
     mov fs, ax 
     mov gs, ax
 

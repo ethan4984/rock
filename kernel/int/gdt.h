@@ -1,22 +1,22 @@
 #ifndef GDT_H_
 #define GDT_H_
 
-#include <asmutils.h>
 #include <memutils.h>
+#include <cpu.h>
 
 extern void lgdt(uint64_t gdt_addr);
 extern void ltr(uint64_t selector);
 
-typedef struct {
+struct memory_segment {
     uint16_t limit;
     uint16_t base_low;
     uint8_t base_mid;
     uint8_t access;
     uint8_t granularity; 
     uint8_t base_high;
-} __attribute__((packed)) memory_segment_t;
+} __attribute__((packed));
 
-typedef struct {
+struct tss_segment {
     uint16_t length;
     uint16_t base_low;
     uint8_t base_mid;
@@ -25,9 +25,9 @@ typedef struct {
     uint8_t base_high;
     uint32_t base_high32;
     uint32_t reserved;
-} __attribute__((packed)) tss_segment_t;
+} __attribute__((packed));
 
-typedef struct {
+struct tss {
     uint32_t reserved;
     uint64_t rsp0;
     uint64_t rsp1;
@@ -44,23 +44,21 @@ typedef struct {
     uint64_t reserved3;
     uint16_t reserved4;
     uint16_t IOPB;
-} __attribute__((packed)) tss_t;
+} __attribute__((packed));
 
-typedef struct {
+struct gdtr {
     uint16_t limit;
     uint64_t offset;
-} __attribute__((packed)) gdtr_t;
+} __attribute__((packed));
 
-typedef struct {
-    memory_segment_t mem_segments[5];
-    tss_segment_t tss_segments[32];
-    gdtr_t gdtr;
-} __attribute__((packed)) gdt_t;
+struct gdt {
+    struct memory_segment mem_segments[5];
+    struct tss_segment tss_segments[32];
+    struct gdtr gdtr;
+} __attribute__((packed));
 
 void gdt_init();
-
 void add_tss_segment();
-
 void create_generic_tss();
 
 #endif

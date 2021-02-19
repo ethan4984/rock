@@ -1,18 +1,18 @@
 #include <fs/ramfs.h>
 
-static_vec(ramfs_node_t, ramfs_nodes);
+static_vec(struct ramfs_node, ramfs_nodes);
 
-static ramfs_node_t *vfs2ramfs(vfs_node_t *vfs_node) {
+static struct ramfs_node *vfs2ramfs(struct vfs_node *vfs_node) {
     for(size_t i = 0; i < ramfs_nodes.element_cnt; i++) {
-        ramfs_node_t *ramfs_node = vec_search(ramfs_node_t, ramfs_nodes, i);
+        struct ramfs_node *ramfs_node = vec_search(struct ramfs_node, ramfs_nodes, i);
         if(strcmp(ramfs_node->vfs_node.absolute_path, vfs_node->absolute_path) == 0)
             return ramfs_node;
     }
     return NULL;
 }
 
-int ramfs_write(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf) {
-    ramfs_node_t *ramfs_node = vfs2ramfs(vfs_node);
+int ramfs_write(struct vfs_node *vfs_node, off_t off, off_t cnt, void *buf) {
+    struct ramfs_node *ramfs_node = vfs2ramfs(vfs_node);
     if(ramfs_node == NULL)
         return -1;
 
@@ -31,8 +31,8 @@ int ramfs_write(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf) {
     return 0;
 }
 
-int ramfs_read(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf) {
-    ramfs_node_t *ramfs_node = vfs2ramfs(vfs_node);
+int ramfs_read(struct vfs_node *vfs_node, off_t off, off_t cnt, void *buf) {
+    struct ramfs_node *ramfs_node = vfs2ramfs(vfs_node);
     if(ramfs_node == NULL)
         return -1;
 
@@ -47,21 +47,21 @@ int ramfs_read(vfs_node_t *vfs_node, off_t off, off_t cnt, void *buf) {
     return 0;
 }
 
-int ramfs_delete(vfs_node_t *vfs_node) {
-    ramfs_node_t *ramfs_node = vfs2ramfs(vfs_node);
+int ramfs_delete(struct vfs_node *vfs_node) {
+    struct ramfs_node *ramfs_node = vfs2ramfs(vfs_node);
     if(ramfs_node == NULL)
         return -1;
 
     kfree(ramfs_node->buf);
-    vec_addr_remove(ramfs_node_t, ramfs_nodes, ramfs_node);
+    vec_addr_remove(struct ramfs_node, ramfs_nodes, ramfs_node);
 
     return 0;
 }
 
-int ramfs_open(vfs_node_t *vfs_node, int flags) {
+int ramfs_open(struct vfs_node *vfs_node, int flags) {
     if(flags & O_CREAT) {
-        ramfs_node_t ramfs_node = { .vfs_node = *vfs_node, .perms = flags };
-        vec_push(ramfs_node_t, ramfs_nodes, ramfs_node);
+        struct ramfs_node ramfs_node = { .vfs_node = *vfs_node, .perms = flags };
+        vec_push(struct ramfs_node, ramfs_nodes, ramfs_node);
         return 0;
     }
 

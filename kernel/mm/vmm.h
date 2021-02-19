@@ -1,29 +1,30 @@
 #ifndef VMM_H_
 #define VMM_H_
 
-#include <mm/pmm.h>
-
 #define KERNEL_HIGH_VMA 0xffffffff80000000
 #define HIGH_VMA 0xffff800000000000
 #define PAGE_SIZE 0x1000
 
-#define GET_PMLX_FLAGS(pmlX) ((pmlX) & 0xfff)
-#define GET_PMLX_ADDR(pmlX) ((pmlX) & ~(0xfff))
+#include <stdint.h>
+#include <stddef.h>
 
-typedef struct {
+struct page_map {
     uint64_t *pml4;
-    int lock;
-} pagestruct_t;
+    uint8_t *bitmap;
+    size_t bm_size;
+    size_t lock;
+};
 
-extern pagestruct_t kernel_mapping;
+extern struct page_map kernel_mapping; 
 
-void map_range(pagestruct_t *p, uint64_t vaddr, uint64_t cnt, uint64_t flags);
-void unmap_range(pagestruct_t *p, uint64_t vaddr, uint64_t cnt, uint64_t flags);
-pagestruct_t *vmm_generic_pagestruct();
-void page_copy(pagestruct_t *in, pagestruct_t *out);
-uint64_t grab_PML4();
-void tlb_flush();
-void pagestruct_init(pagestruct_t *in);
+void vmm_map_range(struct page_map *page_map, size_t vaddr, size_t cnt, uint64_t flags, uint64_t flags1);
+void vmm_unmap_range(struct page_map *page_map, size_t vaddr, size_t cnt, uint64_t flags1); 
+void vmm_map_page(struct page_map *page_map, size_t paddr, size_t vaddr, uint64_t flags, uint64_t flags1);
+size_t vmm_unmap_page(struct page_map *page_map, size_t vaddr, uint64_t flags1);
+void vmm_tlb_flush();
 void vmm_init();
+void vmm_page_map_init(struct page_map *page_map);
+uint64_t vmm_get_pml4(); 
+struct page_map *vmm_generic_page_map();
 
 #endif

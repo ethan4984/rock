@@ -1,9 +1,9 @@
 #ifndef PCI_H_
 #define PCI_H_
 
-#include <asmutils.h>
+#include <cpu.h>
 
-typedef struct {
+struct pci_device {
     uint8_t class_code;
     uint8_t sub_class;
     uint8_t prog_IF;
@@ -12,14 +12,14 @@ typedef struct {
     uint8_t bus;
     uint8_t device;
     uint8_t function;
-} pci_device_t;
+};
 
-typedef struct {
+struct pci_bar {
     uint32_t base;
     uint32_t size;
-} pci_bar_t;
+};
 
-extern pci_device_t *pci_devices;
+extern struct pci_device *pci_devices;
 extern uint64_t pci_device_cnt;
 
 uint32_t pci_read(uint8_t bus, uint8_t device, uint8_t func, uint8_t reg);
@@ -28,7 +28,7 @@ void pci_write(uint32_t data, uint8_t bus, uint8_t device, uint8_t func, uint8_t
 
 void pci_scan_bus(uint8_t bus);
 
-pci_bar_t pci_get_bar(pci_device_t device, uint64_t bar_num);
+struct pci_bar pci_get_bar(struct pci_device device, uint64_t bar_num);
 
 void pci_init();
 

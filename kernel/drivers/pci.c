@@ -1,11 +1,11 @@
 #include <drivers/pci.h>
-#include <output.h>
-#include <bitmap.h>
+#include <debug.h>
+#include <vec.h>
 
-pci_device_t *pci_devices;
+struct pci_device *pci_devices;
 uint64_t pci_device_cnt;
 
-static void add_pci_device(pci_device_t new_device) {
+static void add_pci_device(struct pci_device new_device) {
     if(pci_device_cnt + 1 % 10 == 0) {
         pci_devices = krealloc(pci_devices, pci_device_cnt + 10);
     }
@@ -21,7 +21,7 @@ static void check_device(uint8_t bus, uint8_t device, uint8_t function) {
     if(is_bridge) {
         pci_scan_bus((uint8_t)(pci_read(bus, device, function, 0x18) >> 8));
     } else {
-        add_pci_device((pci_device_t) { (uint8_t)(pci_read(bus, device, function, 0x8) >> 24), // class 
+        add_pci_device((struct pci_device) { (uint8_t)(pci_read(bus, device, function, 0x8) >> 24), // class 
                                         (uint8_t)(pci_read(bus, device, function, 0x8) >> 16), // subclass
                                         (uint8_t)(pci_read(bus, device, function, 0x8) >> 8), // prog_IF
                                         (uint16_t)(pci_read(bus, device, function, 0) >> 16), // device ID
@@ -58,18 +58,18 @@ void pci_scan_bus(uint8_t bus) {
     }
 }
 
-pci_bar_t pci_get_bar(pci_device_t device, uint64_t bar_num) {
+struct pci_bar pci_get_bar(struct pci_device device, uint64_t bar_num) {
     uint32_t base = pci_read(device.bus, device.device, device.function, 0x10 + (bar_num * 4));
 
     pci_write(0xffffffff, device.bus, device.device, device.function, 0x10 + (bar_num * 4));
     uint32_t size = pci_read(device.bus, device.device, device.function, 0x10 + (bar_num * 4));
     pci_write(base, device.bus, device.device, device.function, 0x10 + (bar_num * 4));
     
-    return (pci_bar_t) { base, ~(size) + 1 };
+    return (struct pci_bar) { base, ~(size) + 1 };
 }
 
 void pci_init() {
-    pci_devices = kmalloc(sizeof(pci_device_t) * 10);
+    pci_devices = kmalloc(sizeof(struct pci_device) * 10);
 
     pci_scan_bus(0);
     show_pci_devices();
@@ -77,9 +77,9 @@ void pci_init() {
 
 void show_pci_devices() {
     for(uint64_t i = 0; i < pci_device_cnt; i++) {
-        kvprintf("[PCI] device: %x\n", i);
-        kvprintf("[PCI] \tVendor: %x on [bus] %x [function] %x\n", pci_devices[i].vendor_ID, pci_devices[i].bus, pci_devices[i].function);
-        kvprintf("[PCI] \tdevice type: [class] %x [subclass] %x [prog_IF] %x [device ID] %x\n", pci_devices[i].class_code, pci_devices[i].sub_class, pci_devices[i].prog_IF, pci_devices[i].device_ID);
+        kprintf("[PCI] device: %x\n", i);
+        kprintf("[PCI] \tVendor: %x on [bus] %x [function] %x\n", pci_devices[i].vendor_ID, pci_devices[i].bus, pci_devices[i].function);
+        kprintf("[PCI] \tdevice type: [class] %x [subclass] %x [prog_IF] %x [device ID] %x\n", pci_devices[i].class_code, pci_devices[i].sub_class, pci_devices[i].prog_IF, pci_devices[i].device_ID);
     }
-    kvprintf("[PCI] total devices: %x\n", pci_device_cnt);
+    kprintf("[PCI] total devices: %x\n", pci_device_cnt);
 }

@@ -1,7 +1,9 @@
 #include <int/gdt.h>
-#include <bitmap.h>
+#include <mm/vmm.h>
+#include <mm/pmm.h>
+#include <mm/slab.h>
 
-static gdt_t gdt;
+static struct gdt gdt;
 static int tss_cnt = 0;
 
 void gdt_init() {
@@ -37,9 +39,11 @@ void gdt_init() {
     gdt.mem_segments[4].granularity = 0b00100000;
 
     gdt.gdtr.offset = (uint64_t)&gdt.mem_segments;
-    gdt.gdtr.limit = sizeof(memory_segment_t) * 5 - 1;
+    gdt.gdtr.limit = sizeof(struct memory_segment) * 5 - 1;
 
     lgdt((uint64_t)&gdt.gdtr);
+
+    create_generic_tss();
 }
 
 void gdt_tss_segment(uint64_t tss_addr) {
@@ -51,14 +55,15 @@ void gdt_tss_segment(uint64_t tss_addr) {
     gdt.tss_segments[tss_cnt].base_high = (uint8_t)(tss_addr >> 24);
     gdt.tss_segments[tss_cnt++].base_high32 = (uint32_t)(tss_addr >> 32);
 
-    gdt.gdtr.limit += sizeof(tss_segment_t);
+    gdt.gdtr.limit += sizeof(struct tss_segment);
     lgdt((uint64_t)&gdt.gdtr); 
 
-    ltr(gdt.gdtr.limit - sizeof(tss_segment_t) + 1);
+
+    ltr(gdt.gdtr.limit - sizeof(struct tss_segment) + 1);
 }
 
 void create_generic_tss() {
-    tss_t *tss = kmalloc(sizeof(tss_t));
+    struct tss *tss = kmalloc(sizeof(struct tss));
 
     tss->rsp0 = pmm_alloc(2) + 0x2000 + HIGH_VMA;
     tss->rsp1 = pmm_alloc(2) + 0x2000 + HIGH_VMA;

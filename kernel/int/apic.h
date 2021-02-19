@@ -1,8 +1,8 @@
 #ifndef APIC_H_
 #define APIC_H_
 
-#include <asmutils.h>
 #include <mm/vmm.h>
+#include <cpu.h>
 
 #define MSR_APIC_BASE 0x1b
 
@@ -69,13 +69,9 @@
 #define LAPIC_ELVT3 0x530
 
 void apic_init();
-
 void lapic_write(uint16_t offset, uint32_t data);
-
 uint32_t lapic_read(uint16_t offset);
-
 void send_IPI(uint8_t ap, uint32_t ipi);
-
-void lapic_timer_init(uint64_t ms);
+void lapic_timer_init(size_t ms);
 
 #endif

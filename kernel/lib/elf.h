@@ -12,10 +12,12 @@
 #define	EI_OSABI 7
 
 #define ABI_SYSTEM_V 0
+#define ABI_LINUX 3
+
 #define LITTLE_ENDIAN 1
 #define MACH_X86_64 0x3e
 
-typedef struct {
+struct elf_hdr {
     uint8_t ident[16];
     uint16_t type;
     uint16_t machine;
@@ -30,7 +32,7 @@ typedef struct {
     uint16_t shdr_size;
     uint16_t sh_num;
     uint16_t shstrndx;
-} __attribute__((packed)) elf_hdr_t;
+} __attribute__((packed));
 
 #define PT_NULL 0
 #define PT_LOAD 1
@@ -45,7 +47,20 @@ typedef struct {
 #define PT_LOPROC 0x70000000
 #define PT_HIPROC 0x7FFFFFFF
 
-typedef struct {
+
+#define AT_ENTRY 10
+#define AT_PHDR 20
+#define AT_PHENT 21
+#define AT_PHNUM 22
+
+struct aux {
+    uint64_t at_entry;
+    uint64_t at_phdr;
+    uint64_t at_phent;
+    uint64_t at_phnum;
+};
+
+struct elf64_phdr {
     uint32_t p_type;
     uint32_t p_flags;
     uint64_t p_offset;
@@ -54,9 +69,9 @@ typedef struct {
     uint64_t p_filesz;
     uint64_t p_memsz;
     uint64_t p_align;
-} elf64_phdr_t;
+};
 
-typedef struct {
+struct elf64_shdr {
     uint32_t sh_name;
     uint32_t sh_type;
     uint64_t sh_flags;
@@ -67,8 +82,8 @@ typedef struct {
     uint32_t sh_info;
     uint64_t sh_addr_align;
     uint64_t sh_entsize;
-} elf64_shdr_t;
+};
 
-int elf64_load(pagestruct_t *pagestruct, elf_hdr_t *ret, int fd);
+int elf64_load(struct page_map *page_map, struct aux *aux, int fd, uint64_t base, char **ld_path);
 
 #endif

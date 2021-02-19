@@ -3,9 +3,10 @@
 
 #include <mm/vmm.h>
 #include <types.h>
-#include <asmutils.h>
+#include <cpu.h>
 #include <memutils.h>
 #include <vec.h>
+#include <elf.h>
 
 extern void start_task(uint64_t ss, uint64_t rsp, uint64_t cs, uint64_t rip);
 extern void switch_task(uint64_t rsp);
@@ -19,7 +20,7 @@ extern char sched_lock;
 #define SCHED_KERNEL (1 << 2)
 #define SCHED_ELF (1 << 3)
 
-typedef struct {
+struct thread {
     tid_t tid;
     size_t idle_cnt, status;
     uint64_t user_stack;
@@ -28,21 +29,24 @@ typedef struct {
     uint64_t user_fs_base;
     size_t user_stack_size;
     size_t kernel_stack_size;
-    regs_t regs;
-} thread_t;
+    struct regs regs;
+};
 
-typedef struct {
+struct task {
     pid_t pid;
     pid_t ppid;
     size_t idle_cnt, status;
-    uninit_hash_table(thread_t, threads);
+    uninit_hash_table(struct thread, threads);
     uninit_vec(int, fd_list);
-    pagestruct_t *pagestruct;
-} task_t;
+    struct page_map *page_map;
+    struct vfs_node *working_dir;
+};
 
-void scheduler_main(regs_t *regs);
-task_t *sched_create_task(task_t *parent, pagestruct_t *pagestruct);
-thread_t *sched_create_thread(pid_t pid, uint64_t starting_addr, uint16_t cs);
-int sched_exec(char *path, char **argv, char **envp, int mode);
+extern_hash_table(struct task, tasks);
+
+void scheduler_main(struct regs *regs);
+struct task *sched_create_task(struct task *parent, struct page_map *page_map);
+struct thread *sched_create_thread(pid_t pid, struct aux *aux, const char **angv, const char **envp, uint64_t starting_addr, uint16_t cs);
+int sched_exec(char *path, const char **argv, const char **envp, int mode);
 
 #endif
