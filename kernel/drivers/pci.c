@@ -22,14 +22,14 @@ static void check_device(uint8_t bus, uint8_t device, uint8_t function) {
         pci_scan_bus((uint8_t)(pci_read(bus, device, function, 0x18) >> 8));
     } else {
         add_pci_device((struct pci_device) { (uint8_t)(pci_read(bus, device, function, 0x8) >> 24), // class 
-                                        (uint8_t)(pci_read(bus, device, function, 0x8) >> 16), // subclass
-                                        (uint8_t)(pci_read(bus, device, function, 0x8) >> 8), // prog_IF
-                                        (uint16_t)(pci_read(bus, device, function, 0) >> 16), // device ID
-                                        (uint16_t)pci_read(bus, device, function, 0), // vendor ID
-                                        bus,
-                                        device,
-                                        function
-                                      });
+                                             (uint8_t)(pci_read(bus, device, function, 0x8) >> 16), // subclass
+                                             (uint8_t)(pci_read(bus, device, function, 0x8) >> 8), // prog_IF
+                                             (uint16_t)(pci_read(bus, device, function, 0) >> 16), // device ID
+                                             (uint16_t)pci_read(bus, device, function, 0), // vendor ID
+                                             bus,
+                                             device,
+                                             function
+                                           });
     }
 }
 

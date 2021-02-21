@@ -16,7 +16,7 @@ void ahci_init() {
     ahci_drives = kmalloc(sizeof(struct ahci_drive) * 32);
 
     for(uint64_t i = 0; i < pci_device_cnt; i++) {
-        if((pci_devices[i].class_code == 1) && (pci_devices[i].sub_class == 6)) { 
+        if(pci_devices[i].class_code == 1 && pci_devices[i].sub_class == 6) { 
             switch(pci_devices[i].prog_IF) {
                 case 0:
                     kprintf("[AHCI] detected a vendor specific interface (get a new pc)\n");

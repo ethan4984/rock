@@ -212,11 +212,34 @@ static int kmm_slab_obj_free(struct kmm_slab *slab, const void *obj) {
         return -1;
 
     struct kmm_slab_cache *cache = slab->cache_parent;
-    if(slab->buf > obj || (slab->buf + cache->object_size * cache->objects_per_slab) < obj)
-        return -1;
+    if(slab->buf <= obj && (slab->buf + cache->object_size * cache->objects_per_slab) > obj) {
+        size_t index = (size_t)(obj - slab->buf) / cache->object_size;
+        BM_CLEAR(slab->bitmap, index);
+        return 0;
+    }
 
-    size_t index = (size_t)(obj - slab->buf) / cache->object_size;
-    BM_CLEAR(slab->bitmap, index);
+    return -1;
+}
+
+static size_t kmm_object_size(const void *addr) {
+    if(!addr)
+        return 0;
+
+    struct kmm_slab_cache *cache = cache_root;
+
+    do {
+        struct kmm_slab *slab = cache->slab_partial;
+        if(slab && slab->buf <= addr && (slab->buf + cache->object_size * cache->objects_per_slab) > addr) {
+            return cache->object_size;
+        }
+
+        slab = cache->slab_full;
+        if(slab && slab->buf <= addr && (slab->buf + cache->object_size * cache->objects_per_slab) > addr) {
+            return cache->object_size;
+        }
+
+        cache = cache->next;
+    } while(cache != NULL);
 
     return 0;
 }
@@ -265,16 +288,18 @@ size_t kfree(const void *obj) {
 }
 
 void *krealloc(void *addr, size_t cnt) {
-    size_t alloc_size = kfree(addr);
+    size_t alloc_size = kmm_object_size(addr);
     void *new_addr = kmalloc(cnt);
     memcpy8(new_addr, addr, alloc_size);
+    kfree(addr);
     return new_addr;
 }
 
 void *krecalloc(void *addr, size_t cnt) {
-    size_t alloc_size = kfree(addr);
-    void *new_addr = kcalloc(cnt);
+    size_t alloc_size = kmm_object_size(addr);
+    void *new_addr = kmalloc(cnt);
     memcpy8(new_addr, addr, alloc_size);
+    kfree(addr);
     return new_addr;
 }
 

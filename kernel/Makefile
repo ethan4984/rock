@@ -1,7 +1,7 @@
 CC = ../tools/bin/x86_64-elf-gcc
 NASM = nasm -felf64
 
-CFLAGS = -ffreestanding -Wall -Wextra -fno-stack-protector -fno-exceptions -Isrc  -Wno-unused-parameter -I. -Ilib -Wno-unused-variable
+CFLAGS = -ffreestanding -Wall -Wextra -fno-stack-protector -fno-exceptions -Isrc  -Wno-unused-parameter -I. -Ilib -Wno-unused-variable 
 KERNEL_FLAGS = -fno-pic -mno-sse -mno-sse2 -mno-mmx -mno-80387 -mno-red-zone -gdwarf -mcmodel=kernel -fno-omit-frame-pointer
 
 C_SRC = $(shell find . -type f -name '*.c')

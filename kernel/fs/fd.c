@@ -14,10 +14,10 @@ int open(char *path, int flags) {
         return -1;
     }
 
-    struct fd fd = { .vfs_node = node,
-                .flags = kmalloc(sizeof(int)),
-                .loc = kmalloc(sizeof(size_t))
-              };
+    struct fd fd = {    .vfs_node = node,
+                        .flags = kmalloc(sizeof(int)),
+                        .loc = kmalloc(sizeof(size_t))
+                   };
 
     *fd.flags = flags;
     *fd.loc = 0;

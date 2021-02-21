@@ -14,9 +14,9 @@
  
 #define ddl_remove(type, head, node) ({ \
     __label__ out; \
-    int ret = 0; \
+    int _ret = 0; \
     if(!*(head) || !(node)) {\
-        ret = -1; \
+        _ret = -1; \
         goto out; \
     } \
     if(*(head) == node) \
@@ -27,7 +27,7 @@
         (node)->last->next = node->next; \
     kfree(node); \
 out: \
-    ret; \
+    _ret; \
 })
  
 #define ddl_search(type, head, var, identifier) ({ \
@@ -45,7 +45,7 @@ out: \
  
 #define ddl_get_index(type, head, num) ({ \
     type *node = head; \
-    for(int i = 0; i < (num); i++) { \
+    for(int _i = 0; _i < (num); _i++) { \
         if(node->next) { \
             node = node->next; \
             continue; \
@@ -82,66 +82,66 @@ out: \
  
 #define vec_push(type, name, element) ({ \
     spin_lock(&name.lock); \
-    int ret = 0; \
+    int _ret = 0; \
     if(name.data == NULL) { \
         name.data = kcalloc(sizeof(type) * 32); \
         name.size = 32; \
     } \
-    if(name.current > name.size) { \
+    if(name.current >= name.size) { \
         name.size += 32; \
         name.data = krecalloc(name.data, name.size * sizeof(type)); \
     } \
-    ret = name.current; \
+    _ret = name.current; \
     name.data[name.current++] = element; \
     name.element_cnt++; \
     spin_release(&name.lock); \
-    ret; \
+    _ret; \
 })
  
 #define vec_search(type, name, index) ({ \
     __label__ lret; \
-    type *ret = NULL; \
+    type *_ret = NULL; \
     spin_lock(&name.lock); \
     if(name.element_cnt <= (index)) { \
         goto lret; \
     } \
-    ret = &name.data[index]; \
+    _ret = &name.data[index]; \
 lret: \
     spin_release(&name.lock); \
-    ret; \
+    _ret; \
 })
  
 #define vec_remove(type, name, index) ({ \
-    __label__ ret; \
-    int ret = 0; \
+    __label__ lret; \
+    int _ret = 0; \
     spin_lock(&name.lock); \
     if(name.element_cnt <= index) { \
-        ret = -1; \
-        goto ret; \
+        _ret = -1; \
+        goto lret; \
     } \
     type *tmp = kmalloc(sizeof(type) * name.size); \
-    size_t origin_cnt = 0; \
-    for(size_t i = 0; i < name.element_cnt; i++) { \
-        if(i != index) \
-            tmp[origin_cnt++] = name.data[i]; \
+    size_t _origin_cnt = 0; \
+    for(size_t _i = 0; _i < name.element_cnt; _i++) { \
+        if(_i != index) \
+            tmp[_origin_cnt++] = name.data[_i]; \
     } \
     name.element_cnt--; \
     kfree(name.data); \
     name.data = tmp; \
-ret: \
+lret: \
     spin_release(&name.lock); \
-    ret; \
+    _ret; \
 })
  
 #define vec_addr_remove(type, name, addr) ({ \
-    int ret = -1; \
-    for(size_t i = 0; i < name.element_cnt; i++) { \
-        if(&name.data[i] == (addr)) { \
-            ret = vec_remove(type, name, i); \
+    int _ret = -1; \
+    for(size_t _i = 0; _i < name.element_cnt; _i++) { \
+        if(&name.data[_i] == (addr)) { \
+            _ret = vec_remove(type, name, _i); \
             break; \
         } \
     } \
-    ret; \
+    _ret; \
 })
  
 #define vec_delete(name) \
@@ -170,65 +170,65 @@ ret: \
     typeof(name) name = { 0 };
  
 #define hash_push(type, name, element) ({ \
-    size_t hash_index = name.hash_cnt; \
+    size_t _hash_index = name.hash_cnt; \
     vec_push(type, name.data_map, element); \
-    vec_push(type, name.hash_map, name.hash_cnt++); \
-    hash_index; \
+    vec_push(size_t, name.hash_map, name.hash_cnt++); \
+    _hash_index; \
 })
  
 #define hash_search(type, name, hash_index) ({ \
     __label__ lret; \
     __label__ found; \
-    type *ret = NULL; \
-    size_t i = 0; \
-    for(; i < name.hash_map.element_cnt; i++) { \
-        size_t index = *vec_search(size_t, name.hash_map, i); \
+    type *_ret = NULL; \
+    size_t _i = 0; \
+    for(; _i < name.hash_map.element_cnt; _i++) { \
+        size_t index = *vec_search(size_t, name.hash_map, _i); \
         if(index == (size_t)hash_index) \
             goto found; \
     } \
     goto lret; \
 found: \
-    ret = vec_search(type, name.data_map, i); \
+    _ret = vec_search(type, name.data_map, _i); \
 lret: \
-    ret; \
+    _ret; \
 })
  
 #define hash_remove(type, name, hash_index) ({ \
     __label__ lret; \
     __label__ found; \
-    int ret = -1; \
-    size_t i = 0; \
-    for(; i < name.hash_map.element_cnt; i++) { \
-        size_t index = *vec_search(size_t, name.hash_map, i); \
+    int _ret = -1; \
+    size_t _i = 0; \
+    for(; _i < name.hash_map.element_cnt; _i++) { \
+        size_t index = *vec_search(size_t, name.hash_map, _i); \
         if(index == hash_index) \
             goto found; \
     } \
     goto lret; \
 found: \
-    vec_remove(type, name.data_map, i); \
-    vec_remove(size_t, name.hash_map, i); \
-    ret = 0; \
+    vec_remove(type, name.data_map, _i); \
+    vec_remove(size_t, name.hash_map, _i); \
+    _ret = 0; \
 lret: \
-    ret; \
+    _ret; \
 })
  
 #define hash_addr_remove(type, name, addr) ({ \
     __label__ lret; \
     __label__ found; \
-    int ret = -1; \
-    size_t i = 0; \
-    for(; i < name.data_map.element_cnt; i++) { \
-        type *index = vec_search(type, name.data_map, i); \
+    int _ret = -1; \
+    size_t _i = 0; \
+    for(; _i < name.data_map.element_cnt; _i++) { \
+        type *index = vec_search(type, name.data_map, _i); \
         if(index == addr) \
             goto found; \
     } \
     goto lret; \
 found: \
-    vec_remove(type, name.data_map, i); \
-    vec_remove(size_t, name.hash_map, i); \
-    ret = 0; \
+    vec_remove(type, name.data_map, _i); \
+    vec_remove(size_t, name.hash_map, _i); \
+    _ret = 0; \
 lret: \
-    ret; \
+    _ret; \
 })
  
 #endif
