@@ -156,8 +156,10 @@ struct ahci_drive {
     volatile struct port_regs *regs;
 };
 
-void ahci_init();
+void ahci_init(struct pci_device *device);
 int ahci_read(int drive_index, uint64_t start, uint64_t cnt, void *buf);
 int ahci_write(int drive_index, uint64_t start, uint64_t cnt, void *buf);
+
+extern_vec(struct ahci_drive, ahci_drive_list);
 
 #endif

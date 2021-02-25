@@ -3,63 +3,49 @@
 #include <debug.h>
 #include <vec.h>
 
-static uint64_t ahci_drive_cnt = 0;
-static struct ahci_drive *ahci_drives;
+global_vec(ahci_drive_list);
 
-static void init_proto(struct pci_device *device);
 static void init_sata_device(volatile struct port_regs *regs);
 static void send_command(volatile struct port_regs *regs, uint32_t cmd_slot);
 static void ahci_RW(struct ahci_drive *drive, uint64_t start, uint64_t cnt, void *buffer, uint8_t w); 
 static int find_CMD(volatile struct port_regs *regs);
 
-void ahci_init() {
-    ahci_drives = kmalloc(sizeof(struct ahci_drive) * 32);
-
-    for(uint64_t i = 0; i < pci_device_cnt; i++) {
-        if(pci_devices[i].class_code == 1 && pci_devices[i].sub_class == 6) { 
-            switch(pci_devices[i].prog_IF) {
-                case 0:
-                    kprintf("[AHCI] detected a vendor specific interface (get a new pc)\n");
-                    break;
-                case 1:
-                    kprintf("[ACHI] detetced an AHCI 1.0 compatiable device\n");
-                    init_proto(&pci_devices[i]);
-                    break;
-                case 2:
-                    kprintf("[AHCI] detetced a serial storage bus\n");
-                    break;
-            }
-        }
+void ahci_init(struct pci_device *device) {
+    switch(device->prog_if) {
+        case 0:
+            kprintf("[AHCI] detected a vendor specific interface (get a new pc)\n");
+            return;
+        case 1:
+            kprintf("[ACHI] detetced an AHCI 1.0 compatiable device\n");
+            break;
+        case 2:
+            kprintf("[AHCI] detetced a serial storage bus\n");
+            return;
     }
-    
-    for(uint64_t i = 0; i < ahci_drive_cnt; i++) {
-        kprintf("[AHCI] sata drive %d detected with %d sectors\n", i, ahci_drives[i].sector_cnt);
-    }
-}
 
-static void init_proto(struct pci_device *device) {
-    ahci_drives = kmalloc(sizeof(struct ahci_drive) * 32);
+    pci_become_bus_master(device);
 
-    pci_write(pci_read(device->bus, device->device, device->function, 0x4) | (1 << 2), device->bus, device->device, device->function, 0x4); // become a bus master
+    struct pci_bar bar;
+    if(pci_get_bar(device, &bar, 5) == -1)
+        return;
 
-    struct pci_bar bar = pci_get_bar(*device, 5);
-    volatile struct GHC *GHC = (volatile struct GHC*)((uint64_t)bar.base + HIGH_VMA);
-    kprintf("[AHCI] device's GHC found at %x\n", (uint64_t)GHC);
+    volatile struct GHC *GHC = (volatile struct GHC*)((size_t)bar.base + HIGH_VMA);
 
-    for(uint8_t i = 0; i < 32; i++) {
-        if(GHC->pi & (1 << i)) { // check for a valid port
-            volatile struct port_regs *port_regs = (volatile struct port_regs*)&GHC->port[i];
+    for(int i = 0; i < 32; i++) {
+        if(GHC->pi & (1 << i)) {
+            volatile struct port_regs *regs = (volatile struct port_regs*)&GHC->port[i];
 
-            switch(port_regs->sig) {
+            switch(regs->sig) {
                 case SATA_ATA:
                     kprintf("[AHCI] sata drive found on port %d\n", i);
-                    init_sata_device(port_regs);
-                    break; 
+                    init_sata_device(regs);
+                    break;
                 case SATA_ATAPI:
                     kprintf("[AHCI] enclosure management bridge found on port %d\n", i); 
-                    break; 
+                    break;
                 case SATA_PM:
                     kprintf("[ACHI] port multipler found on port %d\n", i); 
+                    break;
             }
         }
     }
@@ -97,18 +83,26 @@ static void send_command(volatile struct port_regs *regs, uint32_t cmd_slot) {
 
 int ahci_read(int drive_index, uint64_t addr, uint64_t cnt, void *ret) {
     uint8_t *buffer = (uint8_t*)(pmm_alloc(DIV_ROUNDUP(cnt, 0x1000)) + HIGH_VMA);
-    ahci_RW(&ahci_drives[drive_index], addr / 0x200, DIV_ROUNDUP(cnt, 0x200), buffer, 0);
+
+    struct ahci_drive *drive = vec_search(struct ahci_drive, ahci_drive_list, (size_t)drive_index);
+
+    ahci_RW(drive, addr / 0x200, DIV_ROUNDUP(cnt, 0x200), buffer, 0);
     memcpy8(ret, buffer + (addr % 0x200), cnt);
     pmm_free((uint64_t)buffer - HIGH_VMA, DIV_ROUNDUP(cnt, 0x1000));
+
     return cnt;
 }
 
 int ahci_write(int drive_index, uint64_t addr, uint64_t cnt, void *buffer) {
     uint8_t *disk = (uint8_t*)(pmm_alloc(DIV_ROUNDUP(cnt, 0x1000)) + HIGH_VMA);
-    ahci_RW(&ahci_drives[drive_index], addr / 0x200, DIV_ROUNDUP(cnt, 0x200), disk, 0);
+    
+    struct ahci_drive *drive = vec_search(struct ahci_drive, ahci_drive_list, (size_t)drive_index);
+
+    ahci_RW(drive, addr / 0x200, DIV_ROUNDUP(cnt, 0x200), disk, 0);
     memcpy8(disk + (addr % 0x200), buffer, cnt);
-    ahci_RW(&ahci_drives[drive_index], addr / 0x200, DIV_ROUNDUP(cnt, 0x200), disk, 1);
+    ahci_RW(drive, addr / 0x200, DIV_ROUNDUP(cnt, 0x200), disk, 1);
     pmm_free((uint64_t)disk - HIGH_VMA, DIV_ROUNDUP(cnt, 0x1000));
+
     return cnt;
 }
 
@@ -142,18 +136,20 @@ static void init_sata_device(volatile struct port_regs *regs) {
     cmdfis->pmport = 0;
     cmdfis->fisType = FIS_REG_H2D;
 
-    send_command(regs, cmd_slot);
+    send_command(regs, cmd_slot); 
 
-    ahci_drives[ahci_drive_cnt] = (struct ahci_drive) { *(uint64_t*)((uint64_t)&identity[100]), regs };
+    struct ahci_drive new_drive = { .sector_cnt = *(size_t*)((uint64_t)&identity[100]),
+                                    .regs = regs
+                                  };
 
-    struct msd device = {   .device_index = ahci_drive_cnt++,
+    struct msd device = {   .device_index = vec_push(struct ahci_drive, ahci_drive_list, new_drive),
                             .read = ahci_read,
                             .write = ahci_write
                         };
 
-    size_t vec_id = vec_push(struct msd, msd_list, device);
+    size_t msd_id = vec_push(struct msd, msd_list, device);
 
-    scan_device_partitions(vec_search(struct msd, msd_list, vec_id));
+    scan_device_partitions(vec_search(struct msd, msd_list, msd_id));
 }
 
 static void ahci_RW(struct ahci_drive *drive, uint64_t start, uint64_t count, void *buffer, uint8_t w) {
@@ -194,6 +190,5 @@ static void ahci_RW(struct ahci_drive *drive, uint64_t start, uint64_t count, vo
     cmdfis->countl = (uint8_t)count;
     cmdfis->counth = (uint8_t)(count >> 8);
     
-    send_command(drive->
-            regs, cmd_slot);
+    send_command(drive->regs, cmd_slot);
 }

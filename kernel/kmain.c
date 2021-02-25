@@ -36,9 +36,10 @@ void kmain(void *stivale_phys) {
     apic_init();
     idt_init();
 
+    asm ("sti");
+
     devfs_init();
-    pci_init();
-    ahci_init();
+    pci_scan();
 
     vfs_mount_dev("/dev/SD0-0", "/");
 
@@ -46,8 +47,6 @@ void kmain(void *stivale_phys) {
 
     struct task *task = sched_create_task(NULL, NULL);
     sched_create_thread(task->pid, NULL, NULL, NULL, (uint64_t)ktask, 0x8);
-
-    lapic_timer_init(50);
 
     asm ("sti");
 

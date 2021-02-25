@@ -82,6 +82,7 @@ static isr_handler_t isr_handlers[] = {
 };
 
 extern void isr_handler_main(struct regs *regs) {
+    kprintf("Getting interruppt %d\n", regs->isr_number);
     if(regs->isr_number < 32) {
         static char lock = 0;
         spin_lock(&lock);
