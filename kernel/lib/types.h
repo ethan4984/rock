@@ -28,8 +28,6 @@
 #define O_SYNC      0x2000
 #define O_CLOEXEC   0x4000
 
-/* errno for mlibc */
-
 #define EDOM 1
 #define EILSEQ 2
 #define ERANGE 3

@@ -1,5 +1,5 @@
 #include <elf.h>
-#include <mm/vmm.h>
+#include <mm/mmap.h>
 
 static int elf64_validate(int fd, struct elf_hdr *hdr) {
     read(fd, hdr, sizeof(struct elf_hdr));
@@ -30,34 +30,32 @@ int elf64_load(struct page_map *page_map, struct aux *aux, int fd, uint64_t base
     aux->at_phnum = hdr.ph_num;
 
     for(size_t i = 0; i < hdr.ph_num; i++) {
-        switch(phdr[i].p_type) {
-            case PT_INTERP:
-                if(ld_path == NULL)
-                    break;
+        if(phdr[i].p_type == PT_INTERP) {
+            if(ld_path == NULL)
+                continue;
 
-                *ld_path = kcalloc(phdr[i].p_filesz + 1);
+            *ld_path = kcalloc(phdr[i].p_filesz + 1);
 
-                lseek(fd, phdr[i].p_offset, SEEK_SET);
-                read(fd, *ld_path, phdr[i].p_filesz);
-                break;
-            case PT_PHDR:
-                aux->at_phdr = base + phdr[i].p_vaddr;
-                break;
-            default:
-                if(phdr[i].p_type != PT_LOAD)
-                    continue;
-        }
+            lseek(fd, phdr[i].p_offset, SEEK_SET);
+            read(fd, *ld_path, phdr[i].p_filesz);
+
+            continue;
+        } else if(phdr[i].p_type == PT_PHDR) {
+            aux->at_phdr = base + phdr[i].p_vaddr;
+            continue;
+        } else if(phdr[i].p_type != PT_LOAD)
+            continue;
 
         size_t misalignment = phdr[i].p_vaddr & (PAGE_SIZE - 1);
         size_t page_cnt = DIV_ROUNDUP(misalignment + phdr[i].p_memsz, PAGE_SIZE);
 
-        vmm_map_range(page_map, phdr[i].p_vaddr + base, page_cnt, 0x3 | (1 << 2), 0x3 | (1 << 2));
+        mmap(page_map, (void*)phdr[i].p_vaddr + base, page_cnt * PAGE_SIZE, PROT_WRITE | PROT_READ | (1 << 2), MAP_ANONYMOUS | MAP_FIXED, 0, 0);
 
         lseek(fd, phdr[i].p_offset, SEEK_SET);
         read(fd, (void*)(phdr[i].p_vaddr + base), phdr[i].p_filesz);
     }
 
     aux->at_entry = base + hdr.entry;
-
+    
     return 0;
 }

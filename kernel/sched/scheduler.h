@@ -20,6 +20,8 @@ extern char sched_lock;
 #define SCHED_KERNEL (1 << 2)
 #define SCHED_ELF (1 << 3)
 
+#define THREAD_STACK_SIZE 0x8000
+
 struct thread {
     tid_t tid;
     size_t idle_cnt, status;

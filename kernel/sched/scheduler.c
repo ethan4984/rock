@@ -1,4 +1,5 @@
 #include <sched/scheduler.h>
+#include <mm/mmap.h>
 #include <acpi/madt.h>
 #include <sched/smp.h>
 #include <fs/fd.h>
@@ -141,9 +142,11 @@ int sched_delete_thread(struct task *parent, int tid) {
     struct thread *thread = hash_search(struct thread, parent->threads, tid);
     if(thread == NULL)
         return -1;
-    
-    pmm_free(thread->kernel_stack, thread->kernel_stack_size); 
-    pmm_free(thread->user_stack, thread->user_stack_size);
+
+    struct core_local *local = get_core_local(CURRENT_CORE);
+
+    pmm_free(thread->kernel_stack - THREAD_STACK_SIZE, THREAD_STACK_SIZE / PAGE_SIZE);
+    munmap(local->page_map, (void*)thread->user_stack - THREAD_STACK_SIZE, THREAD_STACK_SIZE);
 
     return hash_remove(struct thread, parent->threads, (size_t)tid);
 }
@@ -153,11 +156,10 @@ struct thread *sched_create_thread(pid_t pid, struct aux *aux, const char **argv
     if(task == NULL)
         return NULL;
 
+    struct core_local *local = get_core_local(CURRENT_CORE);
+
     struct thread thread = {    .status = SCHED_WAITING,
-                                .kernel_stack = pmm_alloc(8) + 0x8000,
-                                .user_stack = pmm_alloc(8) + 0x8000, 
-                                .kernel_stack_size = 8,
-                                .user_stack_size = 8,
+                                .kernel_stack = (size_t)pmm_alloc(THREAD_STACK_SIZE / PAGE_SIZE) + THREAD_STACK_SIZE,
                            };
 
     tid_t new_tid = hash_push(struct thread, task->threads, thread);
@@ -170,7 +172,65 @@ struct thread *sched_create_thread(pid_t pid, struct aux *aux, const char **argv
 
     if(cs & 0x3) {
         new_thread->regs.ss = cs - 8;
-        new_thread->regs.rsp = new_thread->user_stack + HIGH_VMA;
+
+        new_thread->user_stack = (size_t)mmap(task->page_map, NULL, THREAD_STACK_SIZE, PROT_READ | PROT_WRITE | (1 << 2), MAP_ANONYMOUS, 0, 0) + THREAD_STACK_SIZE;
+        new_thread->regs.rsp = new_thread->user_stack;
+        
+        uint64_t *stack = (uint64_t*)new_thread->regs.rsp; 
+
+        size_t envp_cnt = 0;
+        size_t argv_cnt = 0;
+
+        while(*envp) {
+            const char *element = *envp;
+            stack = (void*)stack - (strlen(element) + 1);
+            strcpy((void*)stack, element);
+            envp++; envp_cnt++;
+        }
+
+        while(*argv) {
+            const char *element = *argv;
+            stack = (void*)stack - (strlen(element) + 1);
+            strcpy((void*)stack, element);
+            argv++; argv_cnt++;
+        }
+
+        argv -= argv_cnt; envp -= envp_cnt;
+
+        stack = (void*)stack - ((uintptr_t)stack & 0xf);
+
+        if((argv_cnt + envp_cnt + 1) & 1)
+            stack--;
+
+        stack -= 10;
+
+        stack[0] = AT_PHNUM; stack[1] = aux->at_phnum;
+        stack[2] = AT_PHENT; stack[3] = aux->at_phent;
+        stack[4] = AT_PHDR;  stack[5] = aux->at_phdr;
+        stack[6] = AT_ENTRY; stack[7] = aux->at_entry;
+        stack[8] = 0; stack[9] = 0;
+
+        uint64_t save = new_thread->regs.rsp;
+
+        *(--stack) = 0;
+        stack -= envp_cnt;
+
+        for(size_t i = 0; i < envp_cnt; i++) {
+            save -= strlen(envp[i]) + 1;
+            stack[i] = save;
+        }
+
+        *(--stack) = 0;
+        stack -= argv_cnt;
+
+        for(size_t i = 0; i < argv_cnt; i++) {
+            save -= strlen(argv[i]) + 1;
+            stack[i] = save;
+        }
+
+        *(--stack) = argv_cnt; // argc
+
+        new_thread->regs.rsp = (uint64_t)stack;
     } else {
         new_thread->regs.ss = cs + 8;
         new_thread->regs.rsp = new_thread->kernel_stack + HIGH_VMA;
@@ -252,13 +312,13 @@ int sched_exec(char *path, const char **argv, const char **envp, int mode) {
 
         entry_point = ld_aux.at_entry;
     }
-   
-    vmm_page_map_init(local->page_map);
-
-    asm ("sti");
 
     struct task *new_task = sched_create_task(parent, page_map);
     struct thread *new_thread = sched_create_thread(new_task->pid, &aux, argv, envp, entry_point, cs);
+
+    vmm_page_map_init(local->page_map);
+
+    asm ("sti");
 
     return 0;
 }

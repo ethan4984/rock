@@ -126,6 +126,7 @@ lret: \
             tmp[_origin_cnt++] = name.data[_i]; \
     } \
     name.element_cnt--; \
+    name.current--; \
     kfree(name.data); \
     name.data = tmp; \
 lret: \
@@ -180,15 +181,15 @@ lret: \
     __label__ lret; \
     __label__ found; \
     type *_ret = NULL; \
-    size_t _i = 0; \
-    for(; _i < name.hash_map.element_cnt; _i++) { \
-        size_t index = *vec_search(size_t, name.hash_map, _i); \
+    size_t _hash_offset = 0; \
+    for(; _hash_offset < name.hash_map.element_cnt; _hash_offset++) { \
+        size_t index = *vec_search(size_t, name.hash_map, _hash_offset); \
         if(index == (size_t)hash_index) \
             goto found; \
     } \
     goto lret; \
 found: \
-    _ret = vec_search(type, name.data_map, _i); \
+    _ret = vec_search(type, name.data_map, _hash_offset); \
 lret: \
     _ret; \
 })
@@ -197,16 +198,17 @@ lret: \
     __label__ lret; \
     __label__ found; \
     int _ret = -1; \
-    size_t _i = 0; \
-    for(; _i < name.hash_map.element_cnt; _i++) { \
-        size_t index = *vec_search(size_t, name.hash_map, _i); \
+    size_t _hash_offset = 0; \
+    for(; _hash_offset < name.hash_map.element_cnt; _hash_offset++) { \
+        size_t index = *vec_search(size_t, name.hash_map, _hash_offset); \
         if(index == hash_index) \
             goto found; \
     } \
     goto lret; \
 found: \
-    vec_remove(type, name.data_map, _i); \
-    vec_remove(size_t, name.hash_map, _i); \
+    vec_remove(type, name.data_map, _hash_offset); \
+    vec_remove(size_t, name.hash_map, _hash_offset); \
+    name.hash_cnt--; \
     _ret = 0; \
 lret: \
     _ret; \
@@ -216,16 +218,17 @@ lret: \
     __label__ lret; \
     __label__ found; \
     int _ret = -1; \
-    size_t _i = 0; \
-    for(; _i < name.data_map.element_cnt; _i++) { \
-        type *index = vec_search(type, name.data_map, _i); \
+    size_t _hash_offset = 0; \
+    for(; _hash_offset < name.data_map.element_cnt; _hash_offset++) { \
+        type *index = vec_search(type, name.data_map, _hash_offset); \
         if(index == addr) \
             goto found; \
     } \
     goto lret; \
 found: \
-    vec_remove(type, name.data_map, _i); \
-    vec_remove(size_t, name.hash_map, _i); \
+    vec_remove(type, name.data_map, _hash_offset); \
+    vec_remove(size_t, name.hash_map, _hash_offset); \
+    name.hash_cnt--; \
     _ret = 0; \
 lret: \
     _ret; \

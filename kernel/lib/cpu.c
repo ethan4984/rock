@@ -16,9 +16,15 @@ extern void syscall_main();
 void cpu_init_features() {
     wrmsr(MSR_EFER, rdmsr(MSR_EFER) | 1); // set SCE
 
+    uint64_t cr0 = 0;
+    asm volatile ( "mov %%cr0, %0" : "=r"(cr0));
+    cr0 &= ~(1 << 2);
+    cr0 |= (1 << 1);
+    asm volatile ( "mov %0, %%cr0" :: "r"(cr0));
+
     uint64_t cr4;
     asm volatile ( "mov %%cr4, %0" : "=r"(cr4));
-    cr4 |= (1 << 7); // set PGE
+    cr4 |= (1 << 7) | (1 << 9) | (1 << 10);
     asm volatile ( "mov %0, %%cr4" :: "r"(cr4));
 
     wrmsr(MSR_STAR, 0x0013000800000000);

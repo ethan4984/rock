@@ -1,6 +1,8 @@
-CC = ../tools/bin/x86_64-elf-ld
-NASM = nasm -felf64
+CC = build/tools/host-gcc/bin/x86_64-rock-gcc
 
-build:
-	$(NASM) test.asm -o test.o
-	$(CC) -shared -fPIC -ffreestanding -nodefaultlibs test.o -T linker.ld -o test.elf
+main:
+	$(CC) test.c -o test
+
+build_toolchain:
+	mkdir -p build
+	cd build && xbstrap init .. && xbstrap install --all && xbstrap install-tool host-gcc
