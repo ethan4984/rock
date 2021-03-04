@@ -1,4 +1,5 @@
 #include <elf.h>
+#include <fs/fd.h>
 #include <mm/mmap.h>
 
 static int elf64_validate(int fd, struct elf_hdr *hdr) {

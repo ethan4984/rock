@@ -147,6 +147,10 @@ lret: \
  
 #define vec_delete(name) \
     kfree(name.data);
+
+#define hash_delete(name) \
+    kfree(name.data_map.data); \
+    kfree(name.hash_map.data);
  
 #define create_hash_struct(type) \
     struct { \

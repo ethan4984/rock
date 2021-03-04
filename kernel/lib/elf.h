@@ -1,7 +1,7 @@
 #ifndef ELF_H_
 #define ELF_H_
 
-#include <fs/fd.h>
+#include <mm/vmm.h>
 
 #define ELF_SIGNATURE 0x464C457F
 #define ELF64 2

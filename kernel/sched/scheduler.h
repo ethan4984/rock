@@ -39,7 +39,7 @@ struct task {
     pid_t ppid;
     size_t idle_cnt, status;
     uninit_hash_table(struct thread, threads);
-    uninit_vec(int, fd_list);
+    uninit_hash_table(int, fd_list);
     struct page_map *page_map;
     struct vfs_node *working_dir;
 };

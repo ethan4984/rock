@@ -1,8 +1,27 @@
+#include <sched/scheduler.h>
 #include <fs/fd.h>
 #include <types.h>
 #include <debug.h>
 
 static_hash_table(struct fd, fd_list);
+
+static int translate_internal_fd(int fd) {
+    struct core_local *core_local = get_core_local(CURRENT_CORE);
+    struct task *current_task = hash_search(struct task, tasks, core_local->pid);
+
+    int *ptr = hash_search(int, current_task->fd_list, fd);
+    if(ptr == NULL) { 
+        set_errno(EBADF);
+        return -1;
+    }
+
+    return *ptr;
+}
+
+int fd_open_task(struct task *task, char *path, int flags) {
+    int fd = open(path, flags);
+    return hash_push(int, task->fd_list, fd);
+}
 
 int open(char *path, int flags) {
     if(vfs_open(path, flags) == -1)
@@ -25,9 +44,20 @@ int open(char *path, int flags) {
     return hash_push(struct fd, fd_list, fd);
 }
 
-void syscall_open(struct regs *regs) {
+int syscall_open(struct regs *regs) {
     int fd = open((void*)regs->rdi, (int)regs->rsi);
-    regs->rax = fd;
+
+    if(fd == -1) {
+        regs->rax = -1;
+        return -1;
+    }
+
+    struct core_local *core_local = get_core_local(CURRENT_CORE);
+    struct task *current_task = hash_search(struct task, tasks, core_local->pid);
+
+    regs->rax = hash_push(int, current_task->fd_list, fd);
+
+    return regs->rax;
 }
 
 int read(int fd, void *buf, size_t cnt) {
@@ -47,8 +77,16 @@ int read(int fd, void *buf, size_t cnt) {
     return ret;
 }
 
-void syscall_read(struct regs *regs) {
-    regs->rax = read((int)regs->rdi, (void*)regs->rsi, regs->rdx);
+int syscall_read(struct regs *regs) {
+    int internal_fd = translate_internal_fd(regs->rdi);
+    if(internal_fd == -1) {
+        regs->rax = -1;
+        return -1;
+    }
+
+    regs->rax = read(internal_fd, (void*)regs->rsi, regs->rdx);
+
+    return regs->rax;
 }
 
 int write(int fd, void *buf, size_t cnt) {
@@ -67,8 +105,22 @@ int write(int fd, void *buf, size_t cnt) {
     return ret;
 }
 
-void syscall_write(struct regs *regs) {
-    regs->rax = write((int)regs->rdi, (void*)regs->rsi, regs->rdx);
+int syscall_write(struct regs *regs) {
+    int internal_fd = translate_internal_fd(regs->rdi);
+    if(internal_fd == -1) {
+        regs->rax = -1;
+        return -1;
+    }
+
+    if(regs->rdi == 1) {
+        char *str = kcalloc(regs->rdx + 1);
+        strncpy(str, (void*)regs->rsi, regs->rdx);
+        kprintf("stdout: %s\n", str);
+    }
+
+    regs->rax = write(internal_fd, (void*)regs->rsi, regs->rdx);
+
+    return regs->rax;
 }
 
 int lseek(int fd, off_t off, int whence) {
@@ -90,8 +142,16 @@ int lseek(int fd, off_t off, int whence) {
     return -1;
 }
 
-void syscall_lseek(struct regs *regs) {
-    regs->rax = lseek((int)regs->rdi, (off_t)regs->rsi, (int)regs->rdx);
+int syscall_lseek(struct regs *regs) {
+    int internal_fd = translate_internal_fd(regs->rdi);
+    if(internal_fd == -1) {
+        regs->rax = -1;
+        return -1;
+    }
+
+    regs->rax = lseek(internal_fd, (off_t)regs->rsi, (int)regs->rdx);
+
+    return regs->rax;
 }
 
 int close(int fd) {
@@ -104,8 +164,21 @@ int close(int fd) {
     return hash_remove(struct fd, fd_list, (size_t)fd);
 }
 
-void syscall_close(struct regs *regs) {
-    regs->rax = close((int)regs->rdi);
+int syscall_close(struct regs *regs) {
+    int internal_fd = translate_internal_fd(regs->rdi);
+    if(internal_fd == -1) {
+        regs->rax = -1;
+        return -1;
+    }
+
+    struct core_local *core_local = get_core_local(CURRENT_CORE);
+    struct task *current_task = hash_search(struct task, tasks, core_local->pid);
+
+    close(internal_fd);
+    hash_remove(int, current_task->fd_list, regs->rdi);
+    regs->rax = regs->rdi;
+
+    return regs->rax;
 }
 
 int dup(int fd) {
@@ -120,8 +193,16 @@ int dup(int fd) {
     return hash_push(struct fd, fd_list, new_fd);
 }
 
-void syscall_dup(struct regs *regs) {
-    regs->rax = dup((int)regs->rdi);
+int syscall_dup(struct regs *regs) {
+    int internal_fd = translate_internal_fd(regs->rdi);
+    if(internal_fd == -1) {
+        regs->rax = -1;
+        return -1;
+    }
+
+    regs->rax = dup(internal_fd);
+
+    return regs->rax;
 }
 
 int dup2(int old_fd, int new_fd) {
@@ -141,15 +222,25 @@ int dup2(int old_fd, int new_fd) {
     return hash_push(struct fd, fd_list, fd);
 }
 
-void syscall_dup2(struct regs *regs) {
-    regs->rax = dup2((int)regs->rdi, (int)regs->rsi);
+int syscall_dup2(struct regs *regs) {
+    int internal_fd = translate_internal_fd(regs->rdi);
+    if(internal_fd == -1) {
+        regs->rax = -1;
+        return -1;
+    }
+
+    regs->rax = dup2(internal_fd, (int)regs->rsi);
+
+    return regs->rax;
 }
 
 void syscall_stat(struct regs *regs) {
     char *path = (void*)regs->rdi;
     struct stat *stat = (void*)regs->rsi;
 
-    int fd = open(path, 0);
+    struct regs open_regs = { .rdi = regs->rdi, .rsi = 0 };
+
+    int fd = syscall_open(&open_regs);
     if(fd == -1) {
         regs->rax = -1;
         return;
@@ -160,18 +251,25 @@ void syscall_stat(struct regs *regs) {
     regs->rax = 0;
 }
 
-void syscall_fstat(struct regs *regs) {
-    int fd = (int)regs->rdi;
+int syscall_fstat(struct regs *regs) {
+    int internal_fd = translate_internal_fd(regs->rdi);
+    if(internal_fd == -1) {
+        regs->rax = -1;
+        return -1;
+    }
+    
     struct stat *stat = (void*)regs->rsi;
 
-    struct fd *fd_struct = hash_search(struct fd, fd_list, (size_t)fd);
+    struct fd *fd_struct = hash_search(struct fd, fd_list, (size_t)internal_fd);
     if(fd_struct == NULL) {
         regs->rax = -1;
-        return;
+        return -1;
     }
     
     *stat = fd_struct->vfs_node->stat; 
     regs->rax = 0;
+
+    return 0;
 }
 
 #define F_DUPFD 1
@@ -189,10 +287,15 @@ void syscall_fstat(struct regs *regs) {
 #define FD_CLOEXEC 1
 
 void syscall_fcntl(struct regs *regs) {
-    int fd = (int)regs->rdi;
+    int internal_fd = translate_internal_fd(regs->rdi);
+    if(internal_fd == -1) {
+        regs->rax = -1;
+        return;
+    }
+
     int cmd = (int)regs->rsi;
 
-    struct fd *fd_struct = hash_search(struct fd, fd_list, fd);
+    struct fd *fd_struct = hash_search(struct fd, fd_list, internal_fd);
     if(fd_struct == NULL) {
         regs->rax = -1;
         return;
@@ -200,7 +303,7 @@ void syscall_fcntl(struct regs *regs) {
 
     switch(cmd) {
         case F_DUPFD: 
-            regs->rax = (size_t)dup2(fd, (int)regs->rdx);
+            regs->rax = (size_t)dup2(internal_fd, (int)regs->rdx);
             return;
         case F_GETFD:
             regs->rax = (size_t)((regs->rdx & FD_CLOEXEC) ? O_CLOEXEC : 0);
@@ -220,5 +323,4 @@ void syscall_fcntl(struct regs *regs) {
     }
 
     regs->rax = 0;
-    return;
 }

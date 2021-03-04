@@ -135,6 +135,18 @@ struct task *sched_create_task(struct task *parent, struct page_map *page_map) {
     struct task *new_task = hash_search(struct task, tasks, new_pid);
     new_task->pid = new_pid;
 
+    char *stdout_name = kcalloc(256);
+    char *stderr_name = kcalloc(256);
+    char *stdin_name = kcalloc(256);
+
+    sprintf(stdout_name, "/dev/stdout%x", 1,  new_pid);
+    sprintf(stderr_name, "/dev/stderr%x", 1, new_pid);
+    sprintf(stdin_name, "/dev/stdin%x", 1, new_pid);
+
+    fd_open_task(new_task, stdin_name, O_CREAT);
+    fd_open_task(new_task, stdout_name, O_CREAT);
+    fd_open_task(new_task, stderr_name, O_CREAT);
+
     return new_task;
 }
 
@@ -340,12 +352,12 @@ int sched_exit(struct regs *regs) {
     struct core_local *local = get_core_local(CURRENT_CORE);
     struct task *current_task = hash_search(struct task, tasks, local->pid);
 
-    for(size_t i = 0; i < current_task->fd_list.element_cnt; i++) {
-        int fd = *vec_search(int, current_task->fd_list, i);
+    for(size_t i = 0; i < current_task->fd_list.hash_cnt; i++) {
+        int fd = *vec_search(int, current_task->fd_list.data_map, i);
         close(fd);
     }
 
-    vec_delete(current_task->fd_list);
+    hash_delete(current_task->fd_list);
 
     for(size_t i = 0; i < current_task->threads.hash_cnt; i++) {
         struct thread *thread = vec_search(struct thread, current_task->threads.data_map, i);

@@ -28,7 +28,7 @@ int ramfs_write(struct vfs_node *vfs_node, off_t off, off_t cnt, void *buf) {
 
     memcpy8(ramfs_node->buf + off, buf, cnt);
 
-    return 0;
+    return cnt;
 }
 
 int ramfs_read(struct vfs_node *vfs_node, off_t off, off_t cnt, void *buf) {
@@ -44,7 +44,7 @@ int ramfs_read(struct vfs_node *vfs_node, off_t off, off_t cnt, void *buf) {
 
     memcpy8(buf, ramfs_node->buf + off, cnt);
 
-    return 0;
+    return cnt;
 }
 
 int ramfs_delete(struct vfs_node *vfs_node) {
