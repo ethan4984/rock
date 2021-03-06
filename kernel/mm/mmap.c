@@ -134,3 +134,8 @@ void syscall_mmap(struct regs *regs) {
     struct core_local *local = get_core_local(CURRENT_CORE);
     regs->rax = (size_t)mmap(local->page_map, (void*)regs->rdi, regs->rsi, (int)regs->rdx | (1 << 2), (int)regs->r10, (int)regs->r8, (int64_t)regs->r9);
 }
+
+void syscall_munmap(struct regs *regs) {
+    struct core_local *local = get_core_local(CURRENT_CORE);
+    regs->rax = (size_t)munmap(local->page_map, (void*)regs->rdi, regs->rsi);
+}

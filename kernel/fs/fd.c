@@ -2,6 +2,7 @@
 #include <fs/fd.h>
 #include <types.h>
 #include <debug.h>
+#include <tty.h>
 
 static_hash_table(struct fd, fd_list);
 
@@ -115,7 +116,12 @@ int syscall_write(struct regs *regs) {
     if(regs->rdi == 1) {
         char *str = kcalloc(regs->rdx + 1);
         strncpy(str, (void*)regs->rsi, regs->rdx);
-        kprintf("stdout: %s\n", str);
+
+        for(size_t i = 0; i < strlen(str); i++) {
+            tty_print_char(hash_search(struct tty, tty_list, 0), str[i]);
+        }
+
+        kfree(str);
     }
 
     regs->rax = write(internal_fd, (void*)regs->rsi, regs->rdx);

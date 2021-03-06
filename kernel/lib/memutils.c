@@ -186,6 +186,7 @@ char *str_congregate(char *str1, char *str2) {
     char *new_str = kcalloc(strlen(str1) + strlen(str2) + 1);
     strncpy(new_str, str1, strlen(str1));
     strncpy(new_str + strlen(str1), str2, strlen(str2));
+    new_str[strlen(new_str)] = '\0';
     return new_str;
 }
 

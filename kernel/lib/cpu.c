@@ -50,10 +50,14 @@ void syscall_get_gs_base(struct regs *regs) {
 
 void set_errno(uint64_t errno) {
     struct core_local *local = get_core_local(CURRENT_CORE);
+    if(local == NULL) 
+        return;
     local->errno = errno;
 }
 
 uint64_t get_errno(uint64_t errno) {
     struct core_local *local = get_core_local(CURRENT_CORE);
+    if(local == NULL) 
+        return 0;
     return local->errno;
 }

@@ -19,7 +19,7 @@
 void ktask() {
     const char *argv[] = { "/test", NULL };
     const char *envp[] = { 
-        "HOME=/root",
+        "HOME=/",
         "PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
         "TERM=linux",
         NULL
@@ -52,6 +52,8 @@ void kmain(void *stivale_phys) {
     vfs_mount_dev("/dev/SD0-0", "/");
 
     smp_init();
+
+    tty_init(stivale);
 
     struct task *task = sched_create_task(NULL, NULL);
     sched_create_thread(task->pid, NULL, NULL, NULL, (uint64_t)ktask, 0x8);

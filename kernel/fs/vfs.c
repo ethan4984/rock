@@ -35,7 +35,7 @@ struct vfs_node *vfs_create_node(struct vfs_node *parent, char *name) {
 }
 
 struct vfs_node *vfs_create_node_deep(char *path) {
-    char *buffer = kmalloc(strlen(path));
+    char *buffer = kmalloc(strlen(path) + 1);
     strcpy(buffer, path);
 
     struct vfs_node *node = &vfs_root_node;

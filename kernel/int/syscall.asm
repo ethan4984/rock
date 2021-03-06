@@ -22,6 +22,7 @@ extern syscall_exit
 extern syscall_yeild
 extern syscall_log
 extern syscall_mmap
+extern syscall_munmap
 extern syscall_chdir
 
 syscall_list:
@@ -48,6 +49,7 @@ dq syscall_exit
 dq syscall_yeild
 dq syscall_log
 dq syscall_mmap
+dq syscall_munmap
 dq syscall_chdir
 
 .end:
