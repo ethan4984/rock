@@ -20,8 +20,13 @@ rockOS is a simple Unix-Like operating system using mlibc
   - DRIVERS
     - pci
     - ahci
+    - tty
     - nvme (coming soon)
-    - e1000 (work in progrss0
+    - e1000 (work in progrss)
+
+# Goals
+  - Fully port bash, we already can run bash but it is missing a lot of things
+  - Create a network stack with TCP, ARP, UDP, DHCP, ICMP, etc
 
 # Build Instructions
 
