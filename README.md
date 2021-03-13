@@ -1,22 +1,27 @@
 # Rock
 
-This is a simple multicore operating system that is made for fun
+rockOS is a simple Unix-Like operating system using mlibc
 
 # Features
 
 - x86_64 kernel
-  - PMM
-  - VMM
-  - SMP
-  - APIC
-  - AHCI
-  - EXT2
-  - PCI
-  - VFS
-  
-# Demo
-
-![](demo.jpg)
+  - MM
+    - vmm
+    - pmm
+    - slab allocator
+  - FS
+    - ext2
+    - ramfs
+    - devfs
+    - vfs
+  - SCHED
+    - smp
+    - preemptive multicore scheduler
+  - DRIVERS
+    - pci
+    - ahci
+    - nvme (coming soon)
+    - e1000 (work in progrss0
 
 # Build Instructions
 
@@ -28,10 +33,9 @@ Here are some programs you will need to build rock:
   - `sed`
   - `wget`
   - `git`
+  - `xbstrap`
   
-Now that you have those just run the build script `tools/build_tools.sh`
-
-The build script compiles a cross compiler along with cloning into limine
+Once you have those run the script `build_tools.sh` in `/tools` and then do `make build_toolchain` in `/user`
 
 To compile and run rock, there are three default build targets available:
   - `make qemu`
