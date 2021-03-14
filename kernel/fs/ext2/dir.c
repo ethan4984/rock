@@ -8,16 +8,23 @@ static int find_dir_relative(struct devfs_node *devfs_node, struct ext2_inode *i
 
     for(uint32_t i = 0; i < inode->size32l;) {
         struct ext2_dir *dir = (struct ext2_dir*)((uint64_t)buffer + i);
+    
+        char *tmp = kcalloc(dir->name_length + 1);
+        memcpy8((void*)tmp, (void*)dir->name, dir->name_length);
 
-        if(strncmp(dir->name, path, strlen(path)) == 0) {
+        if(strcmp(path, tmp) == 0) {
             if(dir->inode == 0) {
                 kfree(buffer);
+                kfree(tmp);
                 return -1;
             }
             *ret = *dir;
             kfree(buffer);
+            kfree(tmp);
             return 0;
         }
+
+        kfree(tmp);
 
         uint32_t expected_size = ALIGN_UP(sizeof(struct ext2_dir) + dir->name_length, 4);
         if(dir->entry_size != expected_size)

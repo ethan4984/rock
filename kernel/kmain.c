@@ -17,7 +17,7 @@
 #include <sched/scheduler.h>
 
 void ktask() {
-    const char *argv[] = { "/test", NULL };
+    const char *argv[] = { "/usr/bin/bash", "--version", NULL };
     const char *envp[] = { 
         "HOME=/",
         "PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
@@ -25,7 +25,7 @@ void ktask() {
         NULL
     };
 
-    sched_exec("/test", argv, envp, SCHED_USER | SCHED_ELF);
+    sched_exec("/usr/bin/bash", argv, envp, SCHED_USER | SCHED_ELF);
 
     for(;;)
         asm ("pause");
