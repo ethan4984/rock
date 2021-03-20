@@ -163,6 +163,8 @@ int sched_delete_thread(struct task *parent, int tid) {
     return hash_remove(struct thread, parent->threads, (size_t)tid);
 }
 
+
+
 struct thread *sched_create_thread(pid_t pid, struct aux *aux, const char **argv, const char **envp, uint64_t starting_addr, uint16_t cs) {
     struct task *task = hash_search(struct task, tasks, pid);
     if(task == NULL)
@@ -273,6 +275,29 @@ void syscall_getppid(struct regs *regs) {
     struct core_local *local = get_core_local(CURRENT_CORE);
     struct task *task = hash_search(struct task, tasks, local->pid);
     regs->rax = task->ppid;
+}
+
+void syscall_fork(struct regs *regs) {
+    struct core_local *local = get_core_local(CURRENT_CORE);
+    struct task *current_task = hash_search(struct task, tasks, local->pid);
+    struct thread *current_thread = hash_search(struct thread, current_task->threads, local->tid);
+
+    struct page_map *page_map = kmalloc(sizeof(struct page_map));
+    vmm_pagemap_copy(page_map, current_task->page_map);
+
+    struct task *new_task = sched_create_task(current_task, page_map);
+
+    struct thread new_thread = {    .status = SCHED_WAITING,
+                                    .kernel_stack = (size_t)pmm_alloc(THREAD_STACK_SIZE / PAGE_SIZE) + THREAD_STACK_SIZE,
+                                    .regs = current_thread->regs,
+                                    .user_gs_base = current_thread->user_gs_base,
+                                    .user_fs_base = current_thread->user_fs_base
+                               };
+
+    tid_t tid = hash_push(struct thread, new_task->threads, new_thread);
+    struct thread *thread = hash_search(struct thread, new_task->threads, tid);
+
+    regs->rax = new_task->pid;
 }
 
 int sched_exec(char *path, const char **argv, const char **envp, int mode) {

@@ -80,7 +80,7 @@ new file mode 100644
 index 0000000..ddc5004
 --- /dev/null
 +++ b/ports/mlibc-workdir/sysdeps/rock/generic/generic.cpp
-@@ -0,0 +1,321 @@
+@@ -0,0 +1,333 @@
 +#include <bits/ensure.h>
 +#include <mlibc/debug.hpp>
 +#include <mlibc/all-sysdeps.hpp>
@@ -162,6 +162,8 @@ index 0000000..ddc5004
 +#define SYSCALL_LOG 20
 +#define SYSCALL_MMAP 21
 +#define SYSCALL_MUNMAP 22
++#define SYSCALL_CHDIR 23
++#define SYSCALL_FORK 24
 +
 +namespace mlibc {
 +
@@ -236,6 +238,16 @@ index 0000000..ddc5004
 +    SYSCALL1(SYSCALL_CLOSE, fd);
 +    if (ret == -1)
 +        return errno;
++    return 0;
++}
++
++int sys_fork(pid_t *child) {
++    pid_t ret;
++    int errno;
++    SYSCALL0(SYSCALL_FORK);
++    if (ret == -1)
++        return errno;
++    *child = ret;
 +    return 0;
 +}
 +

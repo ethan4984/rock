@@ -1,3 +1,4 @@
+#include <sched/scheduler.h>
 #include <sched/smp.h>
 #include <cpu.h>
 
@@ -33,11 +34,23 @@ void cpu_init_features() {
 }
 
 void syscall_set_fs_base(struct regs *regs) {
+    struct core_local *local = get_core_local(CURRENT_CORE);
+    struct task *current_task = hash_search(struct task, tasks, local->pid);
+    struct thread *current_thread = hash_search(struct thread, current_task->threads, local->tid);
+
     set_user_fs(regs->rdi);    
+
+    current_thread->user_fs_base = regs->rdi;
 }
 
 void syscall_set_gs_base(struct regs *regs) {
+    struct core_local *local = get_core_local(CURRENT_CORE);
+    struct task *current_task = hash_search(struct task, tasks, local->pid);
+    struct thread *current_thread = hash_search(struct thread, current_task->threads, local->tid);
+
     set_user_gs(regs->rdi);
+
+    current_thread->user_gs_base = regs->rdi;
 }
 
 void syscall_get_fs_base(struct regs *regs) {

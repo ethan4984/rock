@@ -24,6 +24,7 @@ extern syscall_log
 extern syscall_mmap
 extern syscall_munmap
 extern syscall_chdir
+extern syscall_fork
 
 syscall_list:
 
@@ -51,6 +52,7 @@ dq syscall_log
 dq syscall_mmap
 dq syscall_munmap
 dq syscall_chdir
+dq syscall_fork
 
 .end:
 

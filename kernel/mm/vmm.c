@@ -131,6 +131,39 @@ struct page_map *vmm_generic_page_map() {
     return page_map;
 }
 
+void vmm_pagemap_copy(struct page_map *in, struct page_map *out) {
+    in->pml4 = (void*)(pmm_calloc(1) + HIGH_VMA);
+    memcpy64(in->pml4, out->pml4, 0x200);
+
+    for(int i = 0; i < 0x200; i++) {
+        if(out->pml4[i] & 0b1) {
+            in->pml4[i] = pmm_calloc(1) | GET_PMLX_FLAGS(out->pml4[i]);
+            uint64_t *pml3 = (uint64_t*)(GET_PMLX_ADDR(in->pml4[i]) + HIGH_VMA), *m1pml3 = (uint64_t*)(GET_PMLX_ADDR(out->pml4[i]) + HIGH_VMA);
+            memcpy64(pml3, m1pml3, 0x200);
+
+            for(int j = 0; j < 0x200; j++) {
+                if(m1pml3[j] & 0b1 && !(m1pml3[j] & (1 << 7))) {
+                    pml3[j] = pmm_calloc(1) | GET_PMLX_FLAGS(m1pml3[j]);
+                    uint64_t *pml2 = (uint64_t*)(GET_PMLX_ADDR(pml3[j]) + HIGH_VMA), *m1pml2 = (uint64_t*)(GET_PMLX_ADDR(m1pml3[j])  + HIGH_VMA);
+                    memcpy64(pml2, m1pml2, 0x200);
+
+                    for(int k = 0; k < 0x200; k++) {
+                        if(m1pml2[k] & 0b1 && !(m1pml2[k] & (1 << 7))) {
+                            pml2[k] = pmm_calloc(1) | GET_PMLX_FLAGS(m1pml2[k]);
+                            uint64_t *pml1 = (uint64_t*)(GET_PMLX_ADDR(pml2[k]) + HIGH_VMA), *m1pml1 = (uint64_t*)(GET_PMLX_ADDR(m1pml2[k]) + HIGH_VMA);
+                            memcpy64(pml1, m1pml1, 0x200);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    in->bitmap = kmalloc(out->bm_size);
+    memcpy8(in->bitmap, out->bitmap, out->bm_size);
+    in->bm_size = out->bm_size;
+}
+
 void vmm_init() {
     kernel_mapping = (struct page_map) { .pml4 = (uint64_t*)(pmm_calloc(1) + HIGH_VMA) };
 
@@ -148,5 +181,3 @@ void vmm_init() {
 
     vmm_page_map_init(&kernel_mapping);
 }
-
-
