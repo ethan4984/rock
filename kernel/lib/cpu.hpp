@@ -119,14 +119,6 @@ void spin_lock(T *lock) {
     while(__atomic_test_and_set(lock, __ATOMIC_ACQUIRE));
 }
 
-/*inline void spin_lock(void *lock) {
-    while(__atomic_test_and_set((char*)lock, __ATOMIC_ACQUIRE));
-}
-
-inline void spin_release(void *lock) {
-    __atomic_clear((char*)lock, __ATOMIC_RELEASE);
-}*/
-
 template <typename T>
 void spin_release(T *lock) {
     __atomic_clear(lock, __ATOMIC_RELEASE);

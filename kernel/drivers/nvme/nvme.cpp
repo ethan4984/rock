@@ -111,7 +111,7 @@ device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0) {
             return;
         }
 
-        namespace_list.push(ns(*ns_id));
+        namespace_list.push(ns(*ns_id, nsid_list[i]));
 
         print("[NVME] Namespace ID {}\n", nsid_list[i]);
         print("[NVME] \tLBA cnt: {x}\n", namespace_list[i].lba_cnt);
@@ -150,8 +150,7 @@ int device::get_ctrl_id() {
     new_command.ident.cns = 1;
     new_command.ident.prp1 = reinterpret_cast<size_t>(ctrl_id) - vmm::high_vma;
     
-    uint16_t status = admin_queue.send_cmd(new_command);
-    if(status)
+    if(admin_queue.send_cmd(new_command))
         return -1;
 
     return 0;
@@ -167,8 +166,7 @@ int device::get_namespace_id(int num) {
     new_command.ident.prp1 = reinterpret_cast<size_t>(ns_id) - vmm::high_vma;
     new_command.ident.prp2 = 0;
 
-    uint16_t status = admin_queue.send_cmd(new_command);
-    if(status)
+    if(admin_queue.send_cmd(new_command))
         return -1;
 
     return 0;
@@ -208,8 +206,7 @@ int device::create_io_queue(queue new_queue) {
     create_cq_command.create_cq.qsize = new_queue.entry_cnt - 1;
     create_cq_command.create_cq.cq_flags = (1 << 0);
 
-    uint16_t status = admin_queue.send_cmd(create_cq_command);
-    if(status)
+    if(admin_queue.send_cmd(create_cq_command))
         return -1;
 
     command create_sq_command;
@@ -222,8 +219,7 @@ int device::create_io_queue(queue new_queue) {
     create_sq_command.create_sq.qsize = new_queue.entry_cnt - 1;
     create_sq_command.create_sq.sq_flags = (1 << 0) | (2 << 1);
 
-    status = admin_queue.send_cmd(create_sq_command);
-    if(status)
+    if(admin_queue.send_cmd(create_sq_command))
         return -1;
 
     return 0;
@@ -272,9 +268,27 @@ uint16_t queue::send_cmd(command cmd) {
     return 0;
 }
 
-ns::ns(namespace_id ns_id) : ns_id(ns_id) {
+ns::ns(namespace_id ns_id, size_t nsid) : nsid(nsid), ns_id(ns_id) {
     lba_cnt = ns_id.nsze;
     lba_size = 1 << ns_id.lbaf_list[(unsigned)ns_id.flbas & 0b11111].ds;
+}
+
+int ns::rw_lba(void *buf, size_t start, size_t cnt, bool rw) {
+    command new_command;
+    memset8(reinterpret_cast<uint8_t*>(&new_command), 0, sizeof(command));
+
+    new_command.rw.opcode = rw ? 1 : 2;
+    new_command.rw.nsid = nsid;
+    new_command.rw.slba = start;
+    new_command.rw.length = cnt - 1;
+    new_command.rw.prp1 = reinterpret_cast<size_t>(buf) - vmm::high_vma;
+
+    smp::cpu local = smp::core_local();
+
+    if(local.nvme_io_queue->send_cmd(new_command))
+        return -1;
+
+    return 0;
 }
 
 }

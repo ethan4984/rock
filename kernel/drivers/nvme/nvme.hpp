@@ -129,6 +129,24 @@ struct [[gnu::packed]] completion {
     uint16_t command_id;
     uint16_t status;
 };
+
+struct [[gnu::packed]] io_rw {
+    uint8_t opcode;
+    uint8_t flags;
+    uint16_t command_id;
+    uint32_t nsid;
+    uint64_t rsvd2;
+    uint64_t metadata;
+    uint64_t prp1;
+    uint64_t prp2;
+    uint64_t slba;
+    uint16_t length;
+    uint16_t control;
+    uint32_t dsmgmt;
+    uint32_t reftag;
+    uint16_t apptag;
+    uint16_t appmask;
+};
  
 struct command {
     union {
@@ -139,6 +157,7 @@ struct command {
         features fet;
         identify ident;
         format_command format_cmd;
+        io_rw rw;
     };
 };
 
@@ -270,11 +289,14 @@ struct queue {
 
 class ns {
 public:
-    ns(namespace_id ns_id);
+    ns(namespace_id ns_id, size_t nsid);
     ns() = default;
+
+    int rw_lba(void *buf, size_t start, size_t cnt, bool rw);
 
     size_t lba_cnt;
     size_t lba_size;
+    size_t nsid;
 private:
     namespace_id ns_id;
 };
@@ -312,7 +334,7 @@ private:
  
     size_t lock;
 };
- 
+
 inline lib::vector<device> device_list;
  
 } 
