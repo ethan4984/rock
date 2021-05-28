@@ -1,11 +1,10 @@
 OUTPUT_FORMAT(elf64-x86-64)
-
-ENTRY(kmain)
+ENTRY(main)
 
 kernel_VMA_start = 0xffffffff80000000;
 
 SECTIONS {
-    . = kernel_VMA_start + 0x100000;
+    . = kernel_VMA_start + 0x200000;
 
     kernel_start = ALIGN(4K);
 
@@ -13,13 +12,7 @@ SECTIONS {
         KEEP(*(.stivalehdr))
     }
 
-    symlist = .;
-
-    .symtab : ALIGN(4K) { 
-        *(.symtab*) 
-    }
-
-    .text : ALIGN(4K) { 
+    .text : ALIGN(4K) {
         *(.text*)
     }
 
@@ -28,8 +21,13 @@ SECTIONS {
     }
 
     .data : ALIGN(4K) {
+        __ctors_start = .;
+        KEEP(*( .init_array ));
+        KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
+        __ctors_end = .;
         *(.data*)
     }
+ 
 
     .bss : ALIGN(4K) {
         *(.bss*)
