@@ -137,9 +137,15 @@ device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0) {
     for(size_t i = 0; i < smp::cpus.size(); i++) {
         smp::cpus[i].nvme_io_queue = new queue;
         *smp::cpus[i].nvme_io_queue = queue(queue_entries, qid_cnt++, registers, strides);
-
         create_io_queue(*smp::cpus[i].nvme_io_queue);
     }
+
+/*    uint64_t *block = reinterpret_cast<uint64_t*>(pmm::calloc(1) + vmm::high_vma);
+    memset64(block, ~(0ull), 0x1000 / 8);
+    namespace_list[0].rw_lba(block, 1, 1, 1);
+    memset64(block, 0, 0x1000 / 8);
+    namespace_list[0].rw_lba(block, 1, 1, 0);
+    print("{x}\n", block[0]);*/
 }
 
 int device::get_ctrl_id() { 

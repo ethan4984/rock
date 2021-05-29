@@ -75,8 +75,8 @@ struct fs {
         return -1;
     }
 
-    virtual int open(node *vfs_node) {
-        print("Warning: unimplemented filesystem call on node {} open<>\n", vfs_node->absolute_path);
+    virtual int open(node *vfs_node, uint16_t status) {
+        print("Warning: unimplemented filesystem call on node {} open<{}>\n", vfs_node->absolute_path, status);
         return -1;
     }
 
