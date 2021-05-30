@@ -18,6 +18,7 @@ public:
     string &operator= (string other);
     string &operator+= (const string &other);
     string operator+ (const string &other);
+    string operator+ (ssize_t number);
     char &operator[] (size_t index);
     char *operator++ ();
     char *operator++ (int);

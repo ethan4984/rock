@@ -110,6 +110,21 @@ string string::operator+ (const string &other) {
     return string(new_str, new_length);
 }
 
+string string::operator+ (ssize_t number) {
+    static char digits[] = "0123456789";
+    static char buffer[50];
+
+    char *str = &buffer[49];
+    *str = '\0';
+
+    do {
+        *--str = digits[number % 10];
+        number /= 10;
+    } while(number);
+
+    return *this + string(str);
+}
+
 size_t string::find_first(char c, size_t start) { 
     for(size_t i = start; i < _length; i++) {
         if(_raw[i] == c) 

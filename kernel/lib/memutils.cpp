@@ -16,8 +16,9 @@ void memset32(uint32_t *src, uint32_t data, size_t count) {
 }
 
 void memset64(uint64_t *src, uint64_t data, size_t count) {
-    for(size_t i = 0; i < count; i++)
+    for(size_t i = 0; i < count; i++) {
         *src++ = data;
+    }
 }
 
 void memcpy8(uint8_t *dest, uint8_t *src, size_t count) {

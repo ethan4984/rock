@@ -148,7 +148,8 @@ void scan_devices() {
                     case 6: // serial ata
                         break;
                     case 8: // nvme
-                        nvme::device_list.push(nvme::device(pci_device));
+                        nvme::device *new_device = new nvme::device(pci_device);
+                        nvme::device_list.push(new_device);
                 }
         }
     }

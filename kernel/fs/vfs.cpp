@@ -2,8 +2,6 @@
  
 namespace vfs {
  
-static node root_node("/", "/", "/", NULL);
- 
 node::node(lib::string absolute_path, lib::string relative_path, lib::string name, fs *filesystem, default_ioctl *ioctl_device) :
     absolute_path(absolute_path),
     relative_path(relative_path),

@@ -153,7 +153,7 @@ size_t alloc(size_t cnt, size_t align) {
 
 size_t calloc(size_t cnt, size_t align) {
     size_t allocation = alloc(cnt, align);
-    memset64((uint64_t*)(allocation + vmm::high_vma), 0, cnt * vmm::page_size / 8);
+    memset64((uint64_t*)(allocation + vmm::high_vma), 0, (cnt * vmm::page_size) / 8);
     return allocation;
 }
 

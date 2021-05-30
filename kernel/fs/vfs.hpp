@@ -45,6 +45,8 @@ private:
     void remove_cluster(node *cur);
 };
 
+inline node root_node("/", "/", "/", NULL);
+
 struct fs {
     explicit fs(size_t flags) : flags(flags) { }
     explicit fs() = default;

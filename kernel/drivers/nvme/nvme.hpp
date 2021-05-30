@@ -263,7 +263,7 @@ struct [[gnu::packed]] namespace_id {
 class device;
 
 struct queue {
-    queue(size_t queue_entry_cnt, size_t qid, volatile bar_regs *registers, size_t strides);
+    queue(device *parent, ssize_t qid);
     queue() = default;
     
     uint16_t send_cmd(command cmd);
@@ -274,17 +274,14 @@ struct queue {
     volatile uint32_t *submission_doorbell;
     volatile uint32_t *completion_doorbell;
 
-    volatile bar_regs *registers;
-
-    size_t entry_cnt;
     size_t qid;
-    size_t strides;
     size_t sq_head;
     size_t sq_tail;
     size_t cq_head;
     size_t cq_tail;
     size_t phase;
-    size_t command_id;
+
+    device *parent;
 };
 
 class ns {
@@ -300,6 +297,8 @@ public:
 private:
     namespace_id ns_id;
 };
+
+struct msd;
  
 class device {
 public: 
@@ -313,6 +312,7 @@ public:
     lib::vector<uint32_t> get_nsid_list();
 
     friend queue;
+    friend msd;
 private: 
     pci::device pci_device;
     pci::bar bar;
@@ -335,7 +335,7 @@ private:
     size_t lock;
 };
 
-inline lib::vector<device> device_list;
+inline lib::vector<device*> device_list;
  
 } 
  

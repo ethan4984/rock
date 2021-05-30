@@ -3,10 +3,61 @@
 #include <int/apic.hpp>
 #include <acpi/madt.hpp>
 #include <mm/vmm.hpp>
+#include <fs/devfs.hpp>
+#include <map.hpp>
+#include <memutils.hpp>
 
 namespace nvme {
 
-device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0) {
+struct msd : dev::msd {
+    ssize_t read(size_t off, size_t cnt, void *buf);
+    ssize_t write(size_t off, size_t cnt, void *buf);
+};
+
+ssize_t msd::read(size_t off, size_t cnt, void *buf) {
+    smp::cpu local = smp::core_local();
+    device *dev = local.nvme_io_queue->parent;
+
+    ns &active_namespace = dev->namespace_list[0];
+
+    size_t lba_start = off / active_namespace.lba_size;
+    size_t lba_cnt = div_roundup(cnt, active_namespace.lba_size);
+
+    uint8_t *lba_buffer = reinterpret_cast<uint8_t*>(pmm::alloc(div_roundup(lba_cnt * active_namespace.lba_size, vmm::page_size)) + vmm::high_vma); 
+
+    active_namespace.rw_lba(lba_buffer, lba_start, lba_cnt, 0);
+    size_t lba_offset = off % active_namespace.lba_size;
+    memcpy8(reinterpret_cast<uint8_t*>(buf), lba_buffer + lba_offset, cnt);
+
+    pmm::free(reinterpret_cast<size_t>(lba_buffer) - vmm::high_vma, align_up(lba_cnt * active_namespace.lba_size, vmm::page_size));
+
+    return cnt;
+}
+
+ssize_t msd::write(size_t off, size_t cnt, void *buf) {
+    smp::cpu local = smp::core_local();
+    device *dev = local.nvme_io_queue->parent;
+
+    ns &active_namespace = dev->namespace_list[0];
+
+    size_t lba_start = off / active_namespace.lba_size;
+    size_t lba_cnt = div_roundup(cnt, active_namespace.lba_size);
+
+    uint8_t *lba_buffer = reinterpret_cast<uint8_t*>(pmm::alloc(div_roundup(lba_cnt * active_namespace.lba_size, vmm::page_size)) + vmm::high_vma); 
+
+    active_namespace.rw_lba(lba_buffer, lba_start, lba_cnt, 0);
+    size_t lba_offset = off % active_namespace.lba_size;
+    memcpy8(lba_buffer + lba_offset, reinterpret_cast<uint8_t*>(buf), cnt);
+    active_namespace.rw_lba(lba_buffer, lba_start, lba_cnt, 1);
+
+    pmm::free(reinterpret_cast<size_t>(lba_buffer) - vmm::high_vma, div_roundup(lba_cnt * active_namespace.lba_size, vmm::page_size));
+
+    return cnt;
+}
+
+device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0), lock(0) {
+    asm volatile ("" ::: "memory");
+    
     pci_device.become_bus_master();
     pci_device.enable_mmio();
     pci_device.get_bar(bar, 0);
@@ -62,7 +113,7 @@ device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0) {
     queue_entries = registers->cap & 0xffff; // max queue entries
     strides = (registers->cap >> 32) & 0xf; // max strides
 
-    admin_queue = queue(queue_entries, qid_cnt++, registers, strides);
+    admin_queue = queue(this, qid_cnt++);
 
     registers->aqa = (queue_entries - 1) << 16 | (queue_entries - 1);
     registers->asq = reinterpret_cast<size_t>(admin_queue.submission_queue) - vmm::high_vma;
@@ -92,7 +143,7 @@ device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0) {
     ns_id = reinterpret_cast<namespace_id*>(pmm::alloc(1) + vmm::high_vma);
 
     if(get_ctrl_id() == -1) {
-        print("[NVME] Fatal Command Error\n");
+        print("[NVME] Unable to get controller id\n");
         return;
     }
 
@@ -107,7 +158,7 @@ device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0) {
 
     for(size_t i = 0; i < nsid_list.size(); i++) {
         if(get_namespace_id(nsid_list[i]) == -1) {
-            print("[NVME] Fatal Command Error\n");
+            print("[NVME] Unable to get namespace id\n");
             return;
         }
 
@@ -130,15 +181,24 @@ device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0) {
     } (smp::cpus.size() * 2);
 
     if(status) {
-        print("[NVME] Failed command\n");
+        print("[NVME] Unable to set queue cnt\n");
         return;
     }
 
     for(size_t i = 0; i < smp::cpus.size(); i++) {
         smp::cpus[i].nvme_io_queue = new queue;
-        *smp::cpus[i].nvme_io_queue = queue(queue_entries, qid_cnt++, registers, strides);
+        *smp::cpus[i].nvme_io_queue = queue(this, qid_cnt++);
         create_io_queue(*smp::cpus[i].nvme_io_queue);
     }
+
+    msd *new_msd = new msd;
+
+    new_msd->device_prefix = "nvme";
+    new_msd->device_index = device_list.size();
+    new_msd->sector_size = namespace_list[0].lba_size;
+    new_msd->partition_cnt = 0;
+    
+    dev::scan_partitions(new_msd);
 
 /*    uint64_t *block = reinterpret_cast<uint64_t*>(pmm::calloc(1) + vmm::high_vma);
     memset64(block, ~(0ull), 0x1000 / 8);
@@ -209,7 +269,7 @@ int device::create_io_queue(queue new_queue) {
     create_cq_command.create_cq.opcode = opcode_create_cq;
     create_cq_command.create_cq.prp1 = reinterpret_cast<size_t>(new_queue.completion_queue) - vmm::high_vma;
     create_cq_command.create_cq.cqid = new_queue.qid;
-    create_cq_command.create_cq.qsize = new_queue.entry_cnt - 1;
+    create_cq_command.create_cq.qsize = new_queue.parent->queue_entries - 1;
     create_cq_command.create_cq.cq_flags = (1 << 0);
 
     if(admin_queue.send_cmd(create_cq_command))
@@ -222,7 +282,7 @@ int device::create_io_queue(queue new_queue) {
     create_sq_command.create_sq.prp1 = reinterpret_cast<size_t>(new_queue.submission_queue) - vmm::high_vma;
     create_sq_command.create_sq.sqid = new_queue.qid;
     create_sq_command.create_sq.cqid = new_queue.qid;
-    create_sq_command.create_sq.qsize = new_queue.entry_cnt - 1;
+    create_sq_command.create_sq.qsize = new_queue.parent->queue_entries - 1;
     create_sq_command.create_sq.sq_flags = (1 << 0) | (2 << 1);
 
     if(admin_queue.send_cmd(create_sq_command))
@@ -231,25 +291,16 @@ int device::create_io_queue(queue new_queue) {
     return 0;
 }
 
-queue::queue(size_t entry_cnt, size_t qid, volatile bar_regs *registers, size_t strides) :  registers(registers),
-                                                                                            entry_cnt(entry_cnt),
-                                                                                            qid(qid),
-                                                                                            strides(strides),
-                                                                                            sq_head(0),
-                                                                                            sq_tail(0),
-                                                                                            cq_head(0),
-                                                                                            cq_tail(0),
-                                                                                            phase(1),
-                                                                                            command_id(0) { 
-    submission_queue = reinterpret_cast<command*>(pmm::calloc(div_roundup(entry_cnt * sizeof(command), vmm::page_size)) + vmm::high_vma);
-    completion_queue = reinterpret_cast<completion*>(pmm::calloc(div_roundup(entry_cnt * sizeof(completion), vmm::page_size)) + vmm::high_vma);
-    submission_doorbell = reinterpret_cast<uint32_t*>(reinterpret_cast<size_t>(registers) + vmm::page_size + (2 * qid * (4 << strides)));
-    completion_doorbell = reinterpret_cast<uint32_t*>(reinterpret_cast<size_t>(registers) + vmm::page_size + ((2 * qid + 1) * (4 << strides)));
+queue::queue(device *parent, ssize_t qid) : qid(qid), sq_head(0), sq_tail(0), cq_head(0), cq_tail(0), phase(1), parent(parent) {
+    submission_queue = reinterpret_cast<command*>(pmm::alloc(div_roundup(parent->queue_entries * sizeof(command), vmm::page_size)) + vmm::high_vma);
+    completion_queue = reinterpret_cast<completion*>(pmm::alloc(div_roundup(parent->queue_entries * sizeof(completion), vmm::page_size)) + vmm::high_vma);
+    submission_doorbell = reinterpret_cast<uint32_t*>(reinterpret_cast<size_t>(parent->registers) + vmm::page_size + (2 * qid * (4 << parent->strides)));
+    completion_doorbell = reinterpret_cast<uint32_t*>(reinterpret_cast<size_t>(parent->registers) + vmm::page_size + ((2 * qid + 1) * (4 << parent->strides)));
 }
 
 uint16_t queue::send_cmd(command cmd) {
     submission_queue[sq_tail] = cmd;
-    if(++sq_tail == entry_cnt)
+    if(++sq_tail == parent->queue_entries)
         sq_tail = 0;
 
     *(submission_doorbell) = sq_tail;
@@ -264,7 +315,7 @@ uint16_t queue::send_cmd(command cmd) {
         return completion_queue[cq_head].status;
     }
 
-    if(++cq_head == entry_cnt) {
+    if(++cq_head == parent->queue_entries) {
         cq_head = 0;
         phase = !phase;
     }

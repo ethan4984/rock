@@ -56,6 +56,8 @@ extern "C" int main(size_t stivale_phys) {
     kmm::cache(NULL, 0, 131072);
     kmm::cache(NULL, 0, 262144);
 
+    ctor_init();
+
     x86::gdt_init();
     x86::idt_init();
 
@@ -74,14 +76,7 @@ extern "C" int main(size_t stivale_phys) {
     apic::init();
     smp::boot_aps();
 
-/*    apic::lapic_write(apic::icrh, 0);
-    apic::lapic_write(apic::icrl, (0b10 << 18) | 128);
-
-    for(;;);*/
-
     pci::scan_devices();
-
-    ctor_init();
 
     vfs::test();
 

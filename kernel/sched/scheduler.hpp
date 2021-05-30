@@ -40,8 +40,8 @@ struct task {
     pid_t ppid;
     size_t idle_cnt;
     size_t status;
-    lib::map<thread> threads;
-    lib::map<int> fds;
+    lib::map<ssize_t, thread> threads;
+    lib::map<ssize_t, int> fds;
     vmm::page_table *page_map;
 };
 
