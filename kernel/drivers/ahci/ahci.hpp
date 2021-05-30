@@ -5,6 +5,8 @@
 
 namespace ahci {
 
+constexpr size_t sector_size = 0x200;
+
 constexpr size_t sata_ata = 0x101;
 constexpr size_t sata_atapi = 0xeb140101;
 constexpr size_t sata_semb = 0xc33C0101;
@@ -61,20 +63,115 @@ struct [[gnu::packed]] bar_regs {
     uint32_t bohc;
     uint32_t reserved[29];
     uint32_t vendor[24];
-    volatile port_regs port[];
+    port_regs port[];
+};
+
+struct [[gnu::packed]] hba_cmd {
+    uint8_t cfl : 5;
+    uint8_t a : 1;
+    uint8_t w : 1;
+    uint8_t p : 1;
+    uint8_t r : 1;
+    uint8_t b : 1;
+    uint8_t c : 1;
+    uint8_t reserved0 : 1;
+    uint8_t pmp : 4;
+    uint16_t prdtl;
+    volatile uint32_t prdbc;
+    uint32_t ctba;
+    uint32_t ctbau;
+    uint32_t rsv1[4];
+};
+
+struct fis_h2d {
+    uint8_t fis_type;
+    uint8_t pmport : 4;
+    uint8_t reserved0 : 3;
+    uint8_t c : 1;
+    uint8_t command;
+    uint8_t featurel;
+    uint8_t lba0;
+    uint8_t lba1;
+    uint8_t lba2;
+    uint8_t device;
+    uint8_t lba3;
+    uint8_t lba4;
+    uint8_t lba5;
+    uint8_t featureh;
+    uint8_t countl;
+    uint8_t counth;
+    uint8_t icc;
+    uint8_t control;
+    uint32_t reserved1;
+};
+
+struct fis_d2h {
+    uint8_t fis_type;
+    uint8_t pmport : 4;
+    uint8_t reserved0 : 2;
+    uint8_t i : 1;
+    uint8_t reserved1 : 1;
+    uint8_t status;
+    uint8_t error;
+    uint8_t lba0;
+    uint8_t lba1;
+    uint8_t lba2;
+    uint8_t device;
+    uint8_t lba3;
+    uint8_t lba4;
+    uint8_t lba5;
+    uint8_t reserved2;
+    uint8_t countl;
+    uint8_t counth;
+    uint16_t reserved3;
+    uint32_t reserved4;
+};
+
+struct hba_prdt {
+    uint32_t dba;
+    uint32_t dbau;
+    uint32_t reserved0;
+    uint32_t dbc : 22;
+    uint32_t reserved1 : 9;
+    uint32_t i : 1;
+};
+
+struct hba_command_table {
+    uint8_t cfis[64];
+    uint8_t acmd[16];
+    uint8_t reserved[48];
+    struct hba_prdt PRDT[1];   
+};
+
+class controller {
+public:
+    controller(pci::device pci_device);
+
+    size_t sector_cnt;
+    size_t port_cnt;
+    size_t cmd_slots;
+private:
+    pci::device pci_device;
+    pci::bar bar;
+    volatile bar_regs *ghc_regs;
 };
 
 class device {
 public:
-    device(pci::device pci_device);
+    device(controller *parent, volatile port_regs *regs);
+    device() = default;
+
+    int find_cmd_slot();
+    void send_cmd(size_t cmd_slot);
+    void lba_rw(size_t start, size_t cnt, void *buffer, bool w);
+
     size_t sector_cnt;
 private:
-    pci::device pci_device;
-    pci::bar bar;
-    volatile bar_regs regs;
+    controller *parent;
+    volatile port_regs *regs; 
 };
 
-inline lib::vector<device*> device_list;
+inline lib::vector<controller*> controller_list;
 
 }
 
