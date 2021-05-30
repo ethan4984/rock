@@ -1,8 +1,46 @@
 #include <drivers/ahci/ahci.hpp>
+#include <fs/devfs.hpp>
 
 namespace ahci {
 
 static lib::vector<device*> device_list;
+
+struct msd : dev::msd {
+    ssize_t read(size_t off, size_t cnt, void *buf);
+    ssize_t write(size_t off, size_t cnt, void *buf);
+};
+
+ssize_t msd::read(size_t off, size_t cnt, void *buf) {
+    size_t lba_start = off / sector_size;
+    size_t lba_cnt = div_roundup(cnt, sector_size);
+
+    uint8_t *lba_buffer = reinterpret_cast<uint8_t*>(pmm::alloc(div_roundup(lba_cnt * sector_size, vmm::page_size)) + vmm::high_vma);
+
+    device_list[device_index]->lba_rw(lba_start, lba_cnt, reinterpret_cast<uint8_t*>(lba_buffer), 0);
+
+    size_t lba_offset = off % sector_size;
+    memcpy8(reinterpret_cast<uint8_t*>(buf), lba_buffer + lba_offset, cnt);
+
+    pmm::free(reinterpret_cast<size_t>(lba_buffer) - vmm::high_vma, div_roundup(lba_cnt * sector_size, vmm::page_size));
+
+    return cnt;
+}
+
+ssize_t msd::write(size_t off, size_t cnt, void *buf) {
+    size_t lba_start = off / sector_size;
+    size_t lba_cnt = div_roundup(cnt, sector_size);
+
+    uint8_t *lba_buffer = reinterpret_cast<uint8_t*>(pmm::alloc(div_roundup(lba_cnt * sector_size, vmm::page_size)) + vmm::high_vma);
+
+    device_list[device_index]->lba_rw(lba_start, lba_cnt, reinterpret_cast<uint8_t*>(lba_buffer), 0);
+    size_t lba_offset = off % sector_size;
+    memcpy8(lba_buffer + lba_offset, reinterpret_cast<uint8_t*>(buf), cnt);
+    device_list[device_index]->lba_rw(lba_start, lba_cnt, reinterpret_cast<uint8_t*>(lba_buffer), 1);
+
+    pmm::free(reinterpret_cast<size_t>(lba_buffer) - vmm::high_vma, div_roundup(lba_cnt * sector_size, vmm::page_size));
+
+    return cnt;
+}
 
 controller::controller(pci::device pci_device) : pci_device(pci_device) {
     switch(pci_device.prog_if) {
@@ -108,7 +146,19 @@ device::device(controller *parent, volatile port_regs *regs) : parent(parent), r
 
     sector_cnt = *reinterpret_cast<size_t*>(&identity[100]);
 
+    msd *new_msd = new msd;
+
+    new_msd->device_prefix = "sd";
+    new_msd->device_index = device_list.size();
+    new_msd->sector_size = sector_size;
+    new_msd->sector_cnt = sector_cnt;
+    new_msd->partition_cnt = 0;
+
     print("[AHCI] SATA drive detected with {x} sectors\n", sector_cnt);
+
+    device_list.push(this);
+
+    dev::scan_partitions(new_msd);
 }
 
 int device::find_cmd_slot() {
@@ -181,6 +231,9 @@ void device::lba_rw(size_t start, size_t cnt, void *buffer, bool w) {
     cmd->lba3 = start >> 24 & 0xff;
     cmd->lba4 = start >> 32 & 0xff;
     cmd->lba5 = start >> 40 & 0xff;
+
+    cmd->countl = cnt & 0xff;
+    cmd->counth = cnt >> 8 & 0xff;
 
     send_cmd(cmd_slot);
 }

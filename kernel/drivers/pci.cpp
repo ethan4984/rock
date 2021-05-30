@@ -147,8 +147,8 @@ void scan_devices() {
             case 1: // mass storage controller
                 switch(pci_device.sub_class) {
                     case 6: { // serial ata
-                        ahci::controller *new_device = new ahci::controller(pci_device);
-                        ahci::controller_list.push(new_device);
+                        //ahci::controller *new_device = new ahci::controller(pci_device);
+                        new ahci::controller(pci_device);
                         break;
                     }
                     case 8: { // nvme

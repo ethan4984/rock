@@ -29,7 +29,7 @@ ssize_t msd::read(size_t off, size_t cnt, void *buf) {
     size_t lba_offset = off % active_namespace.lba_size;
     memcpy8(reinterpret_cast<uint8_t*>(buf), lba_buffer + lba_offset, cnt);
 
-    pmm::free(reinterpret_cast<size_t>(lba_buffer) - vmm::high_vma, align_up(lba_cnt * active_namespace.lba_size, vmm::page_size));
+    pmm::free(reinterpret_cast<size_t>(lba_buffer) - vmm::high_vma, div_roundup(lba_cnt * active_namespace.lba_size, vmm::page_size));
 
     return cnt;
 }
