@@ -20,22 +20,24 @@ struct msd {
     ssize_t device_index;
     ssize_t partition_cnt;
     ssize_t sector_size;
+    ssize_t sector_cnt;
 };
 
 class node {
 public:
-    node(vfs::node *vfs_node, size_t partition_offset, size_t sector_cnt, msd *device) : vfs_node(vfs_node), partition_offset(partition_offset), sector_cnt(sector_cnt), device(device) { }
-    node(vfs::node *vfs_node, size_t sector_cnt, msd *device) : vfs_node(vfs_node), sector_cnt(sector_cnt), device(device) { }
+    node(vfs::node *vfs_node, size_t partition_offset, size_t sector_cnt, msd *device) : vfs_node(vfs_node), device(device), partition_offset(partition_offset), sector_cnt(sector_cnt) { }
+    node(vfs::node *vfs_node, size_t sector_cnt, msd *device) : vfs_node(vfs_node), device(device), sector_cnt(sector_cnt) { }
     node(vfs::node *vfs_node);
     node() = default;
     
-    ssize_t msd_raw_read(size_t start, size_t cnt, void *ret);
-    ssize_t msd_raw_write(size_t start, size_t cnt, void *ret);
-private:
+    ssize_t read(size_t start, size_t cnt, void *ret);
+    ssize_t write(size_t start, size_t cnt, void *ret);
+
     vfs::node *vfs_node;
+    msd *device;
+private:
     size_t partition_offset;
     size_t sector_cnt;
-    msd *device;
 };
 
 struct [[gnu::packed]] mbr_partition {

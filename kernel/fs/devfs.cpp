@@ -1,17 +1,18 @@
 #include <fs/devfs.hpp>
+#include <fs/ext2/ext2.hpp>
 
 namespace dev {
 
 static lib::vector<node> node_list;
 
-ssize_t node::msd_raw_read(size_t start, size_t cnt, void *ret) {
+ssize_t node::read(size_t start, size_t cnt, void *ret) {
     if(!device)
         return -1;
 
     return device->read(start + partition_offset, cnt, ret);
 }
 
-ssize_t node::msd_raw_write(size_t start, size_t cnt, void *ret) {
+ssize_t node::write(size_t start, size_t cnt, void *ret) {
     if(!device)
         return -1;
 
@@ -31,6 +32,13 @@ void scan_partitions(msd *device) {
     uint16_t mbr_signature;
     device->read(510, 2, &mbr_signature);
 
+    lib::string dev_path = lib::string("/dev/") + device->device_prefix + device->device_index;
+    if(vfs::root_node.search_absolute(dev_path) == NULL) {
+        vfs::node new_vfs_node(dev_path, NULL);
+        print("[DEVFS] Creating device {}\n", dev_path);
+        node_list.push(node(vfs::root_node.search_absolute(dev_path), 0, device->sector_cnt, device));
+    }
+
     if(mbr_signature == 0xaa55) {
         mbr_partition partitions[4];
         device->read(0x1be, sizeof(partitions), &partitions);
@@ -42,7 +50,11 @@ void scan_partitions(msd *device) {
             lib::string absolute_path = lib::string("/dev/") + device->device_prefix + device->device_index + "-" + device->partition_cnt++;
             vfs::node new_vfs_node(absolute_path, NULL);
 
+            print("[DEVFS] Creating partition device {}\n", absolute_path);
+
             node_list.push(node(vfs::root_node.search_absolute(absolute_path), partitions[i].starting_lba * device->sector_size, partitions[i].sector_cnt, device));
+
+            ext2::fs(node_list.last());
         }
 
         return;
@@ -65,6 +77,8 @@ void scan_partitions(msd *device) {
 
             lib::string absolute_path = lib::string("/dev/") + device->device_prefix + device->device_index + "-" + device->partition_cnt++;
             vfs::node new_vfs_node(absolute_path, NULL);
+
+            print("[DEVFS] Creating partition device {}\n", absolute_path);
 
             node_list.push(node(vfs::root_node.search_absolute(absolute_path), part_arr[i].starting_lba * device->sector_size, part_arr[i].starting_lba - part_arr[i].last_lba, device));
         }

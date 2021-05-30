@@ -1,5 +1,6 @@
 #include <drivers/pci.hpp>
 #include <drivers/nvme/nvme.hpp>
+#include <drivers/ahci/ahci.hpp>
 
 #define GET_CLASS(BUS, DEVICE, FUNC) \
     (uint8_t)(pci::raw_read(BUS, DEVICE, FUNC, 0x8) >> 24)
@@ -145,11 +146,15 @@ void scan_devices() {
         switch(pci_device.class_code) {
             case 1: // mass storage controller
                 switch(pci_device.sub_class) {
-                    case 6: // serial ata
+                    case 6: { // serial ata
+                        ahci::device *new_device = new ahci::device(pci_device);
+                        ahci::device_list.push(new_device);
                         break;
-                    case 8: // nvme
+                    }
+                    case 8: { // nvme
                         nvme::device *new_device = new nvme::device(pci_device);
                         nvme::device_list.push(new_device);
+                    }
                 }
         }
     }

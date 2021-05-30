@@ -30,6 +30,7 @@ public:
 
     T &push(const T &elem);
     T &push(T &&elem);
+    T &last() { return elements[buf_size - 1]; }
     T pop();
 
     void remove(size_t index);

@@ -196,6 +196,7 @@ device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0), loc
     new_msd->device_prefix = "nvme";
     new_msd->device_index = device_list.size();
     new_msd->sector_size = namespace_list[0].lba_size;
+    new_msd->sector_cnt = namespace_list[0].lba_cnt;
     new_msd->partition_cnt = 0;
     
     dev::scan_partitions(new_msd);
