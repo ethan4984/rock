@@ -18,7 +18,7 @@ struct device {
     uint32_t read(uint8_t off);
     void become_bus_master();
     void enable_mmio();
-    void set_msi(uint8_t vec);
+    int set_msi(uint8_t vec);
     int get_bar(bar &ret, size_t num);
 
     uint8_t bus;

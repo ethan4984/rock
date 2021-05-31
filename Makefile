@@ -7,12 +7,16 @@ QEMUFLAGS = -m 4G \
 			-drive id=disk,file=rock.img,if=none \
 			-device ahci,id=ahci \
 			-device ide-hd,drive=disk,bus=ahci.0 \
+			-drive if=none,id=usbstick,file=usb.img \
+			-usb \
+			-device qemu-xhci
 
 build:
 	cd kernel && make clean && make
-	rm -f rock.img
+	rm -f rock.img disk.img usb.img
 	dd if=/dev/zero bs=1M count=0 seek=64 of=rock.img
 	dd if=/dev/zero bs=1M count=0 seek=128 of=disk.img
+	dd if=/dev/zero bs=1M count=0 seek=128 of=usb.img
 	parted -s rock.img mklabel msdos
 	parted -s rock.img mkpart primary 1 100%
 	rm -rf disk_image/
@@ -29,6 +33,13 @@ build:
 	sudo losetup -d `cat loopback_dev`
 	rm -rf disk_image loopback_dev
 	limine-install rock.img 
+	parted -s disk.img mklabel msdos
+	parted -s disk.img mkpart primary 1 100%
+	sudo losetup -Pf --show disk.img > loopback_dev
+	sudo mkfs.ext2 `cat loopback_dev`p1
+	sudo losetup -d `cat loopback_dev`
+	sync
+	rm -rf loopback_dev
 
 qemu: build
 	touch serial.log

@@ -1,6 +1,8 @@
 #include <drivers/pci.hpp>
 #include <drivers/nvme/nvme.hpp>
 #include <drivers/ahci/ahci.hpp>
+#include <drivers/xhci/xhci.hpp>
+#include <int/apic.hpp>
 
 #define GET_CLASS(BUS, DEVICE, FUNC) \
     (uint8_t)(pci::raw_read(BUS, DEVICE, FUNC, 0x8) >> 24)
@@ -127,6 +129,59 @@ int device::get_bar(bar &ret, size_t num) {
     return 0;
 }
 
+int device::set_msi(uint8_t vec) {
+    uint32_t reg4 = read(0x4);
+    uint32_t off = reg4 >> 16 & (1 << 4) ? read(0x34) : 0;
+
+    while(off) {
+        uint8_t id = read(off);
+
+        switch(id) { 
+            case 0x5:
+                goto found;
+        }
+
+        off = read(off + 1);
+    }
+
+    print("[PCI] Device Does not support MSI\n");
+    return -1;
+
+found:
+    uint16_t message_control = read(off + 0x2) >> 16;
+
+    if(message_control & (1 << 7)) { // 64 bit
+        uint32_t addr = read(off + 0x4);
+        uint32_t data = read(off + 0xb) >> 16;
+
+        data |= vec << 0;
+        data |= 0 << 11; // fixed delivery mode
+
+        addr |= 0xfee << 20; 
+        addr |= apic::lapic_read(apic::id_reg) << 12; // destination id
+
+        write(off + 0x4, addr);
+        write(off + 0xb, data);
+    } else {
+        uint32_t addr = read(off + 0x4);
+        uint32_t data = read(off + 0x8);
+
+        data |= vec << 0;
+        data |= 0 << 11; // fixed delivery mode
+
+        addr |= 0xfee << 20; 
+        addr |= apic::lapic_read(apic::id_reg) << 12; // destination id
+
+        write(off + 0x4, addr);
+        write(off + 0x8, data);
+    }
+
+    message_control |= 1; // msi enable
+    write(off + 0x2, message_control);
+
+    return 0;
+}
+
 void scan_devices() {
     for(int bus = 0; bus < 256; bus++) {
         scan_bus(bus);
@@ -144,7 +199,7 @@ void scan_devices() {
                                                                                                     pci_device.prog_if,
                                                                                                     pci_device.device_id);
         switch(pci_device.class_code) {
-            case 1: // mass storage controller
+            case 1: { // mass storage controller
                 switch(pci_device.sub_class) {
                     case 6: { // serial ata
                         //ahci::controller *new_device = new ahci::controller(pci_device);
@@ -156,6 +211,14 @@ void scan_devices() {
                         nvme::device_list.push(new_device);
                     }
                 }
+                break;
+            }
+            case 0xc: { // serial bus controller
+                switch(pci_device.sub_class) {
+                    case 0x3: // xhci
+                        new xhci::controller(pci_device);
+                }
+            }
         }
     }
 }
