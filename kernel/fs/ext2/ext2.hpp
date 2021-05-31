@@ -5,7 +5,7 @@
 
 namespace ext2 {
 
-struct [[gnu::packed]] bgd {
+struct bgd {
     uint32_t block_addr_bitmap;
     uint32_t block_addr_inode;
     uint32_t inode_table_block;
@@ -53,7 +53,7 @@ struct [[gnu::packed]] superblock {
     uint64_t last_mnt_path[8];
 };
 
-struct [[gnu::packed]] ext2_inode {
+struct [[gnu::packed]] inode {
     uint16_t permissions;
     uint16_t user_id;
     uint32_t size32l;
@@ -92,10 +92,26 @@ public:
     int refresh(vfs::node *vfs_node);
     int unlink(vfs::node *vfs_node);
 private:
+    uint32_t bgd_find_block(uint32_t bgd_index);
+    uint32_t alloc_block();
+    void free_block(uint32_t block);
+    bgd read_bgd(uint32_t index);
+    void write_bgd(bgd *buf, uint32_t index);
+
+    uint32_t alloc_inode();
+    void free_inode(uint32_t index);
+    uint32_t inode_get_block(inode *i, uint32_t block);
+    uint32_t inode_set_block(inode *i, uint32_t iblock);
+    void inode_delete(inode *i, uint32_t index);
+    inode inode_read_entry(uint32_t index);
+    void inode_write_entry(inode *i, uint32_t index);
+
     superblock superb;
     size_t block_size;
     size_t frag_size;
     uint32_t bgd_cnt;
+
+    dev::node devfs_node;
 };
 
 }
