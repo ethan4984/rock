@@ -18,7 +18,7 @@ ssize_t msd::read(size_t off, size_t cnt, void *buf) {
     smp::cpu local = smp::core_local();
     device *dev = local.nvme_io_queue->parent;
 
-    ns &active_namespace = dev->namespace_list[0];
+    ns &active_namespace = dev->namespace_list[partition_index];
 
     size_t lba_start = off / active_namespace.lba_size;
     size_t lba_cnt = div_roundup(cnt, active_namespace.lba_size);
@@ -38,7 +38,7 @@ ssize_t msd::write(size_t off, size_t cnt, void *buf) {
     smp::cpu local = smp::core_local();
     device *dev = local.nvme_io_queue->parent;
 
-    ns &active_namespace = dev->namespace_list[0];
+    ns &active_namespace = dev->namespace_list[partition_index];
 
     size_t lba_start = off / active_namespace.lba_size;
     size_t lba_cnt = div_roundup(cnt, active_namespace.lba_size);
@@ -191,22 +191,18 @@ device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0), loc
         create_io_queue(*smp::cpus[i].nvme_io_queue);
     }
 
-    msd *new_msd = new msd;
+    for(size_t i = 0; i < namespace_list.size(); i++) {
+        msd *new_msd = new msd;
 
-    new_msd->device_prefix = "nvme";
-    new_msd->device_index = device_list.size();
-    new_msd->sector_size = namespace_list[0].lba_size;
-    new_msd->sector_cnt = namespace_list[0].lba_cnt;
-    new_msd->partition_cnt = 0;
-    
-    dev::scan_partitions(new_msd);
+        new_msd->device_prefix = lib::string("nvme") + device_list.size() + lib::string("n") + i + lib::string("p");
+        new_msd->device_index = device_list.size();
+        new_msd->partition_index = i;
+        new_msd->sector_size = namespace_list[i].lba_size;
+        new_msd->sector_cnt = namespace_list[i].lba_cnt;
+        new_msd->partition_cnt = 0;
 
-/*    uint64_t *block = reinterpret_cast<uint64_t*>(pmm::calloc(1) + vmm::high_vma);
-    memset64(block, ~(0ull), 0x1000 / 8);
-    namespace_list[0].rw_lba(block, 1, 1, 1);
-    memset64(block, 0, 0x1000 / 8);
-    namespace_list[0].rw_lba(block, 1, 1, 0);
-    print("{x}\n", block[0]);*/
+        dev::scan_partitions(new_msd);
+    }
 }
 
 int device::get_ctrl_id() { 

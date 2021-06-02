@@ -345,7 +345,7 @@ void idt_init() {
     set_idt_entry(0x8, 0, 0x8e, reinterpret_cast<size_t>(isr255), 255);
 
     struct idtr idtr = { 256 * sizeof(idt_entry) - 1, reinterpret_cast<size_t>(idt) };
-    asm volatile ("lidtq %0" : "=m"(idtr));
+    asm volatile ("lidt %0" : "=m"(idtr));
 }
 
 void disr(regs *regs_cur) {

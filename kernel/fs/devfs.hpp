@@ -18,9 +18,11 @@ struct msd {
 
     lib::string device_prefix;
     ssize_t device_index;
+    ssize_t partition_index;
     ssize_t partition_cnt;
     ssize_t sector_size;
     ssize_t sector_cnt;
+    size_t device_type;
 };
 
 class node {
@@ -77,6 +79,8 @@ struct [[gnu::packed]] gpt_partition_entry {
 
 void scan_partitions(msd *device);
 void init();
+
+inline lib::vector<node> node_list;
 
 }
 

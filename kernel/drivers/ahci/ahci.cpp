@@ -156,6 +156,13 @@ device::device(controller *parent, volatile port_regs *regs) : parent(parent), r
 
     print("[AHCI] SATA drive detected with {x} sectors\n", sector_cnt);
 
+    lib::string dev_path = lib::string("/dev/sd") + device_list.size();
+    if(vfs::root_node.search_absolute(dev_path) == NULL) {
+        vfs::node new_vfs_node(dev_path, NULL);
+        print("[DEVFS] Creating Device {}\n", dev_path);
+        dev::node_list.push(dev::node(vfs::root_node.search_absolute(dev_path), 0, sector_cnt, new_msd));
+    }
+
     device_list.push(this);
 
     dev::scan_partitions(new_msd);

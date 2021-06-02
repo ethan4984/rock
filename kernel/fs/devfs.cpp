@@ -3,8 +3,6 @@
 
 namespace dev {
 
-static lib::vector<node> node_list;
-
 ssize_t node::read(size_t start, size_t cnt, void *ret) {
     if(!device)
         return -1;
@@ -31,13 +29,6 @@ node::node(vfs::node *vfs_search_node) : vfs_node(NULL) {
 void scan_partitions(msd *device) {
     uint16_t mbr_signature;
     device->read(510, 2, &mbr_signature);
-
-    lib::string dev_path = lib::string("/dev/") + device->device_prefix + device->device_index;
-    if(vfs::root_node.search_absolute(dev_path) == NULL) {
-        vfs::node new_vfs_node(dev_path, NULL);
-        print("[DEVFS] Creating device {}\n", dev_path);
-        node_list.push(node(vfs::root_node.search_absolute(dev_path), 0, device->sector_cnt, device));
-    }
 
     if(mbr_signature == 0xaa55) {
         mbr_partition partitions[4];
