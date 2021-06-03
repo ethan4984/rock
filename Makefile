@@ -27,12 +27,12 @@ build:
 	sudo mkdir disk_image/boot
 	sudo cp kernel/rock.elf disk_image/boot/
 	sudo cp kernel/limine.cfg disk_image/
-	sudo cp tools/limine/bin/limine.sys disk_image/boot/
+	sudo cp tools/limine/limine.sys disk_image/boot/
 	sync
 	sudo umount disk_image/
 	sudo losetup -d `cat loopback_dev`
 	rm -rf disk_image loopback_dev
-	limine-install rock.img 
+	tools/limine/limine-install-linux-x86_64 rock.img 
 	parted -s disk.img mklabel msdos
 	parted -s disk.img mkpart primary 1 100%
 	sudo losetup -Pf --show disk.img > loopback_dev
