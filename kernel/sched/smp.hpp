@@ -14,7 +14,7 @@ struct cpu {
     ssize_t errno;
     pid_t pid;
     tid_t tid;
-    vmm::page_table *page_table;
+    vmm::page_table *page_map;
     nvme::queue *nvme_io_queue;
 };
 

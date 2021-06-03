@@ -1,5 +1,6 @@
 #include <drivers/nvme/nvme.hpp>
 #include <sched/smp.hpp>
+#include <sched/scheduler.hpp>
 #include <int/apic.hpp>
 #include <int/idt.hpp>
 #include <debug.hpp>
@@ -20,7 +21,7 @@ Func *const func_array<Func>::data[] = {
     disr, disr, disr, disr, disr, disr, disr, disr, 
     disr, disr, disr, disr, disr, disr, disr, disr,
     disr, disr, disr, disr, disr, disr, disr, disr, // 32
-    disr, disr, disr, disr, disr, disr, disr, disr, 
+    sched::reschedule, disr, disr, disr, disr, disr, disr, disr, 
     disr, disr, disr, disr, disr, disr, disr, disr, 
     disr, disr, disr, disr, disr, disr, disr, disr, 
     disr, disr, disr, disr, disr, disr, disr, disr, // 64

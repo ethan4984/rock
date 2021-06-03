@@ -17,7 +17,10 @@ public:
     map &operator= (map other);
     T &operator[] (const F &index);
 
+    size_t size() const { return _tags.size(); }
+
     void remove(const F &index);
+    F get_tag(size_t i) { return _tags[i]; }
 private:
     vector<F> _tags;
     vector<T> _data;

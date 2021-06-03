@@ -23,6 +23,8 @@ static void prep_core(size_t stack, uint64_t pml4, uint64_t entry, uint64_t idt,
 static void core_bootstrap(size_t core_index) {
     wrmsr(msr_gs_base, core_index);
 
+    apic::timer_calibrate(100);
+
     apic::lapic_write(apic::sint, apic::lapic_read(apic::sint) | 0x1ff);
     asm volatile ("mov %0, %%cr8\nsti" :: "r"(0ull));
 

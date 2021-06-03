@@ -7,12 +7,12 @@
 
 namespace sched {
 
-constexpr size_t task_waiting = 0;
-constexpr size_t task_waiting_to_start = 1;
-constexpr size_t task_running = 2;
+constexpr size_t task_waiting = (1 << 1);
+constexpr size_t task_waiting_to_start = (1 << 2);
+constexpr size_t task_running = (1 << 3);
 
-constexpr size_t task_user = (1 << 0);
-constexpr size_t task_elf = (1 << 1);
+constexpr size_t task_user = (1 << 4);
+constexpr size_t task_elf = (1 << 5);
 
 constexpr size_t thread_stack_size = 0x2000;
 

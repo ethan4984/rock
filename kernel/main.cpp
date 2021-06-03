@@ -41,10 +41,8 @@ extern "C" int main(size_t stivale_phys) {
     kmm::cache(NULL, 0, 65536);
     kmm::cache(NULL, 0, 131072);
     kmm::cache(NULL, 0, 262144);
-
+    
     _init();
-
-    for(;;);
 
     x86::gdt_init();
     x86::idt_init();
@@ -66,7 +64,9 @@ extern "C" int main(size_t stivale_phys) {
 
     pci::scan_devices();
 
-    vfs::test();
+    apic::timer_calibrate(100);
+
+    asm ("sti");
 
     for(;;)
         asm ("pause");
