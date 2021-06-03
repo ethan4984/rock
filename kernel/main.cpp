@@ -19,20 +19,6 @@
 #include <vector.hpp>
 #include <map.hpp>
 
-extern "C" {
-
-using ctor = void (*)();
-
-ctor __ctors_start;
-ctor __ctors_end;
-
-void ctor_init() {
-    for(ctor *call = &__ctors_start; call != &__ctors_end; call++)
-        (*call)();
-}
-
-}
-
 extern "C" void _init();
 
 extern "C" int main(size_t stivale_phys) {
@@ -56,7 +42,9 @@ extern "C" int main(size_t stivale_phys) {
     kmm::cache(NULL, 0, 131072);
     kmm::cache(NULL, 0, 262144);
 
-    ctor_init();
+    _init();
+
+    for(;;);
 
     x86::gdt_init();
     x86::idt_init();

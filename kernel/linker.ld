@@ -16,15 +16,19 @@ SECTIONS {
         *(.text*)
     }
 
-    .rodata : ALIGN(4K) {
+   .rodata : ALIGN(4K) {
+        start_ctors = .;
+        *(SORT(.ctors*))  /* Note the "SORT" */
+        end_ctors = .;
+
+        start_dtors = .;
+        *(SORT(.dtors*))
+        end_dtors = .;
+
         *(.rodata*)
     }
 
     .data : ALIGN(4K) {
-        __ctors_start = .;
-        KEEP(*( .init_array ));
-        KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
-        __ctors_end = .;
         *(.data*)
     }
  
