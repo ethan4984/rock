@@ -62,6 +62,11 @@ class controller {
 public:
     controller(pci::device pci_device);
     controller();
+
+    size_t max_device_slots; 
+    size_t max_interrupts;
+    size_t max_ports;
+    size_t page_size;
 private:
     pci::device pci_device;
     pci::bar bar;
@@ -70,6 +75,9 @@ private:
     volatile operation_regs *operation;
     volatile runtime_regs *runtime;
     volatile db_regs *db;
+    volatile uint32_t *extended_cap;
+
+    size_t max_page_size;
 };
 
 inline lib::vector<controller*> controller_list;
