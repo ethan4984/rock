@@ -173,7 +173,7 @@ void *alloc(size_t size) {
 }
 
 size_t free(void *obj) {
-    if(!obj)
+    if(obj == NULL)
         return 0;
 
     spin_lock(&slab_lock);

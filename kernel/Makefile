@@ -54,7 +54,7 @@ $(KERNEL): $(BINS) $(OBJ)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 %.o: %.asm
-	nasm -felf64 -g $< -o $@
+	nasm -felf64 $< -o $@
 
 clean:
 	rm -rf $(OBJ) $(KERNEL) $(BINS) crti.o crtn.o

@@ -42,10 +42,10 @@ struct task {
     size_t status;
     lib::map<ssize_t, thread> threads;
     lib::map<ssize_t, int> fds;
-    vmm::page_table *page_map;
+    vmm::pmlx_table *page_map;
 };
 
-task &create_task(task &parent, vmm::page_table page_table);
+task &create_task(task &parent, vmm::pmlx_table *table);
 void reschedule(regs *regs_cur);
 
 inline size_t scheduler_lock = 0;

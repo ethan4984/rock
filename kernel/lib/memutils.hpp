@@ -94,6 +94,34 @@ inline constexpr ssize_t pow(ssize_t base, ssize_t exp) {
     return result;
 }
 
+template <typename T>
+class unique_ptr {
+public:
+    unique_ptr(const unique_ptr &other) { _data = other._data; }
+    unique_ptr(unique_ptr &&other) { swap(*this, other); } 
+    unique_ptr(T *_data) : _data(_data) { }
+    unique_ptr() = default;
+    ~unique_ptr() { delete _data; }
+
+    T &operator[] (size_t index) const { return _data[index]; }
+
+    unique_ptr &operator= (unique_ptr other) { swap(*this, other); return *this; }
+
+    bool operator== (unique_ptr other) const { return other._data == _data; }
+    bool operator!= (unique_ptr other) const { return other._data != _data; }
+    bool operator< (unique_ptr other) const { return other._data < _data; }
+    bool operator> (unique_ptr other) const { return other._data > _data; }
+    bool operator<= (unique_ptr other) const { return other._data <= _data; }
+    bool operator>= (unique_ptr other) const { return other._data >= _data; } 
+
+    T &operator*() const { return *_data; }
+    T *operator->() const { return _data; }
+private:
+    T *_data;
+
+    void swap(unique_ptr &a, unique_ptr &b) { std::swap(a._data, b._data); }
+};
+
 void memset8(uint8_t *src, uint8_t data, size_t count);
 void memset16(uint16_t *src, uint16_t data, size_t count);
 void memset32(uint32_t *src, uint32_t data, size_t count);

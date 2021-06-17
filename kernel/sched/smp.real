@@ -19,7 +19,7 @@ init_CS:
     mov cr3, eax
 
     mov eax, cr4
-    or eax, (1 << 5)
+    or eax, (1 << 5) | (1 << 12)
     mov cr4, eax
 
     mov ecx, 0xc0000080

@@ -19,13 +19,20 @@
 #include <vector.hpp>
 #include <map.hpp>
 
+extern "C" void __cxa_pure_virtual() { while (1); }
+
 extern "C" void _init();
 
 extern "C" int main(size_t stivale_phys) {
+    cpuid_state cpu_id = cpuid(7, 0);
+
+    if(cpu_id.rcx & (1 << 16)) {
+        vmm::high_vma = 0xff00000000000000;
+    }
+
     stivale *stivale_virt = reinterpret_cast<stivale*>(stivale_phys + vmm::high_vma);
 
     pmm::init(stivale_virt);
-    vmm::init();
 
     kmm::cache(NULL, 0, 32);
     kmm::cache(NULL, 0, 64);
@@ -41,7 +48,9 @@ extern "C" int main(size_t stivale_phys) {
     kmm::cache(NULL, 0, 65536);
     kmm::cache(NULL, 0, 131072);
     kmm::cache(NULL, 0, 262144);
-    
+
+    vmm::init();
+
     _init();
 
     x86::gdt_init();

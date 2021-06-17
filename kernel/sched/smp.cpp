@@ -45,11 +45,7 @@ void boot_aps() {
 
     uint32_t current_apic_id = apic::lapic_read(apic::id_reg);
 
-    vmm::virtual_address(vmm::kernel_mapping.pml4_raw, 0, 0,
-                    vmm::pml4_entry::flags::p | vmm::pml4_entry::flags::rw,
-                    vmm::pml3_entry::flags::p | vmm::pml3_entry::flags::rw,
-                    vmm::pml2_entry::flags::p | vmm::pml2_entry::flags::rw | vmm::pml2_entry::flags::ps,
-                    0);
+    vmm::kernel_mapping->map_page_raw(0, 0, 0x3, 0x3 | (1 << 7) | (1 << 8)); 
 
     for(size_t i = 0; i < madt0_list.size(); i++) {
         madt0 madt0_entry = madt0_list[i];
@@ -60,7 +56,7 @@ void boot_aps() {
                         0,
                         -1,
                         -1,
-                        &vmm::kernel_mapping,
+                        vmm::kernel_mapping,
                         NULL
                       };
 
@@ -73,7 +69,7 @@ void boot_aps() {
 
         if(madt0_entry.flags == 1) {
             prep_core(  new_cpu.kernel_stack,
-                        reinterpret_cast<uint64_t>(vmm::kernel_mapping.pml4_raw),
+                        reinterpret_cast<uint64_t>(vmm::kernel_mapping->highest_raw),
                         reinterpret_cast<uint64_t>(core_bootstrap),
                         reinterpret_cast<uint64_t>(&idtr),
                         reinterpret_cast<uint64_t>(&gdtr),
@@ -86,7 +82,7 @@ void boot_aps() {
         }
     }
 
-    vmm::kernel_mapping.unmap_page(0);
+    vmm::kernel_mapping->unmap_page(0);
 }
 
 cpu &core_local() {

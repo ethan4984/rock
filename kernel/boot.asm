@@ -1,7 +1,7 @@
 section .stivalehdr
 
 dq stack
-dw 1
+dw (1 << 0) | (1 << 1)
 dw 0
 dw 0
 dw 0

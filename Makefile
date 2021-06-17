@@ -9,7 +9,8 @@ QEMUFLAGS = -m 4G \
 			-device ide-hd,drive=disk,bus=ahci.0 \
 			-drive if=none,id=usbstick,file=usb.img \
 			-usb \
-			-device qemu-xhci
+			-device qemu-xhci \
+			-cpu qemu64,+la57
 
 build:
 	cd kernel && make clean && make
@@ -43,7 +44,7 @@ build:
 
 qemu: build
 	touch serial.log
-	qemu-system-x86_64 $(QEMUFLAGS) -enable-kvm &
+	qemu-system-x86_64 $(QEMUFLAGS) &
 	tail -n0 -f serial.log
 
 info: build

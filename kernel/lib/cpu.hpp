@@ -44,6 +44,15 @@ struct regs {
     uint64_t ss;
 };
 
+struct cpuid_state {
+    uint64_t leaf;
+    uint64_t subleaf;
+    uint64_t rax;
+    uint64_t rbx;
+    uint64_t rcx;
+    uint64_t rdx;
+};
+
 inline void outb(uint16_t port, uint8_t data) {
     asm volatile("outb %0, %1" :: "a"(data), "Nd"(port));
 }
@@ -84,6 +93,21 @@ inline void wrmsr(uint32_t msr, uint64_t data) {
     uint64_t rax = (uint32_t)data;
     uint64_t rdx = data >> 32;
     asm volatile ("wrmsr" :: "a"(rax), "d"(rdx), "c"(msr));
+}
+
+inline cpuid_state cpuid(size_t leaf, size_t subleaf) {
+    cpuid_state ret = { leaf, subleaf, 0, 0, 0, 0 };
+
+    size_t max;
+    asm volatile ("cpuid" : "=a"(max) : "a"(leaf & 0x80000000) : "rbx", "rcx", "rdx");
+
+    if(leaf > max) {
+        return ret;
+    }
+
+    asm volatile ("cpuid" : "=a"(ret.rax), "=b"(ret.rbx), "=c"(ret.rcx), "=d"(ret.rbx) : "a"(leaf), "c"(subleaf));
+
+    return ret;
 }
 
 inline void swapgs(void) {
