@@ -11,6 +11,6 @@ section .bss
 
 align 0x10
 
-resb 32768
+resb 0x10000
 
 stack:

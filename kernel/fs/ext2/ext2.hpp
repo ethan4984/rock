@@ -2,18 +2,9 @@
 #define EXT2_HPP_
 
 #include <fs/devfs.hpp>
+#include <utility>
 
 namespace ext2 {
-
-struct bgd {
-    uint32_t block_addr_bitmap;
-    uint32_t block_addr_inode;
-    uint32_t inode_table_block;
-    uint16_t unallocated_blocks;
-    uint16_t unallocated_inodes;
-    uint16_t dir_cnt;
-    uint16_t reserved[7];
-};
 
 struct [[gnu::packed]] superblock { 
     uint32_t inode_cnt;
@@ -53,32 +44,112 @@ struct [[gnu::packed]] superblock {
     uint64_t last_mnt_path[8];
 };
 
-struct [[gnu::packed]] inode {
-    uint16_t permissions;
-    uint16_t user_id;
-    uint32_t size32l;
-    uint32_t access_time;
-    uint32_t creation_time;
-    uint32_t mod_time;
-    uint32_t del_time;
-    uint16_t group_id;
-    uint16_t hard_link_cnt;
-    uint32_t sector_cnt;
-    uint32_t flags;
-    uint32_t oss1;
-    uint32_t blocks[15];
-    uint32_t gen_num;
-    uint32_t eab;
-    uint32_t size32h;
-    uint32_t frag_addr;
+class fs;
+
+struct bgd {
+    bgd(fs *parent, uint32_t bgd_index);
+    bgd(bgd &buf);
+    bgd() : parent(NULL) { }
+
+    ssize_t find_block();
+    void write_back();
+
+    ssize_t alloc_block();
+    ssize_t alloc_inode();
+
+    bgd &operator=(bgd other) {
+        swap(*this, other);
+        return *this;
+    }
+
+    void swap(bgd &a, bgd &b) {
+        std::swap(a.raw, b.raw);
+        std::swap(a.parent, b.parent);
+        std::swap(a.bgd_index, b.bgd_index);
+    }
+
+    struct [[gnu::packed]] {
+        uint32_t block_addr_bitmap;
+        uint32_t block_addr_inode;
+        uint32_t inode_table_block;
+        uint16_t unallocated_blocks;
+        uint16_t unallocated_inodes;
+        uint16_t dir_cnt;
+        uint16_t reserved[7];
+    } raw;
+
+    fs *parent;
+    uint32_t bgd_index;
 };
 
-struct [[gnu::packed]] dir_entry {
-    uint32_t inode;
-    uint16_t entry_size;
-    uint8_t name_length;
-    uint8_t type;
-    char name[];
+struct inode {
+    inode(fs *parent, uint32_t inode_index);
+    inode(inode &buf);
+    inode() = default;
+
+    void read(off_t off, off_t cnt, void *buf);
+    void write(off_t, off_t cnt, void *buf);
+
+    ssize_t resize(off_t start, off_t cnt);
+    void write_back();
+    void remove();
+    void free();
+
+    ssize_t get_block(uint32_t iblock);
+    ssize_t set_block(uint32_t iblock, uint32_t disk_block);
+
+    inode &operator= (inode other) {
+        swap(*this, other);
+        return *this;
+    }
+
+    void swap(inode &a, inode &b) {
+        std::swap(a.raw, b.raw);
+        std::swap(a.parent, b.parent);
+        std::swap(a.inode_index, b.inode_index);
+    }
+
+    struct [[gnu::packed]] {
+        uint16_t permissions;
+        uint16_t user_id;
+        uint32_t size32l;
+        uint32_t access_time;
+        uint32_t creation_time;
+        uint32_t mod_time;
+        uint32_t del_time;
+        uint16_t group_id;
+        uint16_t hard_link_cnt;
+        uint32_t sector_cnt;
+        uint32_t flags;
+        uint32_t oss1;
+        uint32_t blocks[15];
+        uint32_t gen_num;
+        uint32_t eab;
+        uint32_t size32h;
+        uint32_t frag_addr;
+    } raw;
+
+    fs *parent;
+    uint32_t inode_index;
+};
+
+struct dir {
+    dir(inode *parent_inode, lib::string path);
+
+    struct raw_dir {
+        uint32_t inode;
+        uint16_t entry_size;
+        uint8_t name_length;
+        uint8_t type;
+        char name[];
+    };
+
+    raw_dir *raw;
+
+    inode *parent_inode;
+    lib::string path;
+private:
+    ssize_t search_relative(lib::string path);
 };
 
 class fs {
@@ -91,27 +162,26 @@ public:
     int write(vfs::node *vfs_node, off_t off, off_t cnt, void *buf);
     int refresh(vfs::node *vfs_node);
     int unlink(vfs::node *vfs_node);
+
+    friend class bgd;
+    friend class inode;
 private:
-    uint32_t bgd_find_block(uint32_t bgd_index);
-    uint32_t alloc_block();
-    void free_block(uint32_t block);
-    bgd read_bgd(uint32_t index);
-    void write_bgd(bgd *buf, uint32_t index);
-
-    uint32_t alloc_inode();
-    void free_inode(uint32_t index);
-    uint32_t inode_get_block(inode *i, uint32_t block);
-    uint32_t inode_set_block(inode *i, uint32_t iblock);
-    void inode_delete(inode *i, uint32_t index);
-    inode inode_read_entry(uint32_t index);
-    void inode_write_entry(inode *i, uint32_t index);
-
     superblock superb;
+    inode root_inode;
+
     size_t block_size;
     size_t frag_size;
     uint32_t bgd_cnt;
 
     dev::node devfs_node;
+
+    ssize_t alloc_block();
+    void free_block(uint32_t block);
+
+    ssize_t alloc_inode();
+    void free_inode(uint32_t inode_index);
+
+    void delete_inode(inode &inode_cur);
 };
 
 }

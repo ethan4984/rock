@@ -56,8 +56,6 @@ ssize_t msd::write(size_t off, size_t cnt, void *buf) {
 }
 
 device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0), lock(0) {
-    asm volatile ("" ::: "memory");
-    
     pci_device.become_bus_master();
     pci_device.enable_mmio();
     pci_device.get_bar(bar, 0);
@@ -90,11 +88,6 @@ device::device(pci::device pci_device) : pci_device(pci_device), qid_cnt(0), loc
 
     if(!(registers->cap & (1ull << 37))) {
         print("[NVME] NVME Command Set Not Supported\n");
-        return;
-    }
-
-    if(!(registers->cap & (1ull << 44))) {
-        print("[NVME] I/O Command Set Not Supprted\n");
         return;
     }
 

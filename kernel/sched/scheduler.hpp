@@ -45,7 +45,6 @@ struct task {
     vmm::pmlx_table *page_map;
 };
 
-task &create_task(task &parent, vmm::pmlx_table *table);
 void reschedule(regs *regs_cur);
 
 inline size_t scheduler_lock = 0;
