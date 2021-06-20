@@ -93,7 +93,7 @@ void reschedule(regs *regs_cur) {
     if(next_thread.regs_cur.cs & 0x3)
         swapgs();
 
-    apic::lapic_write(apic::eoi, 0);
+    apic::lapic->write(apic::lapic->eoi(), 0);
     spin_release(&scheduler_lock);
 }
 

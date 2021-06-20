@@ -69,30 +69,28 @@ ioapic ioapic_validate(uint32_t gsi) {
     return ioapic();
 }
 
-uint32_t lapic_read(uint16_t reg) {
-    return *reinterpret_cast<volatile uint32_t*>((rdmsr(msr_lapic_base) & 0xfffff000) + vmm::high_vma + reg);
-}
-
-void lapic_write(uint16_t reg, uint32_t data) {
-    *reinterpret_cast<volatile uint32_t*>((rdmsr(msr_lapic_base) & 0xfffff000) + vmm::high_vma + reg) = data;
-}
-
-void send_ipi(uint8_t ap, uint32_t ipi) {
-    lapic_write(icrh, (ap << 24));
-    lapic_write(icrl, ipi);
-}
-
 void timer_calibrate(uint64_t ms) {
-    lapic_write(timer_divide_conf, 0x3);
-    lapic_write(timer_inital_count, ~0); 
+    lapic->write(lapic->timer_divide_conf(), 0x3);
+    lapic->write(lapic->timer_inital_count(), ~0); 
 
     ksleep(ms);
 
-    uint32_t ticks = ~0 - lapic_read(timer_current_count);
+    uint32_t ticks = ~0 - lapic->read(lapic->timer_current_count());
 
-    lapic_write(timer_lvt, 32 | 0x20000);
-    lapic_write(timer_divide_conf, 0x3);
-    lapic_write(timer_inital_count, ticks); 
+    lapic->write(lapic->timer_lvt(), 32 | 0x20000);
+    lapic->write(lapic->timer_divide_conf(), 0x3);
+    lapic->write(lapic->timer_inital_count(), ticks); 
+}
+
+x2apic::x2apic() {
+    cpuid_state cpu_state = cpuid(1, 0);
+
+    if(!(cpu_state.rcx & (1 << 21)))
+        return;
+
+    size_t apic_base = rdmsr(msr_lapic_base);
+    apic_base |= 0b11 << 10;
+    wrmsr(msr_lapic_base, apic_base);
 }
 
 void init() {
@@ -123,6 +121,14 @@ void init() {
     }
 
     print("[ACPI] core count detected {}\n", madt0_list.size());
+
+    cpuid_state cpu_state = cpuid(1, 0);
+
+    if(cpu_state.rcx & (1 << 21)) {
+        lapic = new x2apic;
+    } else {
+        lapic = new xapic;
+    }
 
     outb(0x20, 0x11);
     outb(0xa0, 0x11);
@@ -157,7 +163,7 @@ void init() {
 
     ioapic_validate(2).mask_gsi(2);
 
-    lapic_write(sint, lapic_read(sint) | 0x1ff); // enable spurious interrupts
+    lapic->write(lapic->sint(), lapic->read(lapic->sint()) | 0x1ff); // enable spurious interrupts
 
     asm volatile ("mov %0, %%cr8" :: "r"(0ull));
 }

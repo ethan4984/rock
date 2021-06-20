@@ -25,8 +25,10 @@ static void core_bootstrap(size_t core_index) {
 
     apic::timer_calibrate(100);
 
-    apic::lapic_write(apic::sint, apic::lapic_read(apic::sint) | 0x1ff);
+    apic::lapic->write(apic::lapic->sint(), apic::lapic->read(apic::lapic->sint()) | 0x1ff);
     asm volatile ("mov %0, %%cr8\nsti" :: "r"(0ull));
+
+    print("Hello from core {}\n", core_index);
 
     for(;;)
         asm ("pause");
@@ -43,7 +45,7 @@ void boot_aps() {
     x86::gdtr gdtr;
     asm volatile ("sgdt %0" :: "m"(gdtr));
 
-    uint32_t current_apic_id = apic::lapic_read(apic::id_reg);
+    uint32_t current_apic_id = apic::lapic->read(apic::lapic->id_reg());
 
     vmm::kernel_mapping->map_page_raw(0, 0, 0x3, 0x3 | (1 << 7) | (1 << 8)); 
 
@@ -75,8 +77,8 @@ void boot_aps() {
                         reinterpret_cast<uint64_t>(&gdtr),
                         cpus.size() - 1);
                     
-            apic::send_ipi(apic_id, 0x500); // MT = 0b101 for init ipi
-            apic::send_ipi(apic_id, 0x600 | 1); // MT = 0b11 for startup, vec = 1 for 0x1000
+            apic::lapic->send_ipi(apic_id, 0x500); // MT = 0b101 for init ipi
+            apic::lapic->send_ipi(apic_id, 0x600 | 1); // MT = 0b11 for startup, vec = 1 for 0x1000
 
             ksleep(20);
         }

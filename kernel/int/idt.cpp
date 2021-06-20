@@ -84,7 +84,7 @@ extern "C" void isr_handler_main(regs *regs_cur) {
 
     func_array<void(regs*)>::data[regs_cur->isr_number](regs_cur);
 
-    apic::lapic_write(apic::eoi, 0);
+    apic::lapic->write(apic::lapic->eoi(), 0);
 }
 
 void idt_init() {

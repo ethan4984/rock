@@ -21,6 +21,7 @@ CXX_FLAGS = -I. \
 			-fno-rtti \
 			-mcmodel=kernel \
 			-fno-builtin \
+			-flto 
 
 LINK_FLAGS = -nostartfiles \
 			 -nodefaultlibs \

@@ -158,7 +158,7 @@ found:
         data |= 0 << 11; // fixed delivery mode
 
         addr |= 0xfee << 20; 
-        addr |= apic::lapic_read(apic::id_reg) << 12; // destination id
+        addr |= apic::lapic->read(apic::lapic->id_reg()) << 12; // destination id
 
         write(off + 0x4, addr);
         write(off + 0xb, data);
@@ -170,7 +170,7 @@ found:
         data |= 0 << 11; // fixed delivery mode
 
         addr |= 0xfee << 20; 
-        addr |= apic::lapic_read(apic::id_reg) << 12; // destination id
+        addr |= apic::lapic->read(apic::lapic->id_reg()) << 12; // destination id
 
         write(off + 0x4, addr);
         write(off + 0x8, data);
