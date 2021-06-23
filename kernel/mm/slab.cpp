@@ -205,12 +205,15 @@ void *calloc(size_t cnt) {
 }
 
 void *realloc(void *addr, size_t cnt) {
+    if(addr == NULL) 
+        return NULL;
+
     size_t alloc_size = free(addr);
 
     void *new_addr = alloc(cnt);
     
     size_t bytes_to_copy = cnt;
-    if(cnt >= alloc_size) 
+    if(cnt > alloc_size) 
         bytes_to_copy = alloc_size;
 
     memcpy8(reinterpret_cast<uint8_t*>(new_addr), reinterpret_cast<uint8_t*>(addr), bytes_to_copy);
@@ -219,6 +222,9 @@ void *realloc(void *addr, size_t cnt) {
 }
 
 void *recalloc(void *addr, size_t cnt) {
+    if(addr == NULL) 
+        return NULL;
+
     size_t alloc_size = free(addr);
 
     void *new_addr = calloc(cnt);

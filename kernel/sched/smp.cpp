@@ -28,8 +28,6 @@ static void core_bootstrap(size_t core_index) {
     apic::lapic->write(apic::lapic->sint(), apic::lapic->read(apic::lapic->sint()) | 0x1ff);
     asm volatile ("mov %0, %%cr8\nsti" :: "r"(0ull));
 
-    print("Hello from core {}\n", core_index);
-
     for(;;)
         asm ("pause");
 }

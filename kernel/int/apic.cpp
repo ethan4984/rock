@@ -91,6 +91,8 @@ x2apic::x2apic() {
     size_t apic_base = rdmsr(msr_lapic_base);
     apic_base |= 0b11 << 10;
     wrmsr(msr_lapic_base, apic_base);
+
+    print("Poggin\n");
 }
 
 void init() {

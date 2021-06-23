@@ -56,6 +56,8 @@ extern "C" int main(size_t stivale_phys) {
     x86::gdt_init();
     x86::idt_init();
 
+    new x86::tss;
+
     rsdp_ptr = reinterpret_cast<rsdp*>(stivale_virt->rsdp + vmm::high_vma);
 
     if(rsdp_ptr->xsdt_addr) {
