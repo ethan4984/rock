@@ -189,7 +189,10 @@ private:
 class xapic : public xxapic {
 public:
     size_t read(size_t reg) const override {
-        return *reinterpret_cast<volatile uint32_t*>((rdmsr(msr_lapic_base) & 0xfffff000) + vmm::high_vma + reg);
+        size_t ret = *reinterpret_cast<volatile uint32_t*>((rdmsr(msr_lapic_base) & 0xfffff000) + vmm::high_vma + reg);
+        if(reg == id_reg_off)
+            return ret >> 24;
+        return ret;
     }
 
     void write(size_t reg, size_t data) const override {

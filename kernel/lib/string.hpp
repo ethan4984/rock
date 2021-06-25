@@ -12,7 +12,7 @@ public:
     string(string &&other);
     string(const char *raw);
     string(const char *raw, size_t length);
-    string() = default;
+    string() : _length(0), _raw(NULL) { }
     ~string();
 
     string &operator= (string other);

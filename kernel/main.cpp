@@ -20,8 +20,13 @@
 #include <map.hpp>
 
 extern "C" void __cxa_pure_virtual() { while (1); }
-
 extern "C" void _init();
+
+void kernel_thread() {
+    print("Welcome to the kernel thread bois\n");
+    for(;;)
+        asm ("pause");
+}
 
 extern "C" int main(size_t stivale_phys) {
     cpuid_state cpu_id = cpuid(7, 0);
@@ -76,6 +81,9 @@ extern "C" int main(size_t stivale_phys) {
     pci::scan_devices();
 
     apic::timer_calibrate(100);
+
+    ssize_t pid = sched::create_task(-1, NULL);
+    sched::create_thread(pid, (size_t)kernel_thread, 0x8);
 
     asm ("sti");
 

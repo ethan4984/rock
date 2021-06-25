@@ -57,6 +57,7 @@ T &map<F, T>::operator[] (const F &index) {
     }
 
     _tags.push(index);
+
     return _data.push(T());
 }
 

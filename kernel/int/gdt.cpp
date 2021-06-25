@@ -53,14 +53,6 @@ tss_descriptor::tss_descriptor(uint64_t addr) {
     raw.base_high = addr >> 24 & 0xff;
     raw.base_high32 = addr >> 32 & 0xffffffff;
     raw.reserved = 0;
-
-/*    raw.length = 104;
-    raw.base_low = (uint16_t)addr;
-    raw.base_mid = (uint8_t)(addr >> 16);
-    raw.flags1 = 0b10001001;
-    raw.flags2 = 0;
-    raw.base_high = (uint8_t)(addr >> 24);
-    raw.base_high32 = (uint32_t)(addr >> 32);*/
 }
 
 tss::tss() {

@@ -59,15 +59,16 @@ void vector<T>::swap(vector &a, vector &b) {
 }
 
 template <typename T>
-vector<T>::vector(const vector &other) {
+vector<T>::vector(const vector &other) : elements(NULL), buf_size(0), buf_cap(0) {
     buf_size = other.buf_size;
     internal_resize(buf_size);
-    for(size_t i = 0; i < buf_size; i++)
+    for(size_t i = 0; i < buf_size; i++) {
         new (&elements[i]) T(other[i]);
+    }
 }
 
 template <typename T>
-vector<T>::vector(vector &&other) {
+vector<T>::vector(vector &&other) : elements(NULL), buf_size(0), buf_cap(0) {
     swap(*this, other);
 }
 
@@ -76,8 +77,9 @@ vector<T>::vector() : elements(NULL), buf_size(0), buf_cap(0) { }
 
 template <typename T>
 vector<T>::~vector() {
-    for(size_t i = 0; i < buf_size; i++)
+    for(size_t i = 0; i < buf_size; i++) {
         elements[i].~T();
+    }
     delete elements;
 }
 

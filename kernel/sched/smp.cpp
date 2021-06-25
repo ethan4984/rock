@@ -23,8 +23,10 @@ static void prep_core(size_t stack, uint64_t pml4, uint64_t entry, uint64_t idt,
 static void core_bootstrap(size_t core_index) {
     wrmsr(msr_gs_base, core_index);
 
-    apic::timer_calibrate(100);
+    //new x86::tss;
 
+    apic::x2apic();
+    apic::timer_calibrate(100);
     apic::lapic->write(apic::lapic->sint(), apic::lapic->read(apic::lapic->sint()) | 0x1ff);
     asm volatile ("mov %0, %%cr8\nsti" :: "r"(0ull));
 
@@ -63,7 +65,7 @@ void boot_aps() {
         cpus.push(new_cpu);
 
         if(apic_id == current_apic_id) {
-            wrmsr(msr_gs_base, reinterpret_cast<size_t>(&cpus.data()[cpus.size() - 1]));
+            wrmsr(msr_gs_base, reinterpret_cast<size_t>(&cpus.data()[i]));
             continue;
         }
 
@@ -73,7 +75,7 @@ void boot_aps() {
                         reinterpret_cast<uint64_t>(core_bootstrap),
                         reinterpret_cast<uint64_t>(&idtr),
                         reinterpret_cast<uint64_t>(&gdtr),
-                        cpus.size() - 1);
+                        i);
                     
             apic::lapic->send_ipi(apic_id, 0x500); // MT = 0b101 for init ipi
             apic::lapic->send_ipi(apic_id, 0x600 | 1); // MT = 0b11 for startup, vec = 1 for 0x1000
