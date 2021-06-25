@@ -79,11 +79,17 @@ void reschedule(regs *regs_cur) {
         return ret;
     } ();
 
+    smp::cpu &cpu_local = smp::core_local();
+
     if(next_pid == -1) {
-        if(regs_cur->cs & 0x3)
-            swapgs();
-        spin_release(&scheduler_lock);
-        return;
+        if(cpu_local.pid != -1) {
+            next_pid = cpu_local.pid;
+        } else {
+            if(regs_cur->cs & 0x3)
+                swapgs();
+            spin_release(&scheduler_lock);
+            return;
+        }
     }
 
     task &next_task = task_list[next_pid];
@@ -112,8 +118,6 @@ void reschedule(regs *regs_cur) {
     }
 
     thread &next_thread = task_list[next_pid].threads[next_tid];
-
-    smp::cpu &cpu_local = smp::core_local();
 
     if(cpu_local.tid != -1 && cpu_local.pid != -1) {
         task &last_task = task_list[cpu_local.pid];
