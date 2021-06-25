@@ -21,9 +21,9 @@ static void prep_core(size_t stack, uint64_t pml4, uint64_t entry, uint64_t idt,
 }
 
 static void core_bootstrap(size_t core_index) {
-    wrmsr(msr_gs_base, core_index);
+    new x86::tss;
 
-    //new x86::tss;
+    wrmsr(msr_gs_base, reinterpret_cast<size_t>(&cpus.data()[core_index]));
 
     apic::x2apic();
     apic::timer_calibrate(100);

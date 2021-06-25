@@ -63,7 +63,7 @@ void reschedule(regs *regs_cur) {
     if(regs_cur->cs & 0x3)
         swapgs();
 
-    auto &&next_pid = []() {
+    auto next_pid = []() {
         ssize_t ret = -1;
 
         for(size_t i = 0, cnt = 0; i < task_list.size(); i++) {
@@ -88,7 +88,7 @@ void reschedule(regs *regs_cur) {
 
     task &next_task = task_list[next_pid];
 
-    auto &&next_tid = [&]() {
+    auto next_tid = [&]() {
         ssize_t ret = -1;
 
         for(size_t i = 0, cnt = 0; i < next_task.threads.size(); i++) {
