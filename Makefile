@@ -17,9 +17,9 @@ build:
 	cd kernel && make -j16
 	cd user && make 
 	rm -f rock.img disk.img usb.img
-	dd if=/dev/zero bs=1M count=0 seek=256 of=rock.img
-	dd if=/dev/zero bs=1M count=0 seek=256 of=disk.img
-	dd if=/dev/zero bs=1M count=0 seek=256 of=usb.img
+	dd if=/dev/zero bs=1M count=0 seek=512 of=rock.img
+	dd if=/dev/zero bs=1M count=0 seek=512 of=disk.img
+	dd if=/dev/zero bs=1M count=0 seek=512 of=usb.img
 	parted -s rock.img mklabel msdos
 	parted -s rock.img mkpart primary 1 100%
 	rm -rf disk_image/

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 git clone --single-branch -b latest-binary https://github.com/limine-bootloader/limine
-git clone https://github.com/managarm/cxxshim.git
+git clone https://github.com/ethan4984/cxxshim.git
 
 PREFIX="$(pwd)"
 TARGET=x86_64-elf

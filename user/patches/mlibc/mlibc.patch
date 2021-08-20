@@ -80,7 +80,7 @@ new file mode 100644
 index 0000000..ddc5004
 --- /dev/null
 +++ b/ports/mlibc-workdir/sysdeps/rock/generic/generic.cpp
-@@ -0,0 +1,384 @@
+@@ -0,0 +1,382 @@
 +#include <bits/ensure.h>
 +#include <mlibc/debug.hpp>
 +#include <mlibc/all-sysdeps.hpp>
