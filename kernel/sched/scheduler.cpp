@@ -28,7 +28,7 @@ arguments::arguments(const char **raw_argv, const char **raw_envp) : raw_argv(ra
         dest[i] = NULL;
     };
 
-	argv_cnt = arg_cnt(raw_argv);
+    argv_cnt = arg_cnt(raw_argv);
     envp_cnt = arg_cnt(raw_envp);
 
     argv = new char*[argv_cnt + 1];
@@ -145,7 +145,7 @@ task::task(ssize_t ppid) : ppid(ppid), idle_cnt(0) {
     task_list[pid] = this;
 }
 
-ssize_t task::exec(lib::string path, uint16_t cs, arguments args, tid_t tid) {
+ssize_t task::exec(lib::string path, uint16_t cs, arguments args, vfs::node *working_dir, tid_t tid) {
     smp::cpu *core = smp::core_local();
 
     page_map = core->page_map->create_generic();
@@ -187,12 +187,13 @@ ssize_t task::exec(lib::string path, uint16_t cs, arguments args, tid_t tid) {
         threads[tid]->exec(entry_point, cs, &aux, args);
     }
 
+    working_directory = working_dir;
+
     size_t save_pid = core->pid;
     core->pid = pid;
 
     fs::alloc_fd(lib::string("/dev/tty"), s_irusr | s_iwusr);
     fs::alloc_fd(lib::string("/dev/tty"), s_iwusr | s_irusr);
-    //fs::alloc_fd(lib::string("/dev/err"), s_iwusr | s_irusr | o_creat);
     fs::alloc_fd(lib::string("/dev/tty"), s_irusr | s_iwusr);
 
     core->pid = save_pid;
@@ -392,6 +393,8 @@ extern "C" void syscall_fork(regs *regs_cur) {
     new_thread->tid = new_task->tid_bitmap.alloc();
     new_thread->pid = new_task->pid;
 
+    new_task->working_directory = current_task->working_directory;
+
     task_list[new_task->pid]->threads[new_thread->tid] = new_thread;
     task_list[new_task->pid]->fd_list = current_task->fd_list;
 
@@ -412,6 +415,13 @@ extern "C" void syscall_execve(regs *regs_cur) {
     current_task->status = task_waiting;
     current_task->idle_cnt = 0;
 
+    vfs::node *path_vfs_node = vfs::root_cluster->search_absolute(path);
+    if(path_vfs_node == NULL) { 
+        set_errno(enoent);
+        regs_cur->rax = -1;
+        return;
+    }
+
     for(size_t i = 0; i < current_task->fd_list.bitmap_size; i++) {
         current_task->fd_list.list.remove(bm_test(current_task->fd_list.bitmap, i));
         bm_clear(current_task->fd_list.bitmap, i); 
@@ -419,7 +429,7 @@ extern "C" void syscall_execve(regs *regs_cur) {
 
     arguments args(argv, envp);
 
-    current_task->exec(lib::string(path), 0x23, args, current_thread->tid);
+    current_task->exec(lib::string(path), 0x23, args, path_vfs_node->parent, current_thread->tid);
 
     core->pid = -1;
     core->tid = -1;

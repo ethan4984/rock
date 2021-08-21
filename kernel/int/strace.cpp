@@ -30,6 +30,7 @@ extern "C" void syscall_fork(regs*);
 extern "C" void syscall_waitpid(regs*);
 extern "C" void syscall_readdir(regs*);
 extern "C" void syscall_execve(regs*);
+extern "C" void syscall_getcwd(regs*);
 
 struct syscall {
     lib::string name;
@@ -65,7 +66,8 @@ syscall syscall_list[] = {
     { .name = "fork", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: fork { }\n"); }, .handler = syscall_fork, .has_return = true },
     { .name = "waitpid", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: waitpid { pid: {x}, status {x}, flags {x} }\n", regs_cur->rdi, regs_cur->rsi, regs_cur->rdx); }, .handler = syscall_waitpid, .has_return = true },
     { .name = "readdir", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: readdir { fd: {x}, buf {x} }\n", regs_cur->rdi, regs_cur->rsi); }, .handler = syscall_readdir, .has_return = true },
-    { .name = "execve", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: execve { }\n"); }, .handler = syscall_execve, .has_return = true },
+    { .name = "execve", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: execve { }\n"); }, .handler = syscall_execve, .has_return = false },
+    { .name = "getcwd", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: getcwd { buffer: {x}, length: {x} }\n", regs_cur->rdi, regs_cur->rsi); }, .handler = syscall_getcwd, .has_return = true },
 };
 
 extern "C" void syscall_view(regs *regs_cur) {
@@ -79,9 +81,6 @@ extern "C" void syscall_view(regs *regs_cur) {
 
     static char lock = 0;
 
-    smp::cpu *cpu = smp::core_local();
-    vmm::pmlx_table *page_map = cpu->page_map;
-    
     spin_lock(&lock);
     syscall_list[index].logger(regs_cur);
     spin_release(&lock);

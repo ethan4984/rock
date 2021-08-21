@@ -158,7 +158,20 @@ extern "C" void syscall_open(regs *regs_cur) {
     smp::cpu *core = smp::core_local();
     sched::task *current_task = sched::task_list[core->pid];
 
-    lib::string path((char*)regs_cur->rdi);
+    lib::string path = lib::string((char*)regs_cur->rdi);
+
+    if(path[0] != '/') {
+        vfs::node *vfs_path = vfs::root_cluster->search_absolute(lib::string((char*)regs_cur->rdi), current_task->working_directory);
+
+        if(vfs_path == NULL) {
+            set_errno(enoent);
+            regs_cur->rax = -1;
+            return;
+        }
+
+        path = vfs::get_absolute_path(vfs_path);
+    }
+
     int flags = regs_cur->rsi;
     int mode = s_irusr | s_iwusr;
 
@@ -303,14 +316,22 @@ extern "C" void syscall_fstat(regs *regs_cur) {
 }
 
 extern "C" void syscall_fstatat(regs *regs_cur) {
+    smp::cpu *core = smp::core_local();
+    sched::task *current_task = sched::task_list[core->pid];
+
     lib::string path = lib::string((char*)regs_cur->rsi);
 
     vfs::node *vfs_node = NULL;
     vfs::node *parent = NULL;
 
     if(regs_cur->rdi == 0xFFFFFF9C) {
-        vfs_node = vfs::root_cluster->search_absolute(path);
-        parent = vfs::root_cluster->root_node;
+        if(path[0] != '/') {
+            vfs_node = vfs::root_cluster->search_absolute(path, current_task->working_directory);
+            parent = current_task->working_directory;
+        } else {
+            vfs_node = vfs::root_cluster->search_absolute(path);
+            parent = vfs::root_cluster->root_node;
+        }
     } else {
         SYSCALL_FD_TRANSLATE(regs_cur->rdi);
         vfs_node = vfs::root_cluster->search_absolute(path, fd_back.vfs_node);
@@ -394,6 +415,27 @@ extern "C" void syscall_readdir(regs *regs_cur) {
     }
 
     regs_cur->rax = 0;
+}
+
+extern "C" void syscall_getcwd(regs *regs_cur) {
+    smp::cpu *core = smp::core_local();
+    sched::task *current_task = sched::task_list[core->pid];
+
+    char *buffer = (char*)regs_cur->rdi;
+    ssize_t length = regs_cur->rsi;
+
+    lib::string cwd_path = vfs::get_absolute_path(current_task->working_directory);
+    if(cwd_path.length() <= length) {
+        memcpy8((uint8_t*)buffer, (uint8_t*)cwd_path.data(), cwd_path.length());
+    } else {
+        set_errno(erange);
+        regs_cur->rax = 0;
+        return;
+    }
+
+    print("cwd path {x}\n", cwd_path);
+
+    regs_cur->rax = (size_t)buffer;
 }
 
 }

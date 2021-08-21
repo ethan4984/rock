@@ -100,7 +100,7 @@ extern "C" int main(size_t stivale_phys) {
     sched::arguments args(argv, envp); 
 
     sched::task *new_task = new sched::task(-1);
-    new_task->exec("/usr/bin/bash", 0x23, args);
+    new_task->exec("/usr/bin/bash", 0x23, args, vfs::root_cluster->root_node);
 
     for(;;)
         asm ("pause");

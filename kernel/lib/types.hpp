@@ -94,6 +94,7 @@ constexpr size_t eexist = 1019;
 constexpr size_t eisdir = 1019;
 constexpr size_t espipe = 1069;
 constexpr size_t enotdir = 1053;
+constexpr size_t erange = 3;
 
 constexpr size_t f_dupfd = 1;
 constexpr size_t f_dupfd_cloexec = 2;

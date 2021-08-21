@@ -112,7 +112,7 @@ node *cluster::search_absolute(lib::string absolute_path, node *vfs_node) {
         return root_node;
     }
 
-    node *cur = root_node;
+    node *cur = vfs_node;
     if(vfs_node == NULL)
         cur = root_node;
 
@@ -167,6 +167,12 @@ node::node(cluster *parent_cluster, fs *filesystem, uint16_t mode, lib::string a
         new_node->filesystem = filesystem;
 
         new_node->stat_cur->st_mode = st_mode;
+
+        if(name == "..") {
+            new_node->child = parent;
+        } else if(name == ".") { 
+            new_node->child = new_node;
+        }
 
         new_node->parent = parent;
         node *cur = parent->child;

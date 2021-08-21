@@ -71,9 +71,9 @@ struct thread {
 struct task {
     task(ssize_t ppid, vmm::pmlx_table *page_map);
     task(ssize_t ppid);
-    task() : pid(-1), ppid(-1), idle_cnt(0) { }
+    task() : pid(-1), ppid(-1), idle_cnt(0), working_directory(NULL) { }
 
-    ssize_t exec(lib::string path, uint16_t cs, arguments args, tid_t tid = -1);
+    ssize_t exec(lib::string path, uint16_t cs, arguments args, vfs::node *working_dir, tid_t tid = -1);
 
     pid_t pid;
     pid_t ppid;
@@ -84,6 +84,8 @@ struct task {
     lib::map<ssize_t, thread*> threads;
     lib::bitmap tid_bitmap;
     lib::vector<event> event_list;
+
+    vfs::node *working_directory;
 
     struct {
         lib::map<ssize_t, fs::fd> list;

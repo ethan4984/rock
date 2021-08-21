@@ -80,7 +80,7 @@ new file mode 100644
 index 0000000..ddc5004
 --- /dev/null
 +++ b/ports/mlibc-workdir/sysdeps/rock/generic/generic.cpp
-@@ -0,0 +1,382 @@
+@@ -0,0 +1,397 @@
 +#include <bits/ensure.h>
 +#include <mlibc/debug.hpp>
 +#include <mlibc/all-sysdeps.hpp>
@@ -166,6 +166,7 @@ index 0000000..ddc5004
 +#define SYSCALL_WAITPID 24
 +#define SYSCALL_READDIR 25
 +#define SYSCALL_EXECVE 26
++#define SYSCALL_GETCWD 27
 +
 +namespace mlibc {
 +
@@ -391,12 +392,12 @@ index 0000000..ddc5004
 +
 +int sys_sigprocmask(int how, const sigset_t *__restrict set, sigset_t *__restrict retrieve) {
 +    mlibc::infoLogger() << "mlibc: " << __func__ << " is a stub!\n" << frg::endlog;
-+    return ENOSYS;
++	return 0;
 +}
 +
 +int sys_sigaction(int signum, const struct sigaction *act, struct sigaction *oldact) {
 +    mlibc::infoLogger() << "mlibc: " << __func__ << " is a stub!\n" << frg::endlog;
-+    return ENOSYS;
++	return 0; 
 +}
 +
 +int sys_pselect(int num_fds, fd_set *read_set, fd_set *write_set, fd_set *except_set,
@@ -460,6 +461,20 @@ index 0000000..ddc5004
 +    int errno, ret;
 +    SYSCALL3(SYSCALL_EXECVE, path, argv, envp);
 +    return errno;
++}
++
++int sys_access(const char *path, int mode) {
++	return 0;
++}
++
++int sys_getcwd(char *buffer, size_t size) {
++	int errno, ret;
++	SYSCALL2(SYSCALL_GETCWD, buffer, size);
++
++	if(ret == 0)
++        return errno;
++
++    return 0;
 +}
 +
 +} // namespace mlibc
