@@ -7,7 +7,6 @@ namespace fs {
 
 struct fd {
     fd(lib::string path, int flags, int backing_fd);
-    fd(int backing_fd);
     fd() : status(0), backing_fd(-1), _loc(NULL), dirent(false), vfs_node(NULL) { }
 
     int read(void *buf, size_t cnt);

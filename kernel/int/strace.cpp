@@ -31,6 +31,7 @@ extern "C" void syscall_waitpid(regs*);
 extern "C" void syscall_readdir(regs*);
 extern "C" void syscall_execve(regs*);
 extern "C" void syscall_getcwd(regs*);
+extern "C" void syscall_chdir(regs*);
 
 struct syscall {
     lib::string name;
@@ -68,6 +69,7 @@ syscall syscall_list[] = {
     { .name = "readdir", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: readdir { fd: {x}, buf {x} }\n", regs_cur->rdi, regs_cur->rsi); }, .handler = syscall_readdir, .has_return = true },
     { .name = "execve", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: execve { }\n"); }, .handler = syscall_execve, .has_return = false },
     { .name = "getcwd", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: getcwd { buffer: {x}, length: {x} }\n", regs_cur->rdi, regs_cur->rsi); }, .handler = syscall_getcwd, .has_return = true },
+    { .name = "chdir", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: chdir { path: {} }\n", (char*)regs_cur->rdi); }, .handler = syscall_chdir, .has_return = true },
 };
 
 extern "C" void syscall_view(regs *regs_cur) {

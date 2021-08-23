@@ -553,10 +553,6 @@ pmlx_table *pmlx_table::duplicate() {
     pmlx_table *new_table = create_generic();
 
     for(size_t i = 0; i < mmap.region_list.size(); i++) {
-        print("{x} {x} {x} {x}\n", mmap.region_list[i].base, mmap.region_list[i].limit, mmap.region_list[i].prot, mmap.region_list[i].flags);
-    }
-
-    for(size_t i = 0; i < mmap.region_list.size(); i++) {
         region &region_cur = mmap.region_list[i];
         auto page_cnt = div_roundup(region_cur.limit, vmm::page_size);
         auto base = region_cur.base;

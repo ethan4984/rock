@@ -429,7 +429,7 @@ extern "C" void syscall_execve(regs *regs_cur) {
 
     arguments args(argv, envp);
 
-    current_task->exec(lib::string(path), 0x23, args, path_vfs_node->parent, current_thread->tid);
+    current_task->exec(lib::string(path), 0x23, args, current_task->working_directory, current_thread->tid);
 
     core->pid = -1;
     core->tid = -1;

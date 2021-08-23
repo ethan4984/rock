@@ -94,6 +94,9 @@ extern "C" int main(size_t stivale_phys) {
 
     const char *argv[] = { "/usr/bin/bash", NULL };
     const char *envp[] = {
+        "HOME=/",
+        "PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+        "TERM=linux",
         NULL
     };
 

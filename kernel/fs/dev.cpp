@@ -6,7 +6,7 @@
 namespace dev {
 
 ssize_t msd::read(size_t off, size_t cnt, void *buf) {
-    /*cache_block_size = 0x10000;
+    /*j*******cache_block_size = 0x10000;
 
     size_t headway = 0;
 
@@ -16,7 +16,7 @@ ssize_t msd::read(size_t off, size_t cnt, void *buf) {
         size_t size = cnt - headway;
         size_t offset = (off + headway) % cache_block_size;
 
-        if(size > cache_block_size - offset)
+        if(size > (cache_block_size - offset))
             size = cache_block_size - offset;
 
         void *cache = search_cache(cache_block_index);

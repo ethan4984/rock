@@ -7,6 +7,16 @@
 
 namespace mm {
 
+size_t conflicts(vmm::pmlx_table *page_map, ssize_t address, ssize_t length) {
+    for(size_t i = 0; i < page_map->mmap.region_list.size(); i++) { 
+        vmm::region &cur = page_map->mmap.region_list[i];
+        if(address <= cur.limit && length <= cur.base) {
+            return cur.limit + length;
+        }
+    }
+    return 0;
+}
+
 void *mmap(vmm::pmlx_table *page_map, void *addr, size_t length, int prot, int flags, int fd, [[maybe_unused]] ssize_t off) {
     if(length == 0 || length % vmm::page_size) {
         set_errno(einval); 
@@ -21,6 +31,13 @@ void *mmap(vmm::pmlx_table *page_map, void *addr, size_t length, int prot, int f
     if(flags & map_fixed) {
         base = (uintptr_t)addr;
     } else {
+        size_t conflict_offset = conflicts(page_map, base, length);
+
+        if(conflict_offset) {
+            page_map->mmap.base += align_up(conflict_offset, vmm::page_size);
+            return mmap(page_map, addr, length, prot, flags, fd, off);
+        }
+
         base = page_map->mmap.base;
         page_map->mmap.base += length; 
     }
@@ -43,6 +60,15 @@ void *mmap(vmm::pmlx_table *page_map, void *addr, size_t length, int prot, int f
 }
 
 ssize_t munmap(vmm::pmlx_table *page_map, void *addr, size_t length) {
+/*    lib::vector<vmm::region> free_regions; 
+
+    for(size_t i = 0; i < page_map->mmap.region_list.size(); i++) { 
+        vmm::region &cur = page_map->mmap.region_list[i];
+        if(address <= cur.limit && length <= cur.base) {
+            vmm::region new_region {};
+        }
+    }*/
+
     return 0;
 }
 

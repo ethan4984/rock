@@ -48,6 +48,24 @@ struct formatter<lib::string> {
     }
 };
 
+template <>
+struct formatter<bool> {
+    template <typename out>
+    static void format(out &output_format, bool arg, [[maybe_unused]] int base) {
+        auto write_string = [](out &output_format, lib::string str) -> void {
+            for(size_t i = 0; i < str.length(); i++) {
+                output_format.write(str[i]);
+            }
+        };
+
+        if(arg) {
+            write_string(output_format, "true");    
+        } else { 
+            write_string(output_format, "false");
+        }
+    }
+};
+
 template <typename out, typename T>
 void print_integer(out &output_format, T arg, int base) {
     static char digits[] = "0123456789ABCDEF";

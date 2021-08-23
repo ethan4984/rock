@@ -1,6 +1,6 @@
 QEMUFLAGS = -m 4G \
 			-serial file:serial.log \
-			-smp 4 \
+			-smp 1 \
 			-drive file=disk.img,if=none,id=NVME1 \
 			-device nvme,drive=NVME1,serial=nvme \
 			-drive id=disk,file=rock.img,if=none \

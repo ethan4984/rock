@@ -359,19 +359,23 @@ extern "C" void syscall_readdir(regs *regs_cur) {
     SYSCALL_FD_TRANSLATE(regs_cur->rdi);
     dirent *buffer = (dirent*)regs_cur->rsi;
 
-    if(fd_back.vfs_node->is_directory()) {
-        set_errno(enotdir);
-        regs_cur->rax = -1;
-        return;
-    }
-
     vfs::node *current_node;
 
     if(fd_back.dirent) {
-        current_node = vfs::root_cluster->search_absolute(buffer->d_name);
+        current_node = vfs::root_cluster->search_absolute(buffer->d_name, fd_back.vfs_node);
     } else {
-        current_node = fd_back.vfs_node;
+        if(fd_back.vfs_node->name != "." && fd_back.vfs_node->name != "..") {
+            current_node = fd_back.vfs_node->child;
+        } else {
+            current_node = fd_back.vfs_node->next;
+        }
         fd_back.dirent = true;
+    }
+
+    if(current_node == NULL) {
+        set_errno(0);
+        regs_cur->rax = -1;
+        return;
     }
 
     vfs::node *next_node = current_node->next;
@@ -433,9 +437,23 @@ extern "C" void syscall_getcwd(regs *regs_cur) {
         return;
     }
 
-    print("cwd path {x}\n", cwd_path);
-
     regs_cur->rax = (size_t)buffer;
+}
+
+extern "C" void syscall_chdir(regs *regs_cur) {
+    smp::cpu *core = smp::core_local();
+    sched::task *current_task = sched::task_list[core->pid];
+
+    vfs::node *vfs_node = vfs::root_cluster->search_absolute(lib::string((char*)regs_cur->rdi));
+    if(vfs_node == NULL) {
+        set_errno(enoent);
+        regs_cur->rax = -1;
+        return;
+    }
+
+    current_task->working_directory = vfs_node;
+
+    regs_cur->rax = 0;
 }
 
 }

@@ -156,7 +156,7 @@ int fs::refresh_node(inode &inode_cur, lib::string mount_gate) {
         lib::string absolute_path = mount_gate + name;
 
         if(name == "." || name == "..") {
-            root_cluster->generate_node(absolute_path, NULL, 0); 
+            root_cluster->generate_node(absolute_path, NULL, s_ifdir); 
             i += dir_cur->entry_size;
             continue;
         }
@@ -231,12 +231,17 @@ int fs::raw_open(vfs::node *vfs_node, uint16_t flags) {
         return 0;
     }
 
-    dir dir_entry(&root_inode, vfs::get_relative_path(vfs_node), true); 
-    if(dir_entry.raw == NULL)
-        return -1;
-    
-    inode inode_cur(this, dir_entry.raw->inode);
+    inode inode_cur;
 
+    if(vfs_node->name == "/") {
+        inode_cur = root_inode;
+    } else {
+        dir dir_entry(&root_inode, vfs::get_relative_path(vfs_node), true); 
+        if(dir_entry.raw == NULL)
+            return -1;
+        inode_cur = inode(this, dir_entry.raw->inode);
+    }
+    
     vfs_node->stat_cur->st_mode |= flags;
     vfs_node->stat_cur->st_size = inode_cur.raw.size32l;
     vfs_node->stat_cur->st_nlink = inode_cur.raw.hard_link_cnt;

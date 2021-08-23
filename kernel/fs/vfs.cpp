@@ -56,6 +56,7 @@ cluster::cluster(fs *filesystem) : filesystem(filesystem) {
     root_node->name = "/";
     root_node->parent = root_node;
     root_node->stat_cur = (stat*)kmm::calloc(sizeof(stat));
+    root_node->stat_cur->st_mode = s_ifdir;
 }
 
 cluster::cluster(node *vfs_node, fs *filesystem) : filesystem(filesystem) {
@@ -64,6 +65,7 @@ cluster::cluster(node *vfs_node, fs *filesystem) : filesystem(filesystem) {
     root_node->name = "/";
     root_node->parent = vfs_node;
     root_node->stat_cur = (stat*)kmm::calloc(sizeof(stat));
+    root_node->stat_cur->st_mode = s_ifdir;
 }
 
 void cluster::generate_node(lib::string absolute_path, fs *override_filesystem, uint16_t mode, default_ioctl *ioctl_device) {
@@ -74,8 +76,12 @@ void cluster::generate_node(lib::string absolute_path, fs *override_filesystem, 
     }
 }
 
-node *node::search_relative(lib::string name) {
-    node *cur = (child == NULL) ? parent->child : child;
+/*
+ * Search for a node within this directory
+ */
+
+node *node::search_relative_local(lib::string name) {
+    node *cur = parent->child;
 
     while(cur != NULL) {
         if(cur->name == name)
@@ -85,6 +91,21 @@ node *node::search_relative(lib::string name) {
 
     return NULL;
 }
+
+/*
+ * Search for a node within the next directory
+ */
+
+node *node::search_relative_next(lib::string name) { 
+    if(!is_directory() || child == NULL)
+        return NULL;
+
+    return child->search_relative_local(name);
+}
+
+/*
+ * Search for an absolute path relative to a cluster
+ */
 
 node *cluster::search_absolute(lib::string absolute_path, node *vfs_node) {
     lib::vector<lib::string> sub_paths = [&]() {
@@ -108,23 +129,31 @@ node *cluster::search_absolute(lib::string absolute_path, node *vfs_node) {
         return ret;
     } ();
 
-    if(sub_paths.size() == 0) {
-        return root_node;
+    node *cur;
+    if(vfs_node != NULL) {
+        while(vfs_node->name == ".." || vfs_node->name == ".") {
+            vfs_node = vfs_node->child;
+        }
+        cur = vfs_node;
+    } else {
+        cur = root_node;
     }
 
-    node *cur = vfs_node;
-    if(vfs_node == NULL)
-        cur = root_node;
-
-    for(size_t i = 0; i < sub_paths.size(); i++) {
+    for(size_t i = 0; i < sub_paths.size(); i++) { 
         if(cur->is_directory() && cur->child_cluster != NULL) {
             cur = cur->child_cluster->root_node;
         }
 
-        cur = cur->search_relative(sub_paths[i]);
+        cur = cur->search_relative_next(sub_paths[i]);
 
-        if(cur == NULL) 
+        if(cur == NULL)
             return NULL;
+
+        if(1 + i != sub_paths.size()) {
+            if(cur->name == ".." || cur->name == ".") {
+                cur = cur->child;
+            }
+        }
     }
 
     return cur;
@@ -152,9 +181,6 @@ node::node(cluster *parent_cluster, fs *filesystem, uint16_t mode, lib::string a
         return ret;
     } ();
 
-    node *node_cur = parent_cluster->root_node;
-    node *parent_cur;
-
     auto create_node = [](cluster *parent_cluster, fs *filesystem, node *parent, lib::string name, uint16_t st_mode) -> node* {
         if(parent == NULL)
             return parent_cluster->root_node;
@@ -169,9 +195,11 @@ node::node(cluster *parent_cluster, fs *filesystem, uint16_t mode, lib::string a
         new_node->stat_cur->st_mode = st_mode;
 
         if(name == "..") {
-            new_node->child = parent;
+            new_node->child = parent->parent;
+            new_node->stat_cur->st_mode |= s_ifdir;
         } else if(name == ".") { 
-            new_node->child = new_node;
+            new_node->child = parent;
+            new_node->stat_cur->st_mode |= s_ifdir;
         }
 
         new_node->parent = parent;
@@ -194,11 +222,14 @@ node::node(cluster *parent_cluster, fs *filesystem, uint16_t mode, lib::string a
         return NULL;
     };
 
+
     cluster *current_cluster = parent_cluster;
+    node *node_cur = parent_cluster->root_node;
+    node *parent_cur;
 
     for(size_t i = 0; i < sub_paths.size(); i++) {
         parent_cur = node_cur;
-        node_cur = parent_cur->search_relative(sub_paths[i]);
+        node_cur = parent_cur->search_relative_next(sub_paths[i]);
 
         if(node_cur != NULL) {
             if(node_cur->is_directory() && node_cur->child_cluster != NULL) {
@@ -206,13 +237,14 @@ node::node(cluster *parent_cluster, fs *filesystem, uint16_t mode, lib::string a
                 current_cluster = node_cur->child_cluster;
                 node_cur = node_cur->child_cluster->root_node;
             }
+            continue;
         }
 
         if(node_cur == NULL) {
             for(; i < (sub_paths.size() - 1); i++) {
                 parent_cur = create_node(current_cluster, current_cluster->filesystem, parent_cur, sub_paths[i], mode | s_ifdir);
             }
-            parent_cur = create_node(current_cluster, filesystem, parent_cur, sub_paths[i], mode | s_ifreg);
+            parent_cur = create_node(current_cluster, filesystem, parent_cur, sub_paths[i], mode);
             return;
         }
     }
@@ -320,15 +352,6 @@ int mount(lib::string source, lib::string target) {
 
     return 0;
 }
-
-struct [[gnu::packed]] winsize {
-    uint16_t ws_row;
-    uint16_t ws_col;
-    uint16_t ws_xpixel;
-    uint16_t ws_ypixel;
-};
-
-constexpr size_t tiocginsz = 0x5413;
 
 int node::ioctl(regs *regs_cur) {
     if(ioctl_device == NULL) {

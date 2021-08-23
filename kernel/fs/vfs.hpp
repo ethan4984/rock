@@ -57,7 +57,8 @@ struct node {
     node() = default;
 
     int ioctl(regs *regs_cur);
-    node *search_relative(lib::string name);
+    node *search_relative_local(lib::string name);
+    node *search_relative_next(lib::string name);
 
     lib::string name;
 
