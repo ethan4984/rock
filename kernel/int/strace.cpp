@@ -91,7 +91,7 @@ extern "C" void syscall_view(regs *regs_cur) {
 
     if(syscall_list[index].has_return) {
         print("\e[31m");
-        print("SYSCALL: {} returning {x}\n", syscall_list[index].name, regs_cur->rax);
+        print("SYSCALL: {} returning {x} with errno: {}\n", syscall_list[index].name, regs_cur->rax, get_errno());
     }
 
     print("\e[39m");

@@ -83,6 +83,8 @@ dir::dir(inode *parent_inode, uint32_t new_inode, uint8_t type, char *name) : pa
     uint8_t *buffer = new uint8_t[parent_inode->raw.size32l];
     parent_inode->read(0, parent_inode->raw.size32l, buffer);
 
+	print("Creating file with {}\n", name);
+
     bool found = false;
 
     for(uint32_t i = 0; i < parent_inode->raw.size32l;) { 
@@ -101,6 +103,8 @@ dir::dir(inode *parent_inode, uint32_t new_inode, uint8_t type, char *name) : pa
             memset8((uint8_t*)dir_cur, 0, sizeof(raw_dir));
 
             parent_inode->write(0, parent_inode->raw.size32l, buffer);
+
+			print("hello I hope this setting inode number {}\n", new_inode);
             
             exists = true;
         }
@@ -109,6 +113,9 @@ dir::dir(inode *parent_inode, uint32_t new_inode, uint8_t type, char *name) : pa
         if(dir_cur->entry_size != expected_size) {
             dir_cur->entry_size = expected_size;
             i += expected_size; 
+
+			dir_cur->entry_size = expected_size;
+
             found = 1;
             continue; 
         }

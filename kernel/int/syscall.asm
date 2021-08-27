@@ -72,8 +72,9 @@ syscall_main:
     pop r11 ; rflags
     pop rcx ; rip
 
-    mov rdx, qword [gs:24] ; errno
     cli
+
+    mov rdx, qword [gs:24] ; errno
     mov rsp, qword [gs:16] ; user stack
 
     swapgs

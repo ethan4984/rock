@@ -11,16 +11,16 @@ int fs::read(node *vfs_node, off_t off, off_t cnt, void *buf) {
         return -1;
     }
 
-    if(!(vfs_node->stat_cur->st_mode & s_irusr)) {
+    /*if(!(vfs_node->stat_cur->st_mode & s_irusr)) {
         set_errno(ebadf); 
         return -1;
-    }
+    }*/
 
     return raw_read(vfs_node, off, cnt, buf);
 }
 
 int fs::write(node *vfs_node, off_t off, off_t cnt, void *buf) {
-    if(vfs_node->is_directory()) {
+    /*if(vfs_node->is_directory()) {
         set_errno(eisdir);
         return -1;
     }
@@ -28,7 +28,7 @@ int fs::write(node *vfs_node, off_t off, off_t cnt, void *buf) {
     if(!(vfs_node->stat_cur->st_mode & s_iwusr)) {
         set_errno(ebadf); 
         return -1;
-    }
+    }*/
 
     return raw_write(vfs_node, off, cnt, buf);
 }
@@ -38,11 +38,6 @@ int fs::mkdir(node *vfs_node) {
 }
 
 int fs::open(node *vfs_node, uint16_t status) {
-    if(status & o_creat && status & o_excl) {
-        set_errno(eexist);
-        return -1;
-    }
-
     return raw_open(vfs_node, status);
 }
 
@@ -76,10 +71,6 @@ void cluster::generate_node(lib::string absolute_path, fs *override_filesystem, 
     }
 }
 
-/*
- * Search for a node within this directory
- */
-
 node *node::search_relative_local(lib::string name) {
     node *cur = parent->child;
 
@@ -92,20 +83,12 @@ node *node::search_relative_local(lib::string name) {
     return NULL;
 }
 
-/*
- * Search for a node within the next directory
- */
-
 node *node::search_relative_next(lib::string name) { 
     if(!is_directory() || child == NULL)
         return NULL;
 
     return child->search_relative_local(name);
 }
-
-/*
- * Search for an absolute path relative to a cluster
- */
 
 node *cluster::search_absolute(lib::string absolute_path, node *vfs_node) {
     lib::vector<lib::string> sub_paths = [&]() {

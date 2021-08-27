@@ -100,7 +100,7 @@ void fs::free_inode(uint32_t inode_index) {
 int fs::raw_read(vfs::node *vfs_node, off_t off, off_t cnt, void *buf) {
     if(off > vfs_node->stat_cur->st_size) {
         set_errno(einval);
-        return -1;
+        return 0;
     }
 
     if((off + cnt) > vfs_node->stat_cur->st_size) {
@@ -120,21 +120,26 @@ int fs::raw_read(vfs::node *vfs_node, off_t off, off_t cnt, void *buf) {
 }
 
 int fs::raw_write(vfs::node *vfs_node, off_t off, off_t cnt, void *buf) {
-    if(off > vfs_node->stat_cur->st_size) {
-        return -1;
-    }
-
     lib::string relative_path = vfs::get_relative_path(vfs_node);
 
     dir file_dir_entry(&root_inode, relative_path, true);
-    if(file_dir_entry.raw == NULL) 
+    if(file_dir_entry.raw == NULL) {
         return -1;
+	}
+
+	/*vfs_node->stat_cur->st_mode = s_ifreg;
+	vfs_node->stat_cur->st_size += off + cnt;*/
+
+	print("New size is with {} {}\n", off, vfs_node->stat_cur->st_size);
+
+	print("hello this is insane\n");
 
     inode inode_cur(this, file_dir_entry.raw->inode);
     inode_cur.write(off, cnt, buf);
 
-    if(off + cnt > vfs_node->stat_cur->st_size) {
-        inode_cur.raw.size32l = (vfs_node->stat_cur->st_size += (off + cnt) - vfs_node->stat_cur->st_size);
+    if((off + cnt) > vfs_node->stat_cur->st_size) {
+        inode_cur.raw.size32l = (vfs_node->stat_cur->st_size = off + cnt);
+		inode_cur.write_back();
     }
 
     return cnt;
@@ -194,10 +199,12 @@ int fs::refresh([[maybe_unused]] vfs::node *vfs_node) {
 }
 
 int fs::raw_open(vfs::node *vfs_node, uint16_t flags) {
+	inode inode_cur;
+
     if(flags & o_creat) {
         inode parent_inode;
-        
-        if(vfs::get_relative_path(vfs_node->parent) == "/") {
+
+		if(vfs_node->parent == vfs_node->parent_cluster->root_node) {
             parent_inode = root_inode;
         } else {
             dir dir_entry(&root_inode, vfs::get_relative_path(vfs_node->parent), true); 
@@ -208,41 +215,34 @@ int fs::raw_open(vfs::node *vfs_node, uint16_t flags) {
             parent_inode = inode(this, dir_entry.raw->inode);
         }
 
-        inode new_inode(this, alloc_inode());
+        inode_cur = inode(this, alloc_inode());
 
-        if(new_inode.set_block(0, alloc_block()) == -1)
+        if(inode_cur.set_block(0, alloc_block()) == -1)
             return -1;
 
-        new_inode.raw.sector_cnt = block_size / devfs_node.device->sector_size;
-        new_inode.write_back();
+        inode_cur.raw.sector_cnt = block_size / devfs_node.device->sector_size;
+        inode_cur.write_back();
 
-        char *path = [&]() {
-            lib::string absolute_path = vfs::get_absolute_path(vfs_node);
+        dir create_dir_entry(&parent_inode, inode_cur.inode_index, 0, vfs_node->name.data());
 
-            char *ret = absolute_path.data();
-            ssize_t offset = absolute_path.find_last('/');
-            return ret + offset + 1;
-        } ();
-
-        dir create_dir_entry(&parent_inode, new_inode.inode_index, 0, path);
         parent_inode.raw.hard_link_cnt++;
+		parent_inode.raw.permissions = s_ifreg;
+
         parent_inode.write_back();
-
-        return 0;
-    }
-
-    inode inode_cur;
-
-    if(vfs_node->name == "/") {
-        inode_cur = root_inode;
     } else {
-        dir dir_entry(&root_inode, vfs::get_relative_path(vfs_node), true); 
-        if(dir_entry.raw == NULL)
-            return -1;
-        inode_cur = inode(this, dir_entry.raw->inode);
-    }
+		if(vfs_node->name == "/") {
+			inode_cur = root_inode;
+		} else {
+			dir dir_entry(&root_inode, vfs::get_relative_path(vfs_node), true); 
+			if(dir_entry.exists == false)
+				return -1;
+			inode_cur = inode(this, dir_entry.raw->inode);
+		}
+	}
     
-    vfs_node->stat_cur->st_mode |= flags;
+	uint16_t file_type = (inode_cur.raw.permissions & 0x4000) ? s_ifdir : s_ifreg;
+
+    vfs_node->stat_cur->st_mode |= file_type | flags;
     vfs_node->stat_cur->st_size = inode_cur.raw.size32l;
     vfs_node->stat_cur->st_nlink = inode_cur.raw.hard_link_cnt;
     vfs_node->stat_cur->st_ino = inode_cur.inode_index;

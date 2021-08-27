@@ -198,6 +198,8 @@ int device::set_msix(uint8_t vec) {
     msix::vector_control vec_cntl {};
     vec_cntl.mask = 0;
 
+	print("msix {x} and {x}\n", (unsigned)address.raw, bar_offset);
+
     table[table_index].addr_low = address.raw;
     table[table_index].addr_high = 0;
     table[table_index].data = data.raw;

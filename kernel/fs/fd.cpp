@@ -130,7 +130,7 @@ int fd::write(void *buf, size_t cnt) {
     if(ret == -1)
         return -1;
 
-    *_loc += cnt; 
+    *_loc += cnt;
 
     return ret;
 }
@@ -161,15 +161,8 @@ extern "C" void syscall_open(regs *regs_cur) {
     lib::string path = lib::string((char*)regs_cur->rdi);
 
     if(path[0] != '/') {
-        vfs::node *vfs_path = vfs::root_cluster->search_absolute(lib::string((char*)regs_cur->rdi), current_task->working_directory);
-
-        if(vfs_path == NULL) {
-            set_errno(enoent);
-            regs_cur->rax = -1;
-            return;
-        }
-
-        path = vfs::get_absolute_path(vfs_path);
+		lib::string working_path = vfs::get_absolute_path(current_task->working_directory);
+		path = working_path + path;
     }
 
     int flags = regs_cur->rsi;
@@ -179,7 +172,7 @@ extern "C" void syscall_open(regs *regs_cur) {
         mode = regs_cur->rdx;
     }
     
-    fd &new_fd = alloc_fd(path, flags | mode);
+    fd &new_fd = alloc_fd(path, flags | mode | s_ifreg);
 
     regs_cur->rax = new_fd.backing_fd;
 
@@ -192,6 +185,8 @@ extern "C" void syscall_open(regs *regs_cur) {
 
 extern "C" void syscall_close(regs *regs_cur) {
     SYSCALL_FD_TRANSLATE(regs_cur->rdi);
+
+	*fd_back.vfs_node->stat_cur = stat {};
 
     current_task->fd_list.list.remove(regs_cur->rdi);
     free_fd(regs_cur->rdi);
@@ -213,12 +208,6 @@ extern "C" void syscall_write(regs *regs_cur) {
 
 extern "C" void syscall_seek(regs *regs_cur) {
     SYSCALL_FD_TRANSLATE(regs_cur->rdi);
-
-    if(fd_back.vfs_node->stat_cur->st_mode & s_ififo) {
-        regs_cur->rax = -1;
-        set_errno(espipe);
-        return;
-    }
 
     regs_cur->rax = fd_back.seek(regs_cur->rsi, regs_cur->rdx);
 }
@@ -344,7 +333,7 @@ extern "C" void syscall_fstatat(regs *regs_cur) {
         return;
     }
 
-    if(parent->filesystem->open(vfs_node, regs_cur->r10) == -1) {
+    if(parent->filesystem->open(vfs_node, 0) == -1) {
         set_errno(enoent);
         regs_cur->rax = -1;
     }

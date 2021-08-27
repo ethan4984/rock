@@ -203,8 +203,6 @@ ssize_t task::exec(lib::string path, uint16_t cs, arguments args, vfs::node *wor
 }
 
 void reschedule(regs *regs_cur, void*) {
-    asm volatile ("" ::: "memory");
-
     if(__atomic_test_and_set(&scheduler_lock, __ATOMIC_ACQUIRE)) {
         return;
     }
@@ -336,6 +334,8 @@ extern "C" void syscall_getppid(regs *regs_cur) {
 }
 
 extern "C" void syscall_exit(regs *regs_cur) {
+    spin_lock(&scheduler_lock);
+
     smp::cpu *core = smp::core_local();
     sched::task *current_task = sched::task_list[core->pid];
 
@@ -368,13 +368,15 @@ extern "C" void syscall_exit(regs *regs_cur) {
     core->pid = -1;
     core->tid = -1;
 
-    swapgs();
-    for(;;) {
-        reschedule(regs_cur, NULL);
-    }
+    spin_release(&scheduler_lock);
+
+    for(;;)
+		asm ("pause");
 }
 
 extern "C" void syscall_fork(regs *regs_cur) {
+    spin_lock(&scheduler_lock);
+
     smp::cpu *core = smp::core_local();
     sched::task *current_task = sched::task_list[core->pid];
     sched::thread *current_thread = current_task->threads[core->tid];
@@ -399,6 +401,8 @@ extern "C" void syscall_fork(regs *regs_cur) {
     task_list[new_task->pid]->fd_list = current_task->fd_list;
 
     regs_cur->rax = new_task->pid;
+
+    spin_release(&scheduler_lock);
 }
 
 extern "C" void syscall_execve(regs *regs_cur) {
@@ -419,6 +423,7 @@ extern "C" void syscall_execve(regs *regs_cur) {
     if(path_vfs_node == NULL) { 
         set_errno(enoent);
         regs_cur->rax = -1;
+		spin_release(&scheduler_lock);
         return;
     }
 
@@ -436,9 +441,8 @@ extern "C" void syscall_execve(regs *regs_cur) {
 
     spin_release(&scheduler_lock);
 
-    swapgs();
     for(;;) {
-        reschedule(regs_cur, NULL);
+		asm ("pause");
     }
 }
 

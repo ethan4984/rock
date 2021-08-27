@@ -92,12 +92,28 @@ extern "C" int main(size_t stivale_phys) {
 
     vfs::mount("sd0-0", "/");
 
+	/*fs::fd new_file("/a.out", o_creat, 0);
+	if(new_file.status == 0)
+		print("Didnt create file\n");
+
+	if(new_file.write((void*)"lol this is cool", 9) == -1)
+		print("Write failed\n");
+
+	print("File stat {}\n", new_file.vfs_node->stat_cur->st_size);
+
+	char *buffer = new char[9];
+	new_file.seek(0, seek_set);
+	new_file.read((void*)buffer, 9);
+	print("Read {}\n", buffer);
+
+	for(;;);*/
+
     const char *argv[] = { "/usr/bin/bash", NULL };
     const char *envp[] = {
         "HOME=/",
         "PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
         "TERM=linux",
-        NULL
+		NULL
     };
 
     sched::arguments args(argv, envp); 

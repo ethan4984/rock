@@ -185,8 +185,8 @@ struct region {
 };
 
 struct pmlx_table {
-    explicit pmlx_table(uint64_t *highest) : highest_raw(highest), lock(0) { mmap.base = 0x1000000; }
-    explicit pmlx_table() : lock(0) { mmap.base = 0x1000000; } 
+    explicit pmlx_table(uint64_t *highest) : highest_raw(highest), lock(0) { mmap.base = 0x10000000; }
+    explicit pmlx_table() : lock(0) { mmap.base = 0x10000000; } 
 
     virtual void map_range(uint64_t vaddr, size_t cnt, size_t flags, ssize_t pa) = 0;
     virtual void unmap_range(uint64_t vaddr, size_t cnt) = 0;
