@@ -6,30 +6,10 @@
 namespace vfs {
 
 int fs::read(node *vfs_node, off_t off, off_t cnt, void *buf) {
-    if(vfs_node->is_directory()) {
-        set_errno(eisdir);
-        return -1;
-    }
-
-    /*if(!(vfs_node->stat_cur->st_mode & s_irusr)) {
-        set_errno(ebadf); 
-        return -1;
-    }*/
-
     return raw_read(vfs_node, off, cnt, buf);
 }
 
 int fs::write(node *vfs_node, off_t off, off_t cnt, void *buf) {
-    /*if(vfs_node->is_directory()) {
-        set_errno(eisdir);
-        return -1;
-    }
-
-    if(!(vfs_node->stat_cur->st_mode & s_iwusr)) {
-        set_errno(ebadf); 
-        return -1;
-    }*/
-
     return raw_write(vfs_node, off, cnt, buf);
 }
 
@@ -151,8 +131,10 @@ node::node(cluster *parent_cluster, fs *filesystem, uint16_t mode, lib::string a
  
         while(end != lib::string::npos) {
             lib::string token = absolute_path.substr(start, end - start);
-            if(!token.empty())
-                ret.push(token);
+            if(!token.empty()) {
+                if(token != ".")
+                    ret.push(token);
+            }
             start = end + 1;
             end = absolute_path.find_first('/', start);
         }
@@ -164,7 +146,7 @@ node::node(cluster *parent_cluster, fs *filesystem, uint16_t mode, lib::string a
         return ret;
     } ();
 
-    auto create_node = [](cluster *parent_cluster, fs *filesystem, node *parent, lib::string name, uint16_t st_mode) -> node* {
+    auto create_node = [](cluster *parent_cluster, fs *filesystem, node *parent, lib::string name, uint16_t st_mode, default_ioctl *ioctl_device) -> node* {
         if(parent == NULL)
             return parent_cluster->root_node;
 
@@ -174,6 +156,7 @@ node::node(cluster *parent_cluster, fs *filesystem, uint16_t mode, lib::string a
         new_node->parent_cluster = parent_cluster; 
         new_node->stat_cur = (stat*)kmm::calloc(sizeof(stat));
         new_node->filesystem = filesystem;
+        new_node->ioctl_device = ioctl_device;
 
         new_node->stat_cur->st_mode = st_mode;
 
@@ -225,9 +208,9 @@ node::node(cluster *parent_cluster, fs *filesystem, uint16_t mode, lib::string a
 
         if(node_cur == NULL) {
             for(; i < (sub_paths.size() - 1); i++) {
-                parent_cur = create_node(current_cluster, current_cluster->filesystem, parent_cur, sub_paths[i], mode | s_ifdir);
+                parent_cur = create_node(current_cluster, current_cluster->filesystem, parent_cur, sub_paths[i], mode | s_ifdir, NULL);
             }
-            parent_cur = create_node(current_cluster, filesystem, parent_cur, sub_paths[i], mode);
+            parent_cur = create_node(current_cluster, filesystem, parent_cur, sub_paths[i], mode, ioctl_device);
             return;
         }
     }
@@ -338,6 +321,7 @@ int mount(lib::string source, lib::string target) {
 
 int node::ioctl(regs *regs_cur) {
     if(ioctl_device == NULL) {
+        print("here for some reason\n");
         return -1;
     }
 

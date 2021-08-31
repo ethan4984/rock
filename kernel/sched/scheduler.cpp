@@ -371,7 +371,7 @@ extern "C" void syscall_exit(regs *regs_cur) {
     spin_release(&scheduler_lock);
 
     for(;;)
-		asm ("pause");
+        asm ("pause");
 }
 
 extern "C" void syscall_fork(regs *regs_cur) {
@@ -423,7 +423,7 @@ extern "C" void syscall_execve(regs *regs_cur) {
     if(path_vfs_node == NULL) { 
         set_errno(enoent);
         regs_cur->rax = -1;
-		spin_release(&scheduler_lock);
+        spin_release(&scheduler_lock);
         return;
     }
 
@@ -442,7 +442,7 @@ extern "C" void syscall_execve(regs *regs_cur) {
     spin_release(&scheduler_lock);
 
     for(;;) {
-		asm ("pause");
+        asm ("pause");
     }
 }
 
@@ -453,14 +453,17 @@ extern "C" void syscall_waitpid(regs *regs_cur) {
     smp::cpu *core = smp::core_local();
     sched::task *current_task = sched::task_list[core->pid];
 
-    auto poll = [](task *current_task, const auto &condition) -> size_t {
+    auto poll = [](task *current_task, const auto &condition) -> std::pair<uint64_t, uint64_t> {
         for(;;) {
             for(size_t i = 0; i < current_task->event_list.size(); i++) {
                 spin_lock(&current_task->event_list[i].lock);
                 if(condition(current_task->event_list[i])) {
                     size_t ret = current_task->event_list[i].ret;
+                    size_t status = current_task->event_list[i].status;
+
                     current_task->event_list.remove(i);
-                    return ret;
+
+                    return { ret, status };
                 }
                 spin_release(&current_task->event_list[i].lock);
             }
@@ -476,9 +479,10 @@ extern "C" void syscall_waitpid(regs *regs_cur) {
             return false;
         };
 
-        regs_cur->rax = poll(current_task, condition);
+        const auto [ret, status] = poll(current_task, condition);
 
-        *wstatus |= 0x7f | 0x200;
+        regs_cur->rax = ret;
+        *wstatus |= status | 0x200;
     } else if(pid == 0) {
 
     } else if(pid > 0) {
@@ -488,9 +492,10 @@ extern "C" void syscall_waitpid(regs *regs_cur) {
             return false;
         };
 
-        regs_cur->rax = poll(current_task, condition);
+        const auto [ret, status] = poll(current_task, condition);
 
-        *wstatus |= 0x7f | 0x200;
+        regs_cur->rax = ret;
+        *wstatus |= status | 0x200;
     }
 }
 

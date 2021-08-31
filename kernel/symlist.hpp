@@ -5,7 +5,6 @@ struct symlist_entry {
     lib::string name;
 };
 
-__attribute__((section(".sym")))
 symlist_entry symlist[] = {
     { 0xffffffffffffffff, "" }
-};
+}

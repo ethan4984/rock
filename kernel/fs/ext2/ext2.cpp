@@ -125,21 +125,14 @@ int fs::raw_write(vfs::node *vfs_node, off_t off, off_t cnt, void *buf) {
     dir file_dir_entry(&root_inode, relative_path, true);
     if(file_dir_entry.raw == NULL) {
         return -1;
-	}
-
-	/*vfs_node->stat_cur->st_mode = s_ifreg;
-	vfs_node->stat_cur->st_size += off + cnt;*/
-
-	print("New size is with {} {}\n", off, vfs_node->stat_cur->st_size);
-
-	print("hello this is insane\n");
+    }
 
     inode inode_cur(this, file_dir_entry.raw->inode);
     inode_cur.write(off, cnt, buf);
 
     if((off + cnt) > vfs_node->stat_cur->st_size) {
         inode_cur.raw.size32l = (vfs_node->stat_cur->st_size = off + cnt);
-		inode_cur.write_back();
+        inode_cur.write_back();
     }
 
     return cnt;
@@ -199,12 +192,12 @@ int fs::refresh([[maybe_unused]] vfs::node *vfs_node) {
 }
 
 int fs::raw_open(vfs::node *vfs_node, uint16_t flags) {
-	inode inode_cur;
+    inode inode_cur;
 
     if(flags & o_creat) {
         inode parent_inode;
 
-		if(vfs_node->parent == vfs_node->parent_cluster->root_node) {
+        if(vfs_node->parent == vfs_node->parent_cluster->root_node) {
             parent_inode = root_inode;
         } else {
             dir dir_entry(&root_inode, vfs::get_relative_path(vfs_node->parent), true); 
@@ -226,21 +219,21 @@ int fs::raw_open(vfs::node *vfs_node, uint16_t flags) {
         dir create_dir_entry(&parent_inode, inode_cur.inode_index, 0, vfs_node->name.data());
 
         parent_inode.raw.hard_link_cnt++;
-		parent_inode.raw.permissions = s_ifreg;
+        parent_inode.raw.permissions = s_ifreg;
 
         parent_inode.write_back();
     } else {
-		if(vfs_node->name == "/") {
-			inode_cur = root_inode;
-		} else {
-			dir dir_entry(&root_inode, vfs::get_relative_path(vfs_node), true); 
-			if(dir_entry.exists == false)
-				return -1;
-			inode_cur = inode(this, dir_entry.raw->inode);
-		}
-	}
+        if(vfs_node->name == "/") {
+            inode_cur = root_inode;
+        } else {
+            dir dir_entry(&root_inode, vfs::get_relative_path(vfs_node), true); 
+            if(dir_entry.exists == false)
+                return -1;
+            inode_cur = inode(this, dir_entry.raw->inode);
+        }
+    }
     
-	uint16_t file_type = (inode_cur.raw.permissions & 0x4000) ? s_ifdir : s_ifreg;
+    uint16_t file_type = (inode_cur.raw.permissions & 0x4000) ? s_ifdir : s_ifreg;
 
     vfs_node->stat_cur->st_mode |= file_type | flags;
     vfs_node->stat_cur->st_size = inode_cur.raw.size32l;

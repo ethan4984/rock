@@ -6,7 +6,7 @@
 namespace dev {
 
 ssize_t msd::read(size_t off, size_t cnt, void *buf) {
-    /*j*******cache_block_size = 0x10000;
+    cache_block_size = 0x10000;
 
     size_t headway = 0;
 
@@ -41,9 +41,7 @@ ssize_t msd::read(size_t off, size_t cnt, void *buf) {
         headway += cache_block_size;
     }
 
-    return cnt;*/
-
-    return raw_read(off, cnt, buf);
+    return cnt;
 }
 
 void *msd::search_cache(size_t block) {
@@ -57,7 +55,7 @@ void *msd::search_cache(size_t block) {
 }
 
 ssize_t msd::write(size_t off, size_t cnt, void *buf) {
-    /*cache_block_size = 0x10000;
+    cache_block_size = 0x10000;
 
     size_t headway = 0;
 
@@ -91,9 +89,7 @@ ssize_t msd::write(size_t off, size_t cnt, void *buf) {
         cache_list.push(new_cache_block);
 
         headway += cache_block_size;
-    }*/
-
-    return raw_write(off, cnt, buf);
+    }
 
     return cnt;
 }
@@ -122,32 +118,6 @@ node::node(vfs::node *vfs_search_node) : vfs_node(NULL) {
 }
 
 void scan_partitions(msd *device) {
-    uint16_t mbr_signature;
-    device->read(510, 2, &mbr_signature);
-
-    if(mbr_signature == 0xaa55) {
-        mbr_partition partitions[4];
-        device->read(0x1be, sizeof(partitions), &partitions);
-
-        for(size_t i = 0; i < 4; i++) {
-            if(partitions[i].partition_type == 0)
-                continue;
-
-            lib::string absolute_path = device->device_prefix + device->device_index + "-" + device->partition_cnt++;
-            root_cluster.generate_node(absolute_path, NULL, 0);
-
-            vfs::node *vfs_node = root_cluster.search_absolute(absolute_path);
-
-            print("[DEVFS] Creating partition device {}\n", lib::string("/dev/") + absolute_path);
-
-            node_list.push(node(vfs_node, partitions[i].starting_lba * device->sector_size, partitions[i].sector_cnt, device));
-
-            new ext2::fs(node_list.last());
-        }
-
-        return;
-    }
-
     gpt_partition_table_hdr gpt_hdr;
     device->read(device->sector_size, sizeof(gpt_partition_table_hdr), &gpt_hdr);
 
@@ -171,6 +141,32 @@ void scan_partitions(msd *device) {
             print("[DEVFS] Creating partition device {}\n", lib::string("/dev") + absolute_path);
 
             node_list.push(node(vfs_node, part_arr[i].starting_lba * device->sector_size, part_arr[i].starting_lba - part_arr[i].last_lba, device));
+        }
+
+        return;
+    }
+
+    uint16_t mbr_signature;
+    device->read(510, 2, &mbr_signature);
+
+    if(mbr_signature == 0xaa55) {
+        mbr_partition partitions[4];
+        device->read(0x1be, sizeof(partitions), &partitions);
+
+        for(size_t i = 0; i < 4; i++) {
+            if(partitions[i].partition_type == 0 || partitions[i].partition_type == 0xee)
+                continue;
+
+            lib::string absolute_path = device->device_prefix + device->device_index + "-" + device->partition_cnt++;
+            root_cluster.generate_node(absolute_path, NULL, 0);
+
+            vfs::node *vfs_node = root_cluster.search_absolute(absolute_path);
+
+            print("[DEVFS] Creating partition device {}\n", lib::string("/dev/") + absolute_path);
+
+            node_list.push(node(vfs_node, partitions[i].starting_lba * device->sector_size, partitions[i].sector_cnt, device));
+
+            new ext2::fs(node_list.last());
         }
 
         return;

@@ -32,6 +32,7 @@ extern "C" void syscall_readdir(regs*);
 extern "C" void syscall_execve(regs*);
 extern "C" void syscall_getcwd(regs*);
 extern "C" void syscall_chdir(regs*);
+extern "C" void syscall_faccessat(regs*);
 
 struct syscall {
     lib::string name;
@@ -70,6 +71,7 @@ syscall syscall_list[] = {
     { .name = "execve", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: execve { }\n"); }, .handler = syscall_execve, .has_return = false },
     { .name = "getcwd", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: getcwd { buffer: {x}, length: {x} }\n", regs_cur->rdi, regs_cur->rsi); }, .handler = syscall_getcwd, .has_return = true },
     { .name = "chdir", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: chdir { path: {} }\n", (char*)regs_cur->rdi); }, .handler = syscall_chdir, .has_return = true },
+    { .name = "faccessat", .logger = []([[maybe_unused]] regs *regs_cur) { print("SYSCALL: faccessat { dirfd {x}, path {}, mode {}, flags {} }\n", regs_cur->rdi, (char*)regs_cur->rsi, regs_cur->rdx, regs_cur->r10); }, .handler = syscall_faccessat, .has_return = true },
 };
 
 extern "C" void syscall_view(regs *regs_cur) {
@@ -88,6 +90,9 @@ extern "C" void syscall_view(regs *regs_cur) {
     spin_release(&lock);
 
     syscall_list[index].handler(regs_cur);
+
+    if(regs_cur->rax != -1)
+        set_errno(0);
 
     if(syscall_list[index].has_return) {
         print("\e[31m");

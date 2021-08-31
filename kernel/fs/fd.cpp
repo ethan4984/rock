@@ -75,6 +75,7 @@ fd::fd(lib::string path, int flags, int backing_fd) : status(0), backing_fd(back
         if((vfs_node == NULL) && (flags & o_creat)) {
             vfs::root_cluster->generate_node(path, NULL, flags);
             vfs_node = vfs::root_cluster->search_absolute(path);
+
             if(vfs_node == NULL) {
                 set_errno(enoent);
                 return -1;
@@ -161,8 +162,8 @@ extern "C" void syscall_open(regs *regs_cur) {
     lib::string path = lib::string((char*)regs_cur->rdi);
 
     if(path[0] != '/') {
-		lib::string working_path = vfs::get_absolute_path(current_task->working_directory);
-		path = working_path + path;
+        lib::string working_path = vfs::get_absolute_path(current_task->working_directory);
+        path = working_path + path;
     }
 
     int flags = regs_cur->rsi;
@@ -186,7 +187,7 @@ extern "C" void syscall_open(regs *regs_cur) {
 extern "C" void syscall_close(regs *regs_cur) {
     SYSCALL_FD_TRANSLATE(regs_cur->rdi);
 
-	*fd_back.vfs_node->stat_cur = stat {};
+    *fd_back.vfs_node->stat_cur = stat {};
 
     current_task->fd_list.list.remove(regs_cur->rdi);
     free_fd(regs_cur->rdi);
@@ -340,6 +341,38 @@ extern "C" void syscall_fstatat(regs *regs_cur) {
 
     stat *stat_buf = (stat*)regs_cur->rdx;
     *stat_buf = *vfs_node->stat_cur;
+
+    regs_cur->rax = 0;
+}
+
+extern "C" void syscall_faccessat(regs *regs_cur) {
+    smp::cpu *core = smp::core_local();
+    sched::task *current_task = sched::task_list[core->pid];
+
+    lib::string path = lib::string((char*)regs_cur->rsi);
+
+    vfs::node *vfs_node = NULL;
+    vfs::node *parent = NULL;
+
+    if(regs_cur->rdi == 0xFFFFFF9C) {
+        if(path[0] != '/') {
+            vfs_node = vfs::root_cluster->search_absolute(path, current_task->working_directory);
+            parent = current_task->working_directory;
+        } else {
+            vfs_node = vfs::root_cluster->search_absolute(path);
+            parent = vfs::root_cluster->root_node;
+        }
+    } else {
+        SYSCALL_FD_TRANSLATE(regs_cur->rdi);
+        vfs_node = vfs::root_cluster->search_absolute(path, fd_back.vfs_node);
+        parent = fd_back.vfs_node;
+    }
+
+    if(vfs_node == NULL) {
+        set_errno(enoent);
+        regs_cur->rax = -1;
+        return;
+    }
 
     regs_cur->rax = 0;
 }
