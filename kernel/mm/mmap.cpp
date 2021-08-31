@@ -25,7 +25,7 @@ void *mmap(vmm::pmlx_table *page_map, void *addr, size_t length, int prot, int f
 
     addr = (void*)((uint64_t)addr - ((uint64_t)addr & (vmm::page_size - 1)));
 
-    uintptr_t base;
+    uintptr_t base = page_map->mmap.base;
     length += vmm::page_size;
 
     if(flags & map_fixed) {
