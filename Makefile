@@ -1,6 +1,6 @@
 QEMUFLAGS = -m 4G \
 			-serial file:serial.log \
-			-smp 1 \
+			-smp 4 \
 			-drive file=disk.img,if=none,id=NVME1 \
 			-device nvme,drive=NVME1,serial=nvme \
 			-drive id=disk,file=rock.img,if=none \
@@ -9,9 +9,9 @@ QEMUFLAGS = -m 4G \
 			-drive if=none,id=usbstick,file=usb.img \
 			-usb \
 			-device qemu-xhci \
-			-cpu qemu64,+la57 \
 			-device intel-hda,debug=0 -device hda-duplex \
-			-trace hda* 
+			-trace hda* \
+	 		-trace pci_nvme*
 
 build:
 	cd kernel && make -j16
@@ -32,13 +32,16 @@ build:
 	sudo cp kernel/limine.cfg disk_image/
 	sudo cp tools/limine/limine.sys disk_image/boot/
 	sudo cp -r user/build/system-root/. disk_image/.
+	sudo cp user/.bashrc disk_image/
+	sudo cp user/test.asm disk_image/
+	sudo cp user/test.c disk_image/
 	sync
 	sudo umount disk_image/
 	sudo losetup -d `cat loopback_dev`
 	rm -rf disk_image loopback_dev
 	tools/limine/limine-install-linux-x86_64 rock.img 
-	parted -s disk.img mklabel msdos
-	parted -s disk.img mkpart primary 1 100%
+	parted -s disk.img mklabel gpt
+	parted -s disk.img mkpart primary 2048s 100%
 	sudo losetup -Pf --show disk.img > loopback_dev
 	sudo mkfs.ext2 `cat loopback_dev`p1
 	rm -rf disk_image/
