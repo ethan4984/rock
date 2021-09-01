@@ -19,7 +19,14 @@ init_CS:
     mov cr3, eax
 
     mov eax, cr4
-    or eax, (1 << 5) | (1 << 12)
+
+	test dword [0x500 + 56], (1 << 0)
+	jz .no_5lv
+	
+	or eax, (1 << 12)
+
+.no_5lv:
+    or eax, (1 << 5)
     mov cr4, eax
 
     mov ecx, 0xc0000080

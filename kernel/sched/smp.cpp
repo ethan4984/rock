@@ -10,7 +10,7 @@ extern symbol smp_core_init_end;
 
 namespace smp {
 
-static void prep_core(size_t stack, uint64_t pml4, uint64_t entry, uint64_t idt, uint64_t gdt, uint64_t core_index) { 
+static void prep_core(size_t stack, uint64_t pml4, uint64_t entry, uint64_t idt, uint64_t gdt, uint64_t core_index, uint64_t flags) { 
     uint64_t *parms = reinterpret_cast<uint64_t*>(0x500 + vmm::high_vma);
     parms[0] = stack;
     parms[1] = pml4;
@@ -18,6 +18,7 @@ static void prep_core(size_t stack, uint64_t pml4, uint64_t entry, uint64_t idt,
     parms[3] = idt;
     parms[4] = gdt;
     parms[5] = core_index;
+    parms[6] = flags;
 }
 
 static void core_bootstrap(size_t core_local) {
@@ -76,13 +77,21 @@ void boot_aps() {
             continue;
         }
 
+        uint64_t flags = 0;
+
+        cpuid_state cpu_id = cpuid(7, 0);
+
+        if(cpu_id.rcx & (1 << 6))
+            flags |= (1 << 0);
+
         if(madt0_entry.flags == 1) {
             prep_core(  new_cpu->kernel_stack,
                         reinterpret_cast<uint64_t>(vmm::kernel_mapping->highest_raw),
                         reinterpret_cast<uint64_t>(core_bootstrap),
                         reinterpret_cast<uint64_t>(&idtr),
                         reinterpret_cast<uint64_t>(&gdtr),
-                        reinterpret_cast<uint64_t>(new_cpu));
+                        reinterpret_cast<uint64_t>(new_cpu),
+                        flags);
                     
             apic::lapic->send_ipi(apic_id, 0x500); // MT = 0b101 for init ipi
             apic::lapic->send_ipi(apic_id, 0x600 | 1); // MT = 0b11 for startup, vec = 1 for 0x1000
