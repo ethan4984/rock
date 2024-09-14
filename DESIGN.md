@@ -23,6 +23,7 @@ struct portal_req {
         uint64_t paddr[];
     } morphology;
 } __attribute__((packed));
+```
 
 ### Class
 
