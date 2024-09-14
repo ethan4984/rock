@@ -1,4 +1,4 @@
-### Memory Portals
+# Memory Portals
 
 ```c
 struct portal_req {
@@ -70,3 +70,15 @@ Certain applications require less safety and assurance than others. For example,
 ### Advanced Share-Point
 
 TBD
+
+# Notifications
+
+Sending quick bursts of information between servers, or between a server and kernel-space, can be done via a notification. Which can be invoked with a flag that provides immediate rescheduling. And another flag often used in conjunction with the previous flag, that upon the return of the notifcation handler the system shall immediately reschedule back to the calling context. While this protocol has minimal-overhead, it should be used conservatively. Mostly intended for applications where objects passed between servers occour at a low to moderate frequency and are of high-impact. For applications that require high-frequency object passing it is recommended to use a more robust interface.
+
+Each context contains a possible 64 notificaiton handlers, each with a circumstantially defined use-case. I do not prescribe any pre-defined use-case for any given notification index, as it is understood that each party involved in the notification, understands how that server defines its notification-set. We provide a system call available to core servers that allows the server to provide handlers for any given notification index.
+
+```c
+    struct [[gnu::packed]] NotificationAction {
+        void (*handler)(void*,int,int);
+    };
+```
