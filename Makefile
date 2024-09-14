@@ -1,68 +1,98 @@
+DISK_IMAGE = dufay.img
+ISO_IMAGE = dufay.iso
+INITRAMFS = initramfs.tar
+
+.PHONY: all
+all: $(DISK_IMAGE)
+
 QEMUFLAGS = -m 4G \
-			-serial file:serial.log \
 			-smp 4 \
-			-drive file=disk.img,if=none,id=NVME1 \
-			-device nvme,drive=NVME1,serial=nvme \
-			-drive id=disk,file=rock.img,if=none \
+			-drive id=disk,file=$(DISK_IMAGE),if=none \
 			-device ahci,id=ahci \
 			-device ide-hd,drive=disk,bus=ahci.0 \
-			-drive if=none,id=usbstick,file=usb.img \
-			-usb \
-			-device qemu-xhci \
-			-device intel-hda,debug=0 -device hda-duplex \
-			-trace hda* \
-	 		-trace pci_nvme*
+			-device intel-iommu,aw-bits=48 \
+			-machine type=q35
 
-build:
-	cd kernel && make -j16
-	cd user && make 
-	rm -f rock.img disk.img usb.img
-	dd if=/dev/zero bs=1M count=0 seek=512 of=rock.img
-	dd if=/dev/zero bs=1M count=0 seek=512 of=disk.img
-	dd if=/dev/zero bs=1M count=0 seek=512 of=usb.img
-	parted -s rock.img mklabel msdos
-	parted -s rock.img mkpart primary 1 100%
-	rm -rf disk_image/
+QEMUFLAGS_ISO = -m 4G \
+				-smp 1 \
+				-drive id=disk,file=$(ISO_IMAGE),if=none \
+				-device ahci,id=ahci \
+				-device ide-hd,drive=disk,bus=ahci.0 \
+				-device intel-iommu,aw-bits=48 \
+				-machine type=q35
+
+.PHONY: run
+run: $(DISK_IMAGE)
+	qemu-system-x86_64 $(QEMUFLAGS) -enable-kvm -serial stdio
+
+.PHONY: run_initrd
+run_initrd: $(ISO_IMAGE)
+	qemu-system-x86_64 $(QEMUFLAGS_ISO) -enable-kvm -serial stdio
+
+.PHONY: console
+console: $(ISO_IMAGE)
+	qemu-system-x86_64 $(QEMUFLAGS_ISO) -enable-kvm -no-reboot -monitor stdio -d int -D qemu.log -no-shutdown
+
+.PHONY: int
+int: $(ISO_IMAGE)
+	qemu-system-x86_64 $(QEMUFLAGS_ISO) -d int -M smm=off -no-reboot -no-shutdown
+
+.PHONY:
+recompile_servers:
+	cd servers && make clean && make 
+
+limine:
+	git clone https://github.com/limine-bootloader/limine.git --branch=v7.x-binary --depth=1
+	make -C limine
+
+.PHONY: kernel
+kernel:
+	$(MAKE) -C kernel
+
+$(INITRAMFS):
+	cd build/system-root/ && tar -c --format=posix -f ../../initramfs.tar .
+
+$(ISO_IMAGE): $(INITRAMFS) limine kernel
+	rm -rf dufay.iso
+	rm -rf disk_image
 	mkdir disk_image
-	sudo losetup -Pf --show rock.img > loopback_dev
+	mkdir disk_image/boot
+	mkdir disk_image/servers/
+	cp servers/scheduler/scheduler disk_image/servers
+	cp kernel/dufay.elf initramfs.tar limine/limine-bios-cd.bin limine/limine-uefi-cd.bin limine/limine-bios.sys limine.cfg disk_image/boot
+	xorriso -as mkisofs -b boot/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot boot/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label disk_image -o dufay.iso
+	./limine/limine bios-install dufay.iso
+	rm -rf disk_image
+
+$(DISK_IMAGE): limine kernel
+	rm -f dufay.img 
+	dd if=/dev/zero bs=1M count=0 seek=1024 of=dufay.img
+	parted -s dufay.img mklabel msdos
+	parted -s dufay.img mkpart primary 1 100%
+	rm -rf disk_image
+	mkdir disk_image
+	sudo losetup -Pf --show dufay.img > loopback_dev
 	sudo mkfs.ext2 `cat loopback_dev`p1
 	sudo mount `cat loopback_dev`p1 disk_image
 	sudo mkdir disk_image/boot
-	sudo cp kernel/rock.elf disk_image/boot/
-	sudo cp kernel/limine.cfg disk_image/
-	sudo cp tools/limine/limine.sys disk_image/boot/
-	sudo cp -r user/build/system-root/. disk_image/.
-	sudo cp user/.bashrc disk_image/
-	sudo cp user/test.asm disk_image/
-	sudo cp user/test.c disk_image/
+	sudo cp kernel/dufay.elf limine/limine-bios-cd.bin limine/limine-uefi-cd.bin limine/limine-bios.sys limine.cfg disk_image/boot
 	sync
 	sudo umount disk_image/
 	sudo losetup -d `cat loopback_dev`
 	rm -rf disk_image loopback_dev
-	tools/limine/limine-install-linux-x86_64 rock.img 
-	parted -s disk.img mklabel gpt
-	parted -s disk.img mkpart primary 2048s 100%
-	sudo losetup -Pf --show disk.img > loopback_dev
-	sudo mkfs.ext2 `cat loopback_dev`p1
-	rm -rf disk_image/
-	mkdir disk_image
-	sudo mount `cat loopback_dev`p1 disk_image
-	sync
-	sudo umount disk_image/
-	sudo losetup -d `cat loopback_dev`
-	sync
-	rm -rf loopback_dev
+	./limine/limine bios-install dufay.img
 
 rebuild_mlibc:
-	cd user/build && xbstrap install mlibc --rebuild
+	cd build && xbstrap install mlibc --rebuild
 
-qemu: build
-	touch serial.log
-	qemu-system-x86_64 $(QEMUFLAGS) &
-	tail -n0 -f serial.log
+rebuild_servers:
+	cd servers/scheduler/ && make clean && make
 
-info: build
-	qemu-system-x86_64 $(QEMUFLAGS) -no-reboot -monitor stdio -d int -D qemu.log -no-shutdown -vga vmware
+.PHONY: clean
+clean:
+	rm -f $(DISK_IMAGE) $(INITRAMFS) $(ISO_IMAGE) serial.log qemu.log
+	$(MAKE) -C kernel clean
 
-debug: build
-	qemu-system-x86_64 $(QEMUFLAGS) -no-reboot -monitor stdio -d int -no-shutdown
+.PHONY: distclean
+distclean: clean
+	rm -rf limine

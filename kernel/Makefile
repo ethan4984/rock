@@ -1,63 +1,61 @@
-CXX = ../tools/bin/x86_64-elf-g++
-LD = ../tools/bin/x86_64-elf-ld
+KERNEL := dufay.elf
 
-CXX_FLAGS = -I. \
-			-Ilib \
-			-I../tools/cxxshim/stage2/include \
-			-Wall \
-			-Wextra \
-			-ffreestanding \
-			-fno-stack-protector \
-			-fno-exceptions \
-			-mno-sse \
-			-mno-sse2 \
-			-mno-80387 \
-			-mno-red-zone \
-			-gdwarf \
-			-fno-omit-frame-pointer \
-			-fno-pic \
-			-std=c++20 \
-			-fno-use-cxa-atexit \
-			-fno-rtti \
-			-mcmodel=kernel \
-			-fno-strict-aliasing \
-			-Wno-sign-compare 
+CC ?= cc
+LD ?= ld
 
-LINK_FLAGS = -nostartfiles \
-			 -nodefaultlibs \
-			 -nostdlib \
-			 -no-pie \
-			 -lgcc 
+CFLAGS	?= -Wall -Wextra -O0 -pipe -fsanitize=undefined -Wno-unused
+LDFLAGS ?=
 
-CXX_SRC = $(shell find . -type f -name '*.cpp')
-ASM_SRC = $(shell find . -type f \( -iname "*.asm" ! -iname "crt*" \))
-REAL_SRC = $(shell find . -type f -name '*.real')
+INTERNALLDFLAGS :=		 \
+	-Tlinker.ld			\
+	-nostdlib				\
+	-zmax-page-size=0x1000 \
+	-static				\
+	--no-dynamic-linker	\
+	-ztext
 
-OBJ = $(CXX_SRC:.cpp=.o) $(ASM_SRC:.asm=.o)
-BINS = $(REAL_SRC:.real=.bin)
+INTERNALCFLAGS :=		\
+	-I.					\
+	-std=gnu11			 \
+	-ffreestanding		 \
+	-fno-stack-protector \
+	-fpie				\
+	-mno-80387			 \
+	-mno-mmx			 \
+	-mno-3dnow			 \
+	-mno-sse			 \
+	-mno-sse2			\
+	-mno-red-zone		\
+	-MMD				 \
+	-Wno-sign-compare
 
-CRTBEGIN_OBJ = $(shell $(CXX) $(CXX_FLAGS) -print-file-name=crtbegin.o)
-CRTEND_OBJ = $(shell $(CXX) $(CXX_FLAGS) -print-file-name=crtend.o)
+CFILES		:= $(shell find ./ -type f -name '*.c')
+ASMFILES	:= $(shell find ./ -type f -name '*.asm')
+REALFILES 	:= $(shell find ./ -type f -name '*.real')
+OBJ		 := $(CFILES:.c=.o) $(ASMFILES:.asm=.o)
+BINS		:= $(REALFILES:.real=.bin)
+HEADER_DEPS := $(CFILES:.c=.d)
 
-KERNEL = $(shell pwd)/rock.elf
-
+.PHONY: all
 all: $(KERNEL)
 
+limine.h:
+	curl -Lo $@ https://github.com/limine-bootloader/limine/raw/trunk/limine.h
+
 $(KERNEL): $(BINS) $(OBJ)
-	nasm -felf64 crti.asm -o crti.o
-	nasm -felf64 crtn.asm -o crtn.o
-	$(CXX) $(LINK_FLAGS) crti.o $(CRTBEGIN_OBJ) $(OBJ) $(CRTEND_OBJ) crtn.o -n -T linker.ld -o $@
-	../tools/generate_sym.sh
-	$(CXX) $(LINK_FLAGS) crti.o $(CRTBEGIN_OBJ) $(OBJ) $(CRTEND_OBJ) crtn.o -n -T linker.ld -o $@
+	$(LD) $(OBJ) $(LDFLAGS) $(INTERNALLDFLAGS) -o $@
 
-%.bin: %.real
-	nasm -fbin $< -o $@
+-include $(HEADER_DEPS)
 
-%.o: %.cpp
-	$(CXX) $(CXX_FLAGS) -c $< -o $@
+%.o: %.c
+	$(CC) $(CFLAGS) $(INTERNALCFLAGS) -c $< -o $@
 
 %.o: %.asm
 	nasm -felf64 $< -o $@
 
+%.bin: %.real
+	nasm -fbin $< -o $@
+
+.PHONY: clean
 clean:
-	rm -rf $(OBJ) $(KERNEL) $(BINS) crti.o crtn.o
+	rm -rf $(KERNEL) $(OBJ) $(HEADER_DEPS) $(BINS)

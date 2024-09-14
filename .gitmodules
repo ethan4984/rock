@@ -1,0 +1,7 @@
+[submodule "kernel/fayt"]
+	path = kernel/fayt
+	url = https://github.com/ethan4984/fayt.git
+[submodule "servers/scheduler/fayt"]
+	path = servers/scheduler/fayt
+	url = https://github.com/ethan4984/fayt.git
+	branch = cpp
