@@ -13,17 +13,43 @@ struct stack {
 	int flags;
 };
 
+struct ustack {
+	struct stack kernel_stack;
+	struct stack user_stack;
+
+	int active;
+
+	struct ustack *next;
+};
+
+struct ucontext {
+	struct {
+		struct stack kernel_stack;
+		struct stack user_stack;
+	} stack;
+
+	struct registers regs;
+};
+
 struct context {
 	struct spinlock lock;
 
 	uintptr_t user_gs_base;
 	uintptr_t user_fs_base;
 
-	struct stack signal_user_stack;
-	struct stack signal_kernel_stack;
-
 	struct stack kernel_stack;
 	struct stack user_stack;
+
+	struct {
+		struct ustack *stacks;
+
+		struct notification_action *actions;
+		struct notification_queue *queue;
+
+		struct ucontext ucontext;
+
+		struct spinlock lock;
+	} notification;
 
 	uint64_t sysperm;
 

@@ -28,10 +28,6 @@ int create_blank_context(struct context *context) {
 		+ CONTEXT_DEFAULT_STACK_SIZE + HIGH_VMA;
 	context->kernel_stack.size = CONTEXT_DEFAULT_STACK_SIZE;
 
-	context->signal_kernel_stack.sp = pmm_alloc(DIV_ROUNDUP(CONTEXT_DEFAULT_STACK_SIZE, PAGE_SIZE), 1)
-		+ CONTEXT_DEFAULT_STACK_SIZE + HIGH_VMA;
-	context->signal_kernel_stack.size = CONTEXT_DEFAULT_STACK_SIZE;
-
 	context->fpu_context = alloc(CORE_LOCAL->fpu_context_size);
 
 	return 0;

@@ -20,11 +20,17 @@ struct syscall_handle {
 extern int syscall_log(struct registers*); 
 extern int syscall_portal(struct registers*);
 extern int syscall_yield(struct registers*);
+extern int syscall_notification_action(struct registers*);
+extern int syscall_notification_define_stack(struct registers*);
+extern int syscall_notification_return(struct registers*);
 
 static struct syscall_handle syscall_handles[] = {
 	{ .handler = syscall_log },
 	{ .handler = syscall_portal },
-	{ .handler = syscall_yield }
+	{ .handler = syscall_yield },
+	{ .handler = syscall_notification_action },
+	{ .handler = syscall_notification_define_stack },
+	{ .handler = syscall_notification_return },
 };
 
 uint64_t syscall_handler(struct registers *regs) {
