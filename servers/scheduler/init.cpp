@@ -16,6 +16,17 @@ int main(void) {
 	fayt::CacheDirectory<fayt::PageFrameAllocator> cacheDirectory(&allocator);
 
 	fayt::print("DUFAY: Slab cache dircetory initialised\n");
+	
+	constexpr int NOTIFICATION_STACK_SIZE = 0x2000;
+	for(int i = 0; i < 5; i++) {
+		uintptr_t addr = allocator.AllocAddress(NOTIFICATION_STACK_SIZE);
+		SyscallRet ret = syscall(SYSCALL_NOTIFICATION_DEFINE_STACK, addr + NOTIFICATION_STACK_SIZE,
+			NOTIFICATION_STACK_SIZE);
+
+		if(ret.ret == -1) fayt::print("DUFAY: failed to allocate notification stack\n");
+		else fayt::print("DUFAY: Allocated notificaton stack #{d} [{x}:{x}]\n", 
+			i, addr, NOTIFICATION_STACK_SIZE);
+	} 
 
 	uintptr_t addr = allocator.AllocAddress(0x10000);
 

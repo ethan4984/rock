@@ -2,6 +2,7 @@
 #define SCHEDULE_H_
 
 #include <arch/x86/cpu.h>
+#include <fayt/vector.h>
 #include <fayt/lock.h>
 
 #define CONTEXT_DEFAULT_STACK_SIZE 0x10000
@@ -23,12 +24,12 @@ struct ustack {
 };
 
 struct ucontext {
-	struct {
-		struct stack kernel_stack;
-		struct stack user_stack;
-	} stack;
+	struct ustack *stack;
 
 	struct registers regs;
+	void *fpu_context;
+
+	int active;
 };
 
 struct context {
@@ -46,7 +47,9 @@ struct context {
 		struct notification_action *actions;
 		struct notification_queue *queue;
 
-		struct ucontext ucontext;
+		VECTOR(struct ucontext*) ucontexts;
+		struct ucontext *ucontext;
+		int ucontext_idx;
 
 		struct spinlock lock;
 	} notification;

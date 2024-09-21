@@ -8,8 +8,9 @@
 #include <core/physical.h>
 #include <core/server.h>
 #include <core/syscall.h>
-
+#include <core/notification.h>
 #include <core/debug.h>
+
 #include <fayt/lock.h>
 #include <fayt/string.h>
 #include <fayt/compiler.h>
@@ -27,6 +28,9 @@ int create_blank_context(struct context *context) {
 	context->kernel_stack.sp = pmm_alloc(DIV_ROUNDUP(CONTEXT_DEFAULT_STACK_SIZE, PAGE_SIZE), 1)
 		+ CONTEXT_DEFAULT_STACK_SIZE + HIGH_VMA;
 	context->kernel_stack.size = CONTEXT_DEFAULT_STACK_SIZE;
+
+	context->notification.actions = alloc(sizeof(struct notification_action) * NOTIFICATION_MAX);
+	context->notification.queue = alloc(sizeof(struct notification_queue));
 
 	context->fpu_context = alloc(CORE_LOCAL->fpu_context_size);
 
@@ -90,17 +94,31 @@ void reschedule(struct registers *regs, void *) {
 	}
 
 	struct context *current_context = CORE_LOCAL->current_context;
+
+	void **fpu_context;
+	struct registers *r;
+
 	if(likely(current_context)) {
-		current_context->regs = *regs;
-		CORE_LOCAL->fpu_save(current_context->fpu_context);
+		fpu_context = (current_context->notification.ucontext == NULL) ? 
+				&current_context->fpu_context : &current_context->notification.ucontext->fpu_context;
+		r = (current_context->notification.ucontext) ?
+				&current_context->notification.ucontext->regs : &current_context->regs;
+
+		CORE_LOCAL->fpu_save(*fpu_context);
+
+		*r = *regs;
 		current_context->user_fs_base = get_user_fs();
 		current_context->user_gs_base = get_user_gs();
-		current_context->user_stack.sp = CORE_LOCAL->user_stack;
 	}
+
+	fpu_context = (next_context->notification.ucontext == NULL) ? 
+			&next_context->fpu_context : &next_context->notification.ucontext->fpu_context;
+	r = (next_context->notification.ucontext) ?
+			&next_context->notification.ucontext->regs : &next_context->regs;
 
 	x86_swap_tables(next_context->page_table);
 
-	CORE_LOCAL->fpu_rstor(next_context->fpu_context);
+	CORE_LOCAL->fpu_rstor(*fpu_context);
 
 	set_user_fs(next_context->user_fs_base);
 	set_user_gs(next_context->user_gs_base);
@@ -110,7 +128,7 @@ void reschedule(struct registers *regs, void *) {
 	xapic_write(XAPIC_EOI_OFF, 0);
 	spinrelease(&reschedule_lock);
 
-	SWAP_TLS(&next_context->regs);
+	SWAP_TLS(&next_context->regs); 
 
 	asm volatile (
 		"mov %0, %%rsp\n\t"
@@ -131,6 +149,6 @@ void reschedule(struct registers *regs, void *) {
 		"pop %%rax\n\t"
 		"addq $16, %%rsp\n\t"
 		"iretq\n\t"
-		:: "r" (&next_context->regs)
+		:: "r" (r)
 	);
 }
