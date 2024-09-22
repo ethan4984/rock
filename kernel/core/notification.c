@@ -15,6 +15,10 @@ static inline int notification_is_valid(int not) {
 	else return 0;
 }
 
+static inline int notification_check_perms(struct context*, struct context*, int) {
+	return 0;
+}
+
 static int get_ucontext(struct context *context, struct ucontext **ucontext) {
 	if(context == NULL || ucontext == NULL) return -1;
 
@@ -33,11 +37,29 @@ static int get_ucontext(struct context *context, struct ucontext **ucontext) {
 	return context->notification.ucontexts.length - 1;
 }
 
+int notification_send(struct context *sender, struct context *target, int not) {
+	if(sender == NULL || target == NULL || !notification_is_valid(not) ||
+		notification_check_perms(sender, target, not) == -1) return -1;
+
+	struct notification_queue *queue = target->notification.queue;
+	struct notification *notification = &queue->queue[not - 1];
+
+	notification->refcnt = 1;
+	notification->notnum = not;
+	notification->info = alloc(sizeof(struct notification_info));
+	notification->queue = queue;
+
+	queue->pending |= NOTIFICATION_MASK(not);
+
+	return 0;
+}
+
 int notification_dispatch(struct context *context) {
 	if(context == NULL) return -1;
 
 	struct notification_queue *queue = context->notification.queue;
 	if(unlikely(queue == NULL)) return -1; 
+	if(unlikely(queue->active == 0)) return -1;
 
 	spinlock(&queue->lock);
 
@@ -76,6 +98,10 @@ int notification_dispatch(struct context *context) {
 		ucontext->regs.rflags = 0x202;
 		ucontext->regs.cs = 0x43;
 		ucontext->regs.rip = (uintptr_t)action->handler;
+
+		ucontext->regs.rdi = (uint64_t)notification->info;
+		ucontext->regs.rsi = (uint64_t)notification->share_region.vaddr;
+		ucontext->regs.rdx = i + 1;
 
 		ucontext->active = 1;
 
@@ -125,5 +151,26 @@ SYSCALL_DEFINE2(notification_define_stack, void *, sp, size_t, size, {
 })
 
 SYSCALL_DEFINE0(notification_return, {
+	print("Here I am polling because I am too lazy to implement this at the moment\n");
+	for(;;);
+})
 
+SYSCALL_DEFINE0(notification_unmute, {
+	struct context *current_context = CORE_LOCAL->current_context; 
+	if(current_context == NULL) return -1;
+
+	struct notification_queue *queue = current_context->notification.queue;
+	if(queue == NULL) return -1;
+
+	queue->active = 1;
+})
+
+SYSCALL_DEFINE0(notification_mute, {
+	struct context *current_context = CORE_LOCAL->current_context; 
+	if(current_context == NULL) return -1;
+
+	struct notification_queue *queue = current_context->notification.queue;
+	if(queue == NULL) return -1;
+
+	queue->active = 0;
 })

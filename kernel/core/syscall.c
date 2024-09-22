@@ -23,6 +23,9 @@ extern int syscall_yield(struct registers*);
 extern int syscall_notification_action(struct registers*);
 extern int syscall_notification_define_stack(struct registers*);
 extern int syscall_notification_return(struct registers*);
+extern int syscall_notification_unmute(struct registers*);
+extern int syscall_notification_mute(struct registers*);
+
 
 static struct syscall_handle syscall_handles[] = {
 	{ .handler = syscall_log },
@@ -31,6 +34,8 @@ static struct syscall_handle syscall_handles[] = {
 	{ .handler = syscall_notification_action },
 	{ .handler = syscall_notification_define_stack },
 	{ .handler = syscall_notification_return },
+	{ .handler = syscall_notification_unmute },
+	{ .handler = syscall_notification_mute }
 };
 
 uint64_t syscall_handler(struct registers *regs) {
