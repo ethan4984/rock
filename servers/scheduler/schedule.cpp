@@ -5,8 +5,7 @@
 
 #include <schedule.hpp>
 
-void NOT_table_push(int notification) {
-	fayt::print("HI WITH {}\n", notification);
+void NOT_table_push(struct fayt::NotificationInfo*, void*, int) {
 	fayt::syscall(fayt::SYSCALL_NOTIFICATION_RETURN);
 }
 
@@ -20,6 +19,12 @@ int schedule(struct fayt::PortalResp *portal) {
 	fayt::SyscallRet ret = fayt::syscall(fayt::SYSCALL_NOTIFICATION_ACTION, 1, &action, NULL);
 	if(ret.ret == -1) {
 		fayt::print("DUFAY: Failed to set notification action\n");
+		return -1;
+	}
+
+	ret = fayt::syscall(fayt::SYSCALL_NOTIFICATION_UNMUTE);
+	if(ret.ret == -1) {
+		fayt::print("DUFAY: Failed to activate notification queue\n");
 		return -1;
 	}
 
