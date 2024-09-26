@@ -1,3 +1,9 @@
+# Scheduling
+
+There exists a pre-processor scheduling server that utilises a circular queue within shared memory for object passing between the kernel and the user-space scheduler. The kernel manages brute context switching, while the user-space scheduler handles scheduling among various contexts with differing priorities. When the kernel depletes this queue, it shall reschedule to the pre-processor scheduling server which will then refill this queue and yield.
+
+![image](misc/images/schedule.png)
+
 # Memory Portals
 
 ```c
@@ -35,17 +41,17 @@ Often certain portal classifications are only accessible by special categories o
 - **Cow**: A set of frames and references to be fulfilled in accordance with the principles of CoW (Copy on Write).
 - **Special**: A special mapping for whose contents must be inferred from a specified chain of servers once written to or read from.
 
-  To resolve a page fault pertaining to a special page, the running thread must be blocked, and upon the response, the server is unblocked.
+To resolve a page fault pertaining to a special page, the running thread must be blocked, and upon the response, the server is unblocked.
 
 These are all special operations that require special permissions to invoke.
 
 ### Trivial Share-Point
 
-Passing objects over shared memory is extremely powerful if it's wrapped around the right protocols and interfaces to make it a little less chaotic.
+Shared memory for object passing can be extremely powerful when paired with the right protocols and interfaces to reduce complexity.
 
-Certain applications require less safety and assurance than others. For example, a unidirectional queue going from user-space to kernel-space. Another trivial but common application is shared meta-data between multiple instances of the same server, requiring only locking. These basic applications are all that is required for the multi-server scheduling interface to function.
+Certain applications require less safety and assurance than others. For example, a unidirectional queue from user-space to kernel-space requires minimal safe-guard. Another common application is shared metadata between multiple instances of the same server, requiring only locking. These basic applications are all that is required for the multi-server scheduling interface to function.
 
-- Under these cases, it is both the client’s and server’s responsibility to understand the nature of the data passed over shared memory. FAYT will provide macros and wrappers for data access to ensure locking.
+- In these scenarios, it is both the client’s and server’s responsibility to understand the nature of the data passed over shared memory. FAYT will provide macros and wrappers for data access to ensure locking.
 
 - There will exist a table of shared memory portals, maintained in kernel space, each with an identifier, a list of the captured threads, and a pointer to the physical memory of the shared object. Each thread, in effect, manages its own virtual address space, so it will decide where it wants the share-point to be established.
 
@@ -63,9 +69,9 @@ Certain applications require less safety and assurance than others. For example,
     };
     ```
 
-    The share-point starts at the next 16-byte aligned address after this structure. All access to the share-point will be understood to only be accessed by a set of wrappers that ensure the locking, protection, and boundary conditions are respected.
+- The share-point begins at the next 16-byte aligned address following this meta-structure. All access to the share-point will be understood to only be accessed by a set of wrappers that ensure all locking, protection, and boundary conditions are respected.
 
-- More advanced applications, such as bidirectional queues between servers, will require a level of validation akin to that of Unix domain sockets. A rigorous connection between client and server must be established and maintained. For something like this, which would involve frequent blocking, a capability that can only be provided by an advanced set of schedulers. So, I will dive deeper into this design later.
+- More advanced applications, such as bidirectional queues between servers, will require validation akin to that of Unix domain sockets. A rigorous connection between client and server must be established and maintained. For something like this, which would involve frequent blocking, a capability that can only be provided by an advanced set of schedulers. So, I will dive deeper into this design later.
 
 ### Advanced Share-Point
 
@@ -78,12 +84,21 @@ Sending quick bursts of information between servers, or between a server and ker
 Each context contains a possible 64 notificaiton handlers, each with a circumstantially defined use-case. I do not prescribe any pre-defined use-case for any given notification index, as it is understood that each party involved in the notification, understands how that server defines its notification-set. We provide a system call available to core servers that allows the server to provide handlers for any given notification index.
 
 ```c
-    struct [[gnu::packed]] NotificationAction {
-        void (*handler)(void*,int,int);
-    };
+struct [[gnu::packed]] NotificationAction {
+    void (*handler)(void*,int,int);
+};
 ```
 
 Notifications will be distributed onto a context by the `notification_dispatch(struct context*)` function. Within `struct context` exists a set of field pertaining to notifcations, such as the a set of actions array and a queue, and most importantly `ucontext`. When a notification is dispatched, the state of context will be saved to `ucontext`, with the state of the current thread being overridden with a fresh notification state. When a notification is complete, the handler will invoke the `notification_ret` syscall. Which restores the previous state of the context in conjunction with `ucontext`.
 
 Each notification receives a fresh stack, but since the kernel has minimal authority over a threads address space, a problem arises when you wish to handle n-number of nested notifcations. A solution would be to provide user-space a syscall to allocate a notification stack, as well as a syscall to provide a notification action that shall be invoked by the kernel whenever it requires a stack to handle an additional nested notification. This is a fringe use-case, but one that should be handled nonetheless. 
 
+A notification handler will exist like this. Where NotificationInfo provides information about the sender and the nature of the call, the data parameter is a region allocated in shared memory for object passing. Notifications provide granular input over-shared memory, and granular output over-shared memory, intended such that a caller will supply the notification invocation with some set of objects, and the notification shall return a set of objects as well.  
+
+```c
+void notification(fayt::NotificationInfo *info, void *data, int not) {
+  fayt::syscall(NOTIFICATION_RETURN);
+}
+```
+
+it must exist over shared memory because this has to be generic, it can not be limited to what can only be passed over registers, because potentially a notification will return a large set of objects such as a device enumeration server returning all known devices on the system
