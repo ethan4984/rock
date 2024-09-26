@@ -2,7 +2,9 @@
 
 There exists a pre-processor scheduling server that utilises a circular queue within shared memory for object passing between the kernel and the user-space scheduler. The kernel manages brute context switching, while the user-space scheduler handles scheduling among various contexts with differing priorities. When the kernel depletes this queue, it shall reschedule to the pre-processor scheduling server which will then refill this queue and yield.
 
-![image](misc/images/schedule.png)
+![image](schedule.png)
+
+The approach for exchanging information between scheduling servers and allocating contexts for governance by a specific core has yet to be decided. Likely the final scheme will involve a combination of notifications for required RPC and direct shared memory for data exchange.
 
 # Memory Portals
 
