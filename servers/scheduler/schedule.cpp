@@ -5,7 +5,7 @@
 
 #include <schedule.hpp>
 
-void NOT_table_push(struct fayt::NotificationInfo*, void*, int) {
+void NotifyQueueChange(struct fayt::NotificationInfo*, void*, int) {
 	fayt::syscall(fayt::SYSCALL_NOTIFICATION_RETURN);
 }
 
@@ -13,7 +13,7 @@ int schedule(struct fayt::PortalResp *portal) {
 	if(portal == nullptr) return -1;
 
 	struct fayt::NotificationAction action = {
-		.handler = NOT_table_push
+		.handler = NotifyQueueChange 
 	};
 
 	fayt::SyscallRet ret = fayt::syscall(fayt::SYSCALL_NOTIFICATION_ACTION, 1, &action, NULL);
