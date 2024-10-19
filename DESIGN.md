@@ -47,9 +47,9 @@ To resolve a page fault pertaining to a special page, the running thread must be
 
 These are all special operations that require special permissions to invoke.
 
-### Trivial Share-Point
+### Portal link over shared memory 
 
-Shared memory for object passing can be extremely powerful when paired with the right protocols and interfaces to reduce complexity.
+Shared memory for object passing can be very powerful when paired with the right protocols and interfaces to reduce complexity.
 
 Certain applications require less safety and assurance than others. For example, a unidirectional queue from user-space to kernel-space requires minimal safe-guard. Another common application is shared metadata between multiple instances of the same server, requiring only locking. These basic applications are all that is required for the multi-server scheduling interface to function.
 
@@ -60,15 +60,30 @@ Certain applications require less safety and assurance than others. For example,
 - To create a share-point, you will call the portal system call, passing both the ANON (or DIRECT) and SHARE flags. You will provide a name identifying the share-point and pass a proper morphology. Then the caller will populate it with the share objects. Among any share-point, the first bytes will always be a meta-structure understood by all parties to be a governing object used for synchronization, defined as:
 
     ```c
-    struct [[gnu::packed]] {
+    struct [[gnu::packed]] portal_link {
         char lock;
-        int prot;
-        size_t length;
-        struct {
-            size_t length;
-            uint64_t paddr[];
-        } morphology;
+    
+        int length;
+        int header_offset;
+        int header_limit;
+        int data_offset;
+        int data_limit;
+    
+        char data[];
     };
+    ```
+
+- All operations performed onto or adjacent to this link, will be required to be routed through a macro known as `OPERATE_LINK(LINK, CLASS, OPERATION)` where LINK is assumed to be a pointer to the portal, CLASS assumed to be the class of portal (LINK_CIRCULAR, LINK_VECTOR, LINK_RAW, ...), and OPERATION assumed to be a statement expression. Example shown below
+
+    ```c
+    int ret = OPERATE_LINK(link, LINK_CIRCULAR,
+        ({
+            struct thread *thread;
+            int ret = traverse_and_queue(&thread);
+            if(ret != -1) ret = circular_queue_push((void*)link->data, thread);
+            ret;
+        })
+    );
     ```
 
 - The share-point begins at the next 16-byte aligned address following this meta-structure. All access to the share-point will be understood to only be accessed by a set of wrappers that ensure all locking, protection, and boundary conditions are respected.
