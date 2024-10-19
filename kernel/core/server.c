@@ -32,20 +32,20 @@ int create_server(const char *namespace_name, const char *name, struct server *s
 
 	struct server_id id = (struct server_id) {
 		.nid = namespace->nid,
-		.sid = bitmap_alloc(&namespace->sid_bitmap)
+			.sid = bitmap_alloc(&namespace->sid_bitmap)
 	};
 
 	*server = (struct server) {
 		.name = ({void *copy = alloc(strlen(name) + 1); strcpy(copy, name); copy;}),
-		.id = id
+			.id = id
 	};
 
 	hash_table_push (
-		&namespace->server_table,
-		(void*)server->name,
-		server, 
-		strlen(server->name)
-	);
+			&namespace->server_table,
+			(void*)server->name,
+			server, 
+			strlen(server->name)
+			);
 
 	return 0;
 }
@@ -55,21 +55,21 @@ int create_namespace(const char *name) {
 
 	*namespace = (struct namespace) {
 		.name = ({void *copy = alloc(strlen(name) + 1); strcpy(copy, name); copy; }),
-		.nid = bitmap_alloc(&nid_bitmap),
-		.sid_bitmap = (struct bitmap) {
-			.data = NULL,
-			.size = 0,
-			.resizable = true
-		}
+			.nid = bitmap_alloc(&nid_bitmap),
+			.sid_bitmap = (struct bitmap) {
+				.data = NULL,
+				.size = 0,
+				.resizable = true
+			}
 	};
 
 	hash_table_push (
-		
-	&namespace_table,
+
+			&namespace_table,
 			(void*)namespace->name,
 			namespace,
 			strlen(namespace->name)
-	);
+			);
 
 	return 0;
 }
@@ -118,7 +118,9 @@ struct scheduler_meta {
 	} share;
 } __attribute__((packed));
 
-static int launch_server(struct server *server) {
+static int launch_server(struct server *server, void *arg, int arg_length) {
+	if(server == NULL) return -1;
+
 	struct elf64_file *elf = alloc(sizeof(struct elf64_file));
 
 	elf->data.buffer = server->file->address;
@@ -148,46 +150,25 @@ static int launch_server(struct server *server) {
 	context->user_stack.sp = SERVER_DEFAULT_STACK_LOCATION + SERVER_DEFAULT_STACK_SIZE;
 	context->user_stack.size = SERVER_DEFAULT_STACK_SIZE;
 
-	uintptr_t stack_physical = pmm_alloc(DIV_ROUNDUP(context->user_stack.sp, PAGE_SIZE), 1) + 
-		DIV_ROUNDUP(context->user_stack.sp, PAGE_SIZE) * PAGE_SIZE; 
+	uintptr_t stack_physical = pmm_alloc(context->user_stack.sp / PAGE_SIZE, 1) + 
+		SERVER_DEFAULT_STACK_SIZE; 
 	uintptr_t stack_virtual = context->user_stack.sp;
 
-	for(size_t i = 0; i < DIV_ROUNDUP(SERVER_DEFAULT_STACK_SIZE, PAGE_SIZE); i++) {
+	for(size_t i = 0; i < SERVER_DEFAULT_STACK_SIZE / PAGE_SIZE; i++) {
 		context->page_table->map_page(context->page_table, stack_virtual - PAGE_SIZE * i,
 				stack_physical - PAGE_SIZE * i,
 				X86_FLAGS_P | X86_FLAGS_RW | X86_FLAGS_US);
 	}
 
-	char *argv[] = { "scheduler", NULL };
-	char *envp[] = { "server", NULL };
-
-	int argv_cnt = 1;
-	int envp_cnt = 1;
-
 	char *location = (void*)(stack_physical + HIGH_VMA);
 
-	for(int i = 0; i < envp_cnt; i++) {
-		location -= strlen(envp[i]) + 1;
-		strcpy(location, envp[i]);
-	}
-
-	for(int i = 0; i < argv_cnt; i++) {
-		location -= strlen(argv[i]) + 1;
-		strcpy(location, argv[i]);
+	if(arg) {
+		location -= arg_length;
+		memcpy(location, arg, arg_length);
+		context->regs.rdi = stack_virtual - (stack_physical - ((uint64_t)location - HIGH_VMA));
 	}
 
 	location = (void*)((uint64_t)location & -16ll);
-
-	if((argv_cnt + envp_cnt + 1) & 1) location--;
-
-	location -= 10;
-
-	location[0] = ELF_AT_PHNUM; location[1] = elf->aux.at_phnum;
-	location[2] = ELF_AT_PHENT; location[3] = elf->aux.at_phent;
-	location[4] = ELF_AT_PHDR;	location[5] = elf->aux.at_phdr;
-	location[6] = ELF_AT_ENTRY; location[7] = elf->aux.at_entry;
-	location[8] = 0; location[9] = 0;
-
 	context->regs.rsp = stack_virtual - (stack_physical - ((uint64_t)location - HIGH_VMA));
 
 	server->context = context;
@@ -215,7 +196,11 @@ static int launch_schedulers(struct limine_file *file) {
 	}
 
 	for(int i = 0; i < bootable_processor_cnt; i++) {
-		if(launch_server(servers[i]) == -1) {
+		struct server_sched_descriptor sched_descriptor = {
+			.processor_id = i + 1
+		};
+
+		if(launch_server(servers[i], &sched_descriptor, sizeof(sched_descriptor)) == -1) {
 			print("dufay: failed to launch server\n");
 			continue;
 		}

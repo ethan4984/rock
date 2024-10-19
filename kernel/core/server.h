@@ -40,6 +40,10 @@ struct server_env {
 	const char *name;
 };
 
+struct server_sched_descriptor {
+	int processor_id;
+};
+
 int launch_servers(void);
 
 #endif

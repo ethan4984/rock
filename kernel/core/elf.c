@@ -80,14 +80,18 @@ int elf64_load_section(struct elf64_file *file, const char *name) {
 				page_cnt++;
 			}
 
+			if(page_cnt == 0) continue;
+			uint64_t physical[page_cnt];
+
 			for(int j = 0; j < page_cnt; j++) {
+				physical[j] = pmm_alloc(1, 1);
 				uintptr_t virtual = shdr->sh_addr + file->load_offset - misalignment + j * PAGE_SIZE;
 
 				uint64_t flags = X86_FLAGS_P | X86_FLAGS_US | X86_FLAGS_NX;
-				if (shdr->sh_flags & ELF_PF_W) flags |= X86_FLAGS_RW;
-				if (shdr->sh_flags & ELF_PF_X) flags &= ~X86_FLAGS_NX;
+				if(shdr->sh_flags & ELF_PF_W) flags |= X86_FLAGS_RW;
+				if(shdr->sh_flags & ELF_PF_X) flags &= ~X86_FLAGS_NX;
 
-				file->page_table->map_page(file->page_table, virtual, pmm_alloc(1, 1), flags);
+				file->page_table->map_page(file->page_table, virtual, physical[j], flags);
 			}
 
             break;
@@ -114,9 +118,7 @@ int elf64_file_load(struct elf64_file *file) {
 				((phdr->p_filesz + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))) {
 			page_cnt++;
         }
-
-		print("%x %x\n", phdr->p_vaddr, phdr->p_filesz);
-
+		
 		if(page_cnt == 0) continue;
 		uintptr_t physical[page_cnt];
 
@@ -125,15 +127,15 @@ int elf64_file_load(struct elf64_file *file) {
             uintptr_t virtual = phdr->p_vaddr + file->load_offset - misalignment + j * PAGE_SIZE;
 
 			uint64_t flags = X86_FLAGS_P | X86_FLAGS_US | X86_FLAGS_NX;
-			if (phdr->p_flags & ELF_PF_W) flags |= X86_FLAGS_RW;
-			if (phdr->p_flags & ELF_PF_X) flags &= ~X86_FLAGS_NX;
+			if(phdr->p_flags & ELF_PF_W) flags |= X86_FLAGS_RW;
+			if(phdr->p_flags & ELF_PF_X) flags &= ~X86_FLAGS_NX;
 
 			file->page_table->map_page(file->page_table, virtual, physical[j], flags);
 		}
 
 		for(int j = 0; j < page_cnt; j++) {
 			size_t cnt = ((PAGE_SIZE + j * PAGE_SIZE) > phdr->p_filesz) ?
-				((PAGE_SIZE + j * PAGE_SIZE) - phdr->p_filesz) : PAGE_SIZE;
+				(phdr->p_filesz % (j * PAGE_SIZE)) : PAGE_SIZE;
 
 			elf64_read(file, (void*)physical[j] + HIGH_VMA + ((j == 0) ? misalignment : 0),
 					phdr->p_offset + j * PAGE_SIZE, cnt - ((j == 0) ? misalignment : 0));
