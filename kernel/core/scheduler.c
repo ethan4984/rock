@@ -69,7 +69,7 @@ int sched_establish_shared_link(struct context *scheduler_context, const char *i
 }
 
 SYSCALL_DEFINE0(yield, {
-	asm volatile ("int $32");
+	__asm__ volatile ("int $32");
 })
 
 void reschedule(struct registers *regs, void *) {
@@ -130,7 +130,7 @@ void reschedule(struct registers *regs, void *) {
 
 	SWAP_TLS(&next_context->regs); 
 
-	asm volatile (
+	__asm__ volatile (
 		"mov %0, %%rsp\n\t"
 		"pop %%r15\n\t"
 		"pop %%r14\n\t"

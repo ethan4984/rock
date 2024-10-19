@@ -12,7 +12,7 @@ void hpet_msleep(size_t ms) {
 	volatile size_t ticks = hpet_regs->counter_value + (ms * (1000000000000 / period));
 
 	while(hpet_regs->counter_value < ticks) {
-		asm ("pause");
+		__asm__ ("pause");
 	}
 }
 
@@ -22,7 +22,7 @@ void hpet_usleep(size_t us) {
 	volatile size_t ticks = hpet_regs->counter_value + (us * (1000000000 / period));
 
 	while(hpet_regs->counter_value < ticks) {
-		asm ("pause");
+		__asm__ ("pause");
 	}
 }
 
@@ -32,7 +32,7 @@ void hpet_nsleep(size_t us) {
 	volatile size_t ticks = hpet_regs->counter_value + (us * (1000000 / period));
 
 	while(hpet_regs->counter_value < ticks) {
-		asm ("pause");
+		__asm__ ("pause");
 	}
 }
 

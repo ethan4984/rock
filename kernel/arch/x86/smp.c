@@ -15,7 +15,7 @@
 #include <acpi/madt.h>
 
 static void chain_aps();
-static void core_bootstrap();
+static void core_bootstrap(struct cpu_local*);
 
 static struct spinlock core_init_lock;
 
@@ -40,16 +40,16 @@ static void core_bootstrap(struct cpu_local *cpu_local) {
 	
 	apic_timer_init(20);
 
-	asm volatile ("mov %0, %%cr8\nsti" :: "r"(0ull));
+	__asm__ volatile ("mov %0, %%cr8\nsti" :: "r"(0ull));
 
 	logical_processor_cnt++; chain_aps();
 
 	for(;;) {
-		asm ("hlt");
+		__asm__ ("hlt");
 	}
 }
 
-asm (
+__asm__ (
 	".global smp_init_begin\n\t"
 	"smp_init_begin: .incbin \"arch/x86/smp.bin\"\n\t"
 	".global smp_init_end\n\t"
@@ -63,7 +63,7 @@ size_t bootable_processor_cnt;
 
 static void chain_aps() {
 	struct idtr idtr;
-	asm ("sidtq %0" :: "m"(idtr));
+	__asm__ ("sidtq %0" :: "m"(idtr));
 
 	if((logical_processor_cnt) >= bootable_processor_cnt) {
 		kernel_mappings.unmap_page(&kernel_mappings, 0);

@@ -16,13 +16,13 @@ struct cpuid_state cpuid(size_t leaf, size_t subleaf) {
 	struct cpuid_state ret = { .leaf = leaf, subleaf = subleaf };
 
 	size_t max;
-	asm volatile ("cpuid" : "=a"(max) : "a"(leaf & 0x80000000) : "rbx", "rcx", "rdx");
+	__asm__ volatile ("cpuid" : "=a"(max) : "a"(leaf & 0x80000000) : "rbx", "rcx", "rdx");
 
 	if(leaf > max) {
 		return ret;
 	}
 
-	asm volatile ("cpuid" : "=a"(ret.rax), "=b"(ret.rbx), "=c"(ret.rcx), "=d"(ret.rbx) : "a"(leaf), "c"(subleaf));
+	__asm__ volatile ("cpuid" : "=a"(ret.rax), "=b"(ret.rbx), "=c"(ret.rcx), "=d"(ret.rbx) : "a"(leaf), "c"(subleaf));
 
 	return ret;
 }
@@ -34,21 +34,21 @@ void x86_system_init(void) {
 	wrmsr(MSR_SFMASK, ~(uint32_t)2);
 
 	uint64_t cr0;
-	asm volatile ("mov %%cr0, %0" : "=r"(cr0));
+	__asm__ volatile ("mov %%cr0, %0" : "=r"(cr0));
 
 	cr0 &= ~(1 << 2); // disable x87 emulation
 	cr0 |= (1 << 1); // enables sse;
 
-	asm volatile ("mov %0, %%cr0" :: "r"(cr0));
+	__asm__ volatile ("mov %0, %%cr0" :: "r"(cr0));
 
 	uint64_t cr4;
-	asm volatile ("mov %%cr4, %0" : "=r"(cr4));
+	__asm__ volatile ("mov %%cr4, %0" : "=r"(cr4));
 
 	cr4 |=	(1 << 7) | // allow for global pages
 			(1 << 9) | // enables xsave/xstore
 			(1 << 10); // enables XM exceptions
 											
-	asm volatile ("mov %0, %%cr4" :: "r"(cr4));
+	__asm__ volatile ("mov %0, %%cr4" :: "r"(cr4));
 
 	serial_init();
 }

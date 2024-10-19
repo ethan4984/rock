@@ -1,9 +1,9 @@
 KERNEL := dufay.elf
 
-CC ?= cc
+CC ?= gcc
 LD ?= ld
 
-CFLAGS	?= -Wall -Wextra -Ofast -pipe -fsanitize=undefined -Wno-unused
+CFLAGS ?= -Wall -Wextra -Ofast -pipe -fsanitize=undefined -Wno-unused
 LDFLAGS ?=
 
 INTERNALLDFLAGS :=		 \
@@ -14,26 +14,26 @@ INTERNALLDFLAGS :=		 \
 	--no-dynamic-linker	\
 	-ztext
 
-INTERNALCFLAGS :=		\
-	-I.					\
-	-std=gnu11			 \
-	-ffreestanding		 \
+INTERNALCFLAGS := \
+	-I. \
+	-std=c23 \
+	-ffreestanding \
 	-fno-stack-protector \
-	-fpie				\
-	-mno-80387			 \
-	-mno-mmx			 \
-	-mno-3dnow			 \
-	-mno-sse			 \
-	-mno-sse2			\
-	-mno-red-zone		\
-	-MMD				 \
+	-fpie \
+	-mno-80387 \
+	-mno-mmx \
+	-mno-3dnow \
+	-mno-sse \
+	-mno-sse2 \
+	-mno-red-zone \
+	-MMD \
 	-Wno-sign-compare
 
-CFILES		:= $(shell find ./ -type f -name '*.c')
-ASMFILES	:= $(shell find ./ -type f -name '*.asm')
-REALFILES 	:= $(shell find ./ -type f -name '*.real')
-OBJ		 := $(CFILES:.c=.o) $(ASMFILES:.asm=.o)
-BINS		:= $(REALFILES:.real=.bin)
+CFILES := $(shell find ./ -type f -name '*.c')
+ASMFILES := $(shell find ./ -type f -name '*.asm')
+REALFILES := $(shell find ./ -type f -name '*.real')
+OBJ := $(CFILES:.c=.o) $(ASMFILES:.asm=.o)
+BINS := $(REALFILES:.real=.bin)
 HEADER_DEPS := $(CFILES:.c=.d)
 
 .PHONY: all

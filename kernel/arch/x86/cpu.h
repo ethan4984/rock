@@ -73,58 +73,58 @@ struct cpuid_state {
 };
 
 static inline void outb(uint16_t port, uint8_t data) {
-	asm volatile("outb %0, %1" :: "a"(data), "Nd"(port));
+	__asm__ volatile("outb %0, %1" :: "a"(data), "Nd"(port));
 }
 
 static inline void outw(uint16_t port, uint16_t data) {
-	asm volatile("outw %0, %1" :: "a"(data), "Nd"(port));
+	__asm__ volatile("outw %0, %1" :: "a"(data), "Nd"(port));
 }
 
 static inline void outd(uint16_t port, uint32_t data) {
-	asm volatile("outl %0, %1" :: "a"(data), "Nd"(port));
+	__asm__ volatile("outl %0, %1" :: "a"(data), "Nd"(port));
 }
 
 static inline uint8_t inb(uint16_t port) {
 	uint8_t data;
-	asm volatile("inb %1, %0" : "=a"(data):"Nd"(port));
+	__asm__ volatile("inb %1, %0" : "=a"(data):"Nd"(port));
 	return data;
 }
 
 static inline uint16_t inw(uint16_t port) {
 	uint16_t data;
-	asm volatile("inw %1, %0" : "=a"(data):"Nd"(port));
+	__asm__ volatile("inw %1, %0" : "=a"(data):"Nd"(port));
 	return data;
 }
 
 static inline uint32_t ind(uint16_t port) {
 	uint32_t data;
-	asm volatile("inl %1, %0" : "=a"(data):"Nd"(port));
+	__asm__ volatile("inl %1, %0" : "=a"(data):"Nd"(port));
 	return data;
 }
 
 static inline uint64_t rdmsr(uint32_t msr) {
 	uint64_t rax, rdx;
-	asm volatile ("rdmsr" : "=a"(rax), "=d"(rdx) : "c"(msr) : "memory");
+	__asm__ volatile ("rdmsr" : "=a"(rax), "=d"(rdx) : "c"(msr) : "memory");
 	return (rdx << 32) | rax;
 }
 
 static inline void wrmsr(uint32_t msr, uint64_t data) {
 	uint64_t rax = (uint32_t)data;
 	uint64_t rdx = data >> 32;
-	asm volatile ("wrmsr" :: "a"(rax), "d"(rdx), "c"(msr));
+	__asm__ volatile ("wrmsr" :: "a"(rax), "d"(rdx), "c"(msr));
 }
 
 static inline void swapgs(void) {
-	asm volatile ("swapgs" ::: "memory");
+	__asm__ volatile ("swapgs" ::: "memory");
 }
 
 static inline void invlpg(uint64_t vaddr) {
-	asm volatile ("invlpg %0" :: "m"((*((int(*)[])((void*)vaddr)))) : "memory");
+	__asm__ volatile ("invlpg %0" :: "m"((*((int(*)[])((void*)vaddr)))) : "memory");
 }
 
 static inline bool get_interrupt_state(void) {
 	uint64_t rflags = 0;
-	asm volatile ("pushfq\n\tpop %0" : "=r"(rflags));
+	__asm__ volatile ("pushfq\n\tpop %0" : "=r"(rflags));
 	return (rflags >> 9) & 1;
 }
 
@@ -150,28 +150,28 @@ static inline uint64_t get_user_fs(void) {
 
 static inline uint64_t rdtsc(void) {
 	uint64_t rax, rdx;
-	asm volatile ("rdtsc" : "=a"(rax), "=d"(rdx));
+	__asm__ volatile ("rdtsc" : "=a"(rax), "=d"(rdx));
 	return (uint64_t)rax | ((uint64_t)rdx << 32);
 }
 
 static inline uint64_t rdseed(void) {
 	uint64_t ret;
-	asm volatile ("rdseed %0" : "=r"(ret));
+	__asm__ volatile ("rdseed %0" : "=r"(ret));
 	return ret;
 }
 
 static inline uint64_t rdrand(void) {
 	uint64_t ret;
-	asm volatile ("rdrand %0" : "=r"(ret));
+	__asm__ volatile ("rdrand %0" : "=r"(ret));
 	return ret;
 }
 
 static inline void fxsave(void *data) {
-	asm volatile ("fxsave (%0)" :: "r"(data) : "memory");
+	__asm__ volatile ("fxsave (%0)" :: "r"(data) : "memory");
 }
 
 static inline void fxrstor(void *data) {
-	asm volatile ("fxrstor (%0)" :: "r"(data) : "memory");
+	__asm__ volatile ("fxrstor (%0)" :: "r"(data) : "memory");
 }
 
 struct cpuid_state cpuid(size_t leaf, size_t subleaf);

@@ -181,5 +181,5 @@ void apic_init() {
 	xapic_write(XAPIC_TPR_OFF, 0);
 	xapic_write(XAPIC_SINT_OFF, xapic_read(XAPIC_SINT_OFF) | 0x1ff);
 
-	asm volatile ("mov %0, %%cr8" :: "r"(0ull));
+	__asm__ volatile ("mov %0, %%cr8" :: "r"(0ull));
 }

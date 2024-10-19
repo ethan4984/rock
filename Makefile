@@ -58,7 +58,7 @@ $(ISO_IMAGE): $(INITRAMFS) limine kernel
 	mkdir disk_image
 	mkdir disk_image/boot
 	mkdir disk_image/servers/
-	cp servers/scheduler/scheduler disk_image/servers
+	cp servers/sched/sched disk_image/servers
 	cp kernel/dufay.elf initramfs.tar limine/limine-bios-cd.bin limine/limine-uefi-cd.bin limine/limine-bios.sys limine.cfg disk_image/boot
 	xorriso -as mkisofs -b boot/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table --efi-boot boot/limine-uefi-cd.bin -efi-boot-part --efi-boot-image --protective-msdos-label disk_image -o dufay.iso
 	./limine/limine bios-install dufay.iso

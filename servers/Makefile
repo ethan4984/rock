@@ -1,5 +1,5 @@
 build_servers:
-	cd scheduler && make && cp scheduler ../../build/system-root/servers/scheduler
+	cd sched && make && cp sched ../../build/system-root/servers/sched
 
 clean:
-	cd scheduler && make clean
+	cd sched && make clean

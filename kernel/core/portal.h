@@ -12,7 +12,7 @@
 #define PORTAL_RESP_SUCCESS (1 << 1)
 
 #include <fayt/hash.h>
-#include <fayt/avl.h>
+#include <fayt/bst.h>
 
 #include <stdint.h>
 #include <stddef.h>

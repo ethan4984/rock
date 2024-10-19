@@ -108,7 +108,7 @@ void gdt_init(void) {
 		.offset = (uintptr_t)gdt
 	};
 							
-	asm volatile (	
+	__asm__ volatile (	
 		"lgdtq %0\n\t"
 		"lea 1f(%%rip), %%rax\n\t"
 		"push $0x28\n\t"

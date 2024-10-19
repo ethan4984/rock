@@ -72,8 +72,7 @@ void dufay_entry(void) {
 
 	launch_servers();
 
-	asm ("sti"); 
+	__asm__ ("sti"); 
 
-	for(;;)
-		asm ("hlt");
+	for(;;) __asm__ ("hlt");
 }

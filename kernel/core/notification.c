@@ -76,7 +76,7 @@ int notification_dispatch(struct context *context) {
 	}
 
 	for(int i = 1; i <= NOTIFICATION_MAX; i++) {
-		if(queue->pending & NOTIFICATION_MASK(i) == 0 || 
+		if((queue->pending & NOTIFICATION_MASK(i)) == 0 || 
 			queue->mask & NOTIFICATION_MASK(i)) continue;
 
 		struct notification *notification = NULL;

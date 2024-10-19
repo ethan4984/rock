@@ -282,7 +282,7 @@ static size_t pml5_unmap_page(struct page_table *page_table, uint64_t vaddr) {
 }
 
 void x86_swap_tables(struct page_table *page_table) {
-	asm volatile ("mov %0, %%cr3" :: "r"((uint64_t)page_table->pmlt - HIGH_VMA) : "memory");
+	__asm__ volatile ("mov %0, %%cr3" :: "r"((uint64_t)page_table->pmlt - HIGH_VMA) : "memory");
 }
 
 void x86_paging_init() {

@@ -55,12 +55,12 @@ void panic(const char *str, ...) {
 	print_unlocked(" > HALTING\n");
 
 	uint64_t rbp;
-	asm volatile ("mov %%rbp, %0" : "=r"(rbp));
+	__asm__ volatile ("mov %%rbp, %0" : "=r"(rbp));
 	stacktrace((void*)rbp);
 
 	spinrelease(&print_stream.lock);
 
-	for(;;) asm volatile ("cli\nhlt");
+	for(;;) __asm__ volatile ("cli\nhlt");
 }
 
 void stacktrace(uint64_t *rbp) {

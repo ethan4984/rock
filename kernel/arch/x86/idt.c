@@ -95,14 +95,14 @@ extern void isr_handler_main(struct registers *regs) {
 		static struct spinlock exception_lock;
 
 		uint64_t cr2;
-		asm volatile ("mov %%cr2, %0" : "=a"(cr2));
+		__asm__ volatile ("mov %%cr2, %0" : "=a"(cr2));
 
 		uint64_t cr3;
-		asm volatile ("mov %%cr3, %0" : "=a"(cr3));
+		__asm__ volatile ("mov %%cr3, %0" : "=a"(cr3));
 
 		if(regs->isr_number == 0xe) {
 			uint64_t faulting_address;
-			asm volatile ("mov %%cr2, %0" : "=a"(faulting_address));
+			__asm__ volatile ("mov %%cr2, %0" : "=a"(faulting_address));
 
 			if(portal_resolve_fault(faulting_address, regs->error_code) == 0) {
 				goto done;
@@ -122,7 +122,7 @@ extern void isr_handler_main(struct registers *regs) {
 		spinrelease(&exception_lock);
 
 		for(;;) {
-			asm ("hlt");
+			__asm__ ("hlt");
 		}
 	}
 
@@ -666,5 +666,5 @@ void idt_init() {
 		.offset = (uintptr_t)idt
 	};
 
-	asm volatile ("lidtq %0" : "=m"(idtr));
+	__asm__ volatile ("lidtq %0" : "=m"(idtr));
 }
