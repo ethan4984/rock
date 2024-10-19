@@ -1,10 +1,10 @@
 SERVER := scheduler
 
-CXX ?= g++
+C ?= gcc
 LD ?= ld
 
 # Compiler and linker flags
-CXXFLAGS ?= -Wall -Wextra -O3 -pipe
+CFLAGS ?= -Wall -Wextra -Ofast -pipe -fsanitize=undefined
 LDFLAGS ?=
 
 INTERNALLDFLAGS := \
@@ -13,21 +13,21 @@ INTERNALLDFLAGS := \
 	-static \
 	-ztext
 
-INTERNALCXXFLAGS := \
+INTERNALCFLAGS := \
 	-I.	\
-	-Ifayt/cxxshim/stage2/include \
-	-std=c++23 \
+	-Ifayt \
+	-std=c23 \
 	-ffreestanding \
-	-fstack-protector \
+	-fstack-protector\
 	-mno-80387 \
 	-mno-mmx \
 	-mno-3dnow \
 	-mno-sse \
 	-mno-sse2
 
-CPPFILES := $(shell find ./ -type f -name '*.cpp')
-OBJ := $(CPPFILES:.cpp=.o)
-HEADER_DEPS := $(CPPFILES:.cpp=.d)
+CFILES := $(shell find ./ -type f -name '*.c')
+OBJ := $(CFILES:.c=.o)
+HEADER_DEPS := $(CFILES:.c=.d)
 
 .PHONY: all
 all: $(SERVER)
@@ -37,8 +37,8 @@ $(SERVER): $(OBJ)
 
 -include $(HEADER_DEPS)
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(INTERNALCXXFLAGS) -c $< -o $@
+%.o: %.c
+	$(C) $(CFLAGS) $(INTERNALCFLAGS) -c $< -o $@
 
 .PHONY: clean
 clean:
