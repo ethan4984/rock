@@ -3,16 +3,56 @@
 #include <fayt/debug.h>
 #include <fayt/notification.h>
 #include <fayt/circular_queue.h>
+#include <fayt/compiler.h>
+#include <fayt/address_space.h>
+#include <fayt/hash.h>
 
 #include <sched.h>
 
 static struct thread *thread_tree;
+static struct hash_table thread_table;
 
-static void notify_enqueue_thread(struct notification_info *, void*, int) {
+static struct sched_descriptor *sched_desc;
+static struct portal_link *sched_meta;
+
+static void notify_enqueue_thread(struct notification_info*, void *data, int) {
+	struct sched_queue_config *config = data;
+	if(config == NULL) { print("DUFAY: SCHEDULER: \n"); goto finish; }
+
+	if(config->offload) {
+		struct sched_descriptor *optimal_sched = sched_desc;
+
+		int ret = OPERATE_LINK(sched_meta, LINK_RAW, 
+			({
+				for(size_t i = 0; i < sched_meta->data_limit / sizeof(struct sched_descriptor); i++) {
+					struct sched_descriptor *desc = (struct sched_descriptor*)sched_meta->data + i;
+
+					if(unlikely(optimal_sched == NULL)) optimal_sched = desc;
+					else if(desc->load > optimal_sched->load) optimal_sched = desc;
+				}
+				0;
+			})
+		);
+
+		if(ret == -1) { print("DUFAY: SCHEDULER: Critical failure to enqueue thread\n"); goto finish; }
+		// invoke a notification to the scheduling servers optimal_sched (set offload=0)
+		goto finish;
+	}
+finish:
 	SYSCALL0(SYSCALL_NOTIFICATION_RETURN);
 }
 
-static void notify_dequeue_thread(struct notification_info *, void*, int) {
+static void notify_dequeue_thread(struct notification_info *, void *data, int) {
+	struct sched_queue_config *config = data;
+	if(config == NULL) goto finish;
+
+	void *thread;
+	int ret = hash_table_search(&thread_table, &config->cid, sizeof(config->cid), &thread);
+	if(ret == -1 || thread == NULL) goto finish;
+
+	ret = RB_GENERIC_DELETE(thread_tree, runtime, (struct thread*)thread); 
+	if(ret == -1) goto finish;
+finish:
 	SYSCALL0(SYSCALL_NOTIFICATION_RETURN);
 }
 
@@ -51,6 +91,32 @@ int sched(struct portal_link *link, struct sched_descriptor *desc) {
 
 	print("DUFAY: SCHEDULER: Initialised enqueue and dequeue notifications\n");
 
+	uintptr_t addr;
+	int ret = as_allocate(&address_space, &addr, 0x10000);
+	if(ret == -1) { print("DUFAY: SCHEDULER: Failed to allocate address\n"); }
+
+	struct portal_resp portal_resp;
+	struct portal_req portal_req = {
+		.type = PORTAL_REQ_SHARE | PORTAL_REQ_ANON,
+		.prot = PORTAL_PROT_READ | PORTAL_PROT_WRITE,
+		.length = sizeof(struct portal_req), 
+		.share = {
+			.identifier = "SCHEDULER META",
+			.type = LINK_RAW,
+			.create = 0
+		},
+		.morphology = {
+			.addr = addr,
+			.length = 0x10000
+		}
+	};
+
+	response = SYSCALL2(SYSCALL_PORTAL, &portal_req, &portal_resp);
+	if(response.ret == -1) { print("DUFAY: SCHEDULER: Failed to establish link\n"); }
+
+	sched_meta = (void*)portal_resp.base;
+	sched_desc = desc;
+
 	response = SYSCALL0(SYSCALL_NOTIFICATION_UNMUTE);
 	if(response.ret == -1) { print("DUFAY: SCHEDULER: Failed to activate notification queue\n"); return -1; }
 
@@ -74,4 +140,3 @@ int sched(struct portal_link *link, struct sched_descriptor *desc) {
 		SYSCALL0(SYSCALL_YIELD);
 	}
 }
-

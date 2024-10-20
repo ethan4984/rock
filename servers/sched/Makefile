@@ -1,9 +1,8 @@
-SERVER := scheduler
+SERVER := sched
 
 C ?= gcc
 LD ?= ld
 
-# Compiler and linker flags
 CFLAGS ?= -Wall -Wextra -Ofast -pipe -fsanitize=undefined
 LDFLAGS ?=
 

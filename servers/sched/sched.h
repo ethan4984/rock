@@ -19,6 +19,12 @@ struct thread {
 struct sched_descriptor {
 	int processor_id; 
 	int queue_default_refill;
+	int load;
+};
+
+struct sched_queue_config {
+	int offload;
+	int cid;
 };
 
 int sched(struct portal_link*, struct sched_descriptor*);
