@@ -12,7 +12,7 @@ static void *spalloc(void*, uint64_t);
 static void spfree(void*, uint64_t, uint64_t);
 
 int main(struct sched_descriptor *desc) {
-	print("DUFAY: SCHEDULER: booting server %x %x\n", desc, desc->processor_id);
+	print("DUFAY: SCHEDULER: booting server {processor_id=%x}\n", desc->processor_id);
 
 	struct slab_pool pool = {
 		.page_size = PAGE_SIZE,
