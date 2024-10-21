@@ -34,6 +34,9 @@ int create_blank_context(struct context *context) {
 
 	context->fpu_context = alloc(CORE_LOCAL->fpu_context_size);
 
+	int ret = NEW_CONTEXT(context);
+	if(ret == -1) return -1;
+
 	return 0;
 }
 
@@ -51,7 +54,7 @@ int sched_establish_shared_link(struct context *scheduler_context, const char *i
 		.length = sizeof(struct portal_req) + sizeof(uint64_t) * page_cnt,
 		.share = {
 			.identifier = identifier,
-			.type = PORTAL_SHARE_TYPE_CIRCULAR, 
+			.type = LINK_CIRCULAR, 
 			.create = 1
 		}
 	};

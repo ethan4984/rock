@@ -54,6 +54,12 @@ struct context {
 		struct spinlock lock;
 	} notification;
 
+	struct {
+		const char *namespace;
+		const char *server;
+		int cid;
+	} comms;
+
 	uint64_t sysperm;
 
 	struct page_table *page_table;

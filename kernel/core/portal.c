@@ -111,8 +111,9 @@ static int portal_fault_anon(struct page_table *page_table, uintptr_t addr) {
 
 			struct frame *shared_frame = NULL;
 			if(root->type & PORTAL_REQ_SHARE) {
-				struct portal_share_point *share_point = hash_table_search(&portal_share_map,
-					(void*)root->share.identifier, strlen(root->share.identifier));
+				struct portal_share_point *share_point;
+				int ret = hash_table_search(&portal_share_map,
+					(void*)root->share.identifier, strlen(root->share.identifier), (void**)&share_point);
 				if(share_point == NULL) {
 					print("DUFAY: backing sharepoint does not exist\n");
 					return -1;	
@@ -142,7 +143,8 @@ static int portal_fault_anon(struct page_table *page_table, uintptr_t addr) {
 			} else page->frame->refcnt++;
 
 			page_table->map_page(page_table, page->vaddr, page->frame->paddr, flags);
-			hash_table_push(page_table->pages, &page->vaddr, page, sizeof(page->vaddr));
+			int ret = hash_table_push(page_table->pages, &page->vaddr, page, sizeof(page->vaddr));
+			if(ret == -1) return -1;
 
 			return 0;
 		}
@@ -191,8 +193,9 @@ static int portal_handle_share(struct portal *portal, struct portal_req *req) {
 
 	portal->type |= PORTAL_REQ_SHARE;
 
-	struct portal_share_point *share_point = hash_table_search(&portal_share_map,
-		(void*)req->share.identifier, strlen(req->share.identifier));
+	struct portal_share_point *share_point;
+	int ret = hash_table_search(&portal_share_map,
+		(void*)req->share.identifier, strlen(req->share.identifier), (void**)&share_point);
 
 	if(share_point == NULL && !req->share.create) return -1;	
 	if(share_point == NULL && req->share.create) {
@@ -203,8 +206,12 @@ static int portal_handle_share(struct portal *portal, struct portal_req *req) {
 		strcpy((void*)share_point->identifier, req->share.identifier);
 		portal->share.identifier = share_point->identifier;
 
-		hash_table_push(&portal_share_map, (void*)share_point->identifier, share_point,
+		int ret = hash_table_push(&portal_share_map, (void*)share_point->identifier, share_point,
 			strlen(share_point->identifier));
+		if(ret == -1) return -1;
+
+		// TODO
+		// THIS MAKE PORTAL LINKS WORK (FIGURE THE MAGIC NUMBER MUMBO NUMBER AND SUCH)
 
 		struct portal_share_meta *share_meta = (void*)req->morphology.addr;
 
@@ -213,7 +220,7 @@ static int portal_handle_share(struct portal *portal, struct portal_req *req) {
 		share_meta->prot = req->prot;
 		share_meta->length = req->morphology.length;
 
-		if(share_meta->type & PORTAL_SHARE_TYPE_CIRCULAR) {
+		if(share_meta->type & LINK_CIRCULAR) {
 			struct circular_queue *queue = (void*)share_meta + sizeof(struct portal_share_meta);
 
 			int queue_length = (req->morphology.length - sizeof(struct portal_share_meta) -

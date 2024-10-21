@@ -5,6 +5,7 @@
 #include <core/scheduler.h>
 #include <core/physical.h>
 #include <core/debug.h>
+#include <core/server.h>
 
 #include <fayt/lock.h>
 #include <fayt/string.h>
@@ -111,6 +112,27 @@ int notification_dispatch(struct context *context) {
 	return 0;
 }
 
+SYSCALL_DEFINE1(notify, struct comm_bridge*, bridge, {
+	if(bridge == NULL) return -1;
+	struct context *context = CORE_LOCAL->current_context;
+	struct context *destination; 
+
+	if(bridge->destination) {
+		const char *namespace = context->comms.namespace;
+		if(bridge->namespace) namespace = bridge->namespace;
+
+		struct server *server = find_server(namespace, bridge->destination);
+		if(server == NULL || server->context == NULL) return -1;
+	
+		destination = server->context;
+	} else {
+		int ret = SEARCH_CONTEXT(bridge->cid, &destination);
+		if(ret == -1 || destination == NULL) return -1;
+	}
+
+	return notification_send(context, destination, bridge->not);
+})
+
 SYSCALL_DEFINE3(notification_action, int, not, struct notification_action *, action,
 	struct notification_action *, old, {
 	struct context *context = CORE_LOCAL->current_context; 
@@ -151,8 +173,6 @@ SYSCALL_DEFINE2(notification_define_stack, void *, sp, size_t, size, {
 })
 
 SYSCALL_DEFINE0(notification_return, {
-	print("Here I am polling because I am too lazy to implement this at the moment\n");
-	for(;;);
 })
 
 SYSCALL_DEFINE0(notification_unmute, {

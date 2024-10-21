@@ -16,6 +16,9 @@
 static struct hash_table namespace_table;
 static struct bitmap nid_bitmap;
 
+struct hash_table context_table;
+struct bitmap cid_bitmap;
+
 static volatile struct limine_module_request limine_module_request = {
 	.id = LIMINE_MODULE_REQUEST,
 	.revision = 0
@@ -24,28 +27,26 @@ static volatile struct limine_module_request limine_module_request = {
 static int launch_schedulers(struct limine_file*);
 
 int create_server(const char *namespace_name, const char *name, struct server *server) {
-	struct namespace *namespace = hash_table_search(&namespace_table,
-			(void*)namespace_name, strlen(namespace_name));
-	if(namespace == NULL) {
+	struct namespace *namespace;
+	int ret = hash_table_search(&namespace_table, (void*)namespace_name,
+		strlen(namespace_name), (void**)&namespace);
+	if(ret == -1 || namespace == NULL) {
 		return -1;
 	}
 
 	struct server_id id = (struct server_id) {
 		.nid = namespace->nid,
-			.sid = bitmap_alloc(&namespace->sid_bitmap)
+		.sid = ({ int sid; int ret = bitmap_alloc(&namespace->sid_bitmap, &sid); ret == -1 ? ret : sid; })
 	};
 
 	*server = (struct server) {
 		.name = ({void *copy = alloc(strlen(name) + 1); strcpy(copy, name); copy;}),
-			.id = id
+		.id = id
 	};
 
-	hash_table_push (
-			&namespace->server_table,
-			(void*)server->name,
-			server, 
-			strlen(server->name)
-			);
+	ret = hash_table_push(&namespace->server_table, (void*)server->name,
+		server, strlen(server->name));
+	if(ret == -1) return -1;
 
 	return 0;
 }
@@ -55,34 +56,28 @@ int create_namespace(const char *name) {
 
 	*namespace = (struct namespace) {
 		.name = ({void *copy = alloc(strlen(name) + 1); strcpy(copy, name); copy; }),
-			.nid = bitmap_alloc(&nid_bitmap),
-			.sid_bitmap = (struct bitmap) {
-				.data = NULL,
-				.size = 0,
-				.resizable = true
-			}
+		.nid = ({ int nid; int ret = bitmap_alloc(&nid_bitmap, &nid); ret == -1 ? ret : nid; })
 	};
 
-	hash_table_push (
-
-			&namespace_table,
-			(void*)namespace->name,
-			namespace,
-			strlen(namespace->name)
-			);
+	int ret = hash_table_push(&namespace_table, (void*)namespace->name,
+		namespace, strlen(namespace->name));
+	if(ret == -1) return -1;
 
 	return 0;
 }
 
 struct server *find_server(const char *namespace_name, const char *server_name) {
-	struct namespace *namespace = hash_table_search(&namespace_table,
-			(void*)namespace_name, strlen(namespace_name));
-	if(namespace == NULL) {
+	struct namespace *namespace;
+	int ret = hash_table_search(&namespace_table, (void*)namespace_name,
+		strlen(namespace_name), (void**)&namespace);
+	if(ret == -1 || namespace == NULL) {
 		return NULL;
 	}
 
-	struct server *server = hash_table_search(&namespace->server_table,
-			(void*)server_name, strlen(server_name));
+	struct server *server;
+	ret = hash_table_search(&namespace->server_table,
+			(void*)server_name, strlen(server_name), (void**)&server);
+	if(ret == -1) return NULL;
 
 	return server;
 }
@@ -105,18 +100,6 @@ int launch_servers(void) {
 
 	return 0;
 }
-
-struct scheduler_meta {
-	struct __attribute__((packed)) {
-		uintptr_t base; 
-		size_t limit;
-	} file;
-
-	struct __attribute__((packed)) {
-		const char *identifier; 
-		size_t length;
-	} share;
-} __attribute__((packed));
 
 static int launch_server(struct server *server, void *arg, int arg_length) {
 	if(server == NULL) return -1;
@@ -195,12 +178,44 @@ static int launch_schedulers(struct limine_file *file) {
 		servers[i]->file = file;
 	}
 
-	for(int i = 0; i < bootable_processor_cnt; i++) {
-		struct server_sched_descriptor sched_descriptor = {
-			.processor_id = i + 1
+	struct sched_descriptor *descriptors = ({
+		size_t page_cnt = DIV_ROUNDUP(bootable_processor_cnt * sizeof(struct sched_descriptor), PAGE_SIZE);
+		uint64_t physical_base = pmm_alloc(page_cnt, 1);
+		uint64_t virtual_base = physical_base + HIGH_VMA;
+
+		struct portal_resp resp;
+		struct portal_req *req = alloc(sizeof(struct portal_req) + sizeof(uint64_t) * page_cnt);
+
+		*req = (struct portal_req) {
+			.type = PORTAL_REQ_SHARE | PORTAL_REQ_DIRECT, 
+			.prot = PORTAL_PROT_READ | PORTAL_PROT_WRITE,
+			.length = sizeof(struct portal_req) + sizeof(uint64_t) * page_cnt,
+			.share = {
+				.identifier = "SCHEDULER META",
+				.type = LINK_RAW, 
+				.create = 1
+			}
 		};
 
-		if(launch_server(servers[i], &sched_descriptor, sizeof(sched_descriptor)) == -1) {
+		req->morphology.addr = virtual_base;
+		req->morphology.length = page_cnt * PAGE_SIZE;
+		for(int i = 0; i < page_cnt; i++, physical_base += PAGE_SIZE) req->morphology.paddr[i] = physical_base;
+
+		ret = portal(req, &resp);
+		if(ret == -1) return -1;
+		free(req);
+
+		(struct sched_descriptor*)virtual_base;
+	});
+
+	for(int i = 0; i < bootable_processor_cnt; i++) {
+		struct sched_descriptor *descriptor = descriptors + i;
+
+		descriptor->processor_id = i;
+		descriptor->queue_default_refill = 0;
+		descriptor->load = 0;
+
+		if(launch_server(servers[i], descriptor, sizeof(struct sched_descriptor)) == -1) {
 			print("dufay: failed to launch server\n");
 			continue;
 		}

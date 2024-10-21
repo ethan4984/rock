@@ -1,15 +1,5 @@
 #ifndef PORTAL_H_
-
 #define PORTAL_H_
-
-#define PORTAL_REQ_SHARE (1 << 0)
-#define PORTAL_REQ_DIRECT (1 << 1)
-#define PORTAL_REQ_ANON (1 << 2)
-#define PORTAL_REQ_COW (1 << 3)
-#define PORTAL_REQ_SP (1 << 4)
-
-#define PORTAL_RESP_FAILURE (1 << 0)
-#define PORTAL_RESP_SUCCESS (1 << 1)
 
 #include <fayt/hash.h>
 #include <fayt/bst.h>
@@ -17,13 +7,40 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define PORTAL_PROT_READ (1 << 0)
-#define PORTAL_PROT_WRITE (1 << 1)
-#define PORTAL_PROT_EXEC (1 << 2)
+constexpr uint32_t PORTAL_REQ_SHARE = 1u << 0;
+constexpr uint32_t PORTAL_REQ_DIRECT = 1u << 1;
+constexpr uint32_t PORTAL_REQ_ANON = 1u << 2;
+constexpr uint32_t PORTAL_REQ_COW = 1u << 3;
+constexpr uint32_t PORTAL_REQ_SP = 1u << 4;
+
+constexpr uint32_t PORTAL_RESP_FAILURE = 1u << 0;
+constexpr uint32_t PORTAL_RESP_SUCCESS = 1u << 1;
+
+constexpr uint32_t PORTAL_PROT_READ = 1u << 0;
+constexpr uint32_t PORTAL_PROT_WRITE = 1u << 1;
+constexpr uint32_t PORTAL_PROT_EXEC = 1u << 2;
+
+struct [[gnu::packed]] portal_link {
+	char lock;
+
+	int length;
+	int header_offset;
+	int header_limit;
+	int data_offset;
+	int data_limit;
+
+	char data[];
+};
+
+constexpr uint32_t LINK_CIRCULAR = 1u << 0;
+constexpr uint32_t LINK_VECTOR = 1u << 1;
+constexpr uint32_t LINK_RAW = 1u << 2;
+
+constexpr uint32_t LINK_CIRCULAR_MAGIC = 0x9E810F7F;
+constexpr uint32_t LINK_VECTOR_MAGIC = 0xEF8647C0;
+constexpr uint32_t LINK_RAW_MAGIC = 0xFF6C7D34;
 
 #define SHARE_MAX_NAME_LENGTH 256
-
-#define PORTAL_SHARE_TYPE_CIRCULAR (1 << 0) 
 
 struct portal_share_meta {
 	char lock;

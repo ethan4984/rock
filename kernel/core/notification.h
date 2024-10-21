@@ -12,6 +12,14 @@ struct notification_info {
 
 };
 
+struct comm_bridge {
+	int not;
+	int cid;
+	int weight;
+	const char *namespace;
+	const char *destination;
+};
+
 struct notification_action {
 	void (*handler)(struct NotificationInfo*, void *, int);
 } __attribute__((packed));
