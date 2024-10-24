@@ -15,6 +15,7 @@ struct cpu_local {
 
 	struct server *scheduling_server;
 	VECTOR(struct context*) thread_queue;
+	VECTOR(struct context*) delivery_stack;
 
 	struct context *current_context;
 

@@ -28,6 +28,7 @@ struct [[gnu::packed]] portal_link {
 	int header_limit;
 	int data_offset;
 	int data_limit;
+	uint32_t magic;
 
 	char data[];
 };
@@ -41,13 +42,6 @@ constexpr uint32_t LINK_VECTOR_MAGIC = 0xEF8647C0;
 constexpr uint32_t LINK_RAW_MAGIC = 0xFF6C7D34;
 
 #define SHARE_MAX_NAME_LENGTH 256
-
-struct portal_share_meta {
-	char lock;
-	int type;
-	int prot;
-	size_t length;
-} __attribute__((packed));
 
 struct portal_req {
 	int type;

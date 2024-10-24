@@ -103,8 +103,9 @@ int notification_dispatch(struct context *context) {
 		ucontext->regs.rdi = (uint64_t)notification->info;
 		ucontext->regs.rsi = (uint64_t)notification->share_region.vaddr;
 		ucontext->regs.rdx = i + 1;
-
+	
 		ucontext->active = 1;
+		context->notification.ucontext = ucontext;
 
 		return 0;
 	}

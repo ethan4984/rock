@@ -210,22 +210,26 @@ static int portal_handle_share(struct portal *portal, struct portal_req *req) {
 			strlen(share_point->identifier));
 		if(ret == -1) return -1;
 
-		// TODO
-		// THIS MAKE PORTAL LINKS WORK (FIGURE THE MAGIC NUMBER MUMBO NUMBER AND SUCH)
+		if((req->share.type & LINK_CIRCULAR) == LINK_CIRCULAR) {
+			struct portal_link *link = (void*)req->morphology.addr;
+			struct circular_queue *queue = (void*)link + sizeof(struct portal_link);
 
-		struct portal_share_meta *share_meta = (void*)req->morphology.addr;
+			*link = (struct portal_link) {
+				.lock = 0,
+				.length = req->morphology.length,
+				.header_offset = 0,
+				.header_limit = sizeof(struct portal_link),
+				.data_offset = sizeof(struct portal_link) + sizeof(struct circular_queue),
+				.data_limit = req->morphology.length - sizeof(struct portal_link) - sizeof(struct circular_queue),
+				.magic = LINK_CIRCULAR_MAGIC
+			};
 
-		share_meta->lock = 0;
-		share_meta->type = req->share.type;
-		share_meta->prot = req->prot;
-		share_meta->length = req->morphology.length;
-
-		if(share_meta->type & LINK_CIRCULAR) {
-			struct circular_queue *queue = (void*)share_meta + sizeof(struct portal_share_meta);
-
-			int queue_length = (req->morphology.length - sizeof(struct portal_share_meta) -
+			int queue_length = (req->morphology.length - sizeof(struct portal_link) -
 				sizeof(struct circular_queue)) / 4;
-			circular_queue_init(queue, (void*)req->morphology.addr + sizeof(struct portal_share_meta) + sizeof(struct circular_queue), queue_length, 4);
+			circular_queue_init(queue, (void*)req->morphology.addr + sizeof(struct portal_link)
+				+ sizeof(struct circular_queue), queue_length, 4);
+		} else if((req->share.type & LINK_RAW) == LINK_RAW) {
+			
 		}
 	}
 

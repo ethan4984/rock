@@ -75,12 +75,15 @@ SYSCALL_DEFINE0(yield, {
 	__asm__ volatile ("int $32");
 })
 
-void reschedule(struct registers *regs, void *) {
+void reschedule(struct registers *regs, void*) {
 	spinlock(&reschedule_lock);
 
 	struct context *next_context;
 
-	int ret = VECTOR_POP(CORE_LOCAL->thread_queue, next_context);
+	int ret = VECTOR_POP(CORE_LOCAL->delivery_stack, next_context);
+	if(ret != -1) goto finish;	
+
+	ret = VECTOR_POP(CORE_LOCAL->thread_queue, next_context);
 	if(ret == -1) {
 		struct server *scheduling_server = CORE_LOCAL->scheduling_server;
 		if(scheduling_server == NULL) {
@@ -95,7 +98,8 @@ void reschedule(struct registers *regs, void *) {
 			return;
 		}
 	}
-
+finish:
+	notification_dispatch(next_context);
 	struct context *current_context = CORE_LOCAL->current_context;
 
 	void **fpu_context;

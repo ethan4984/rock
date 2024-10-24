@@ -1,28 +1,15 @@
 #ifndef NOTIFICATION_H_
 #define NOTIFICATION_H_
 
+#include <core/scheduler.h>
+
 #include <fayt/lock.h>
+#include <fayt/notification.h>
 
 #include <stdbool.h>
 
 #define NOTIFICATION_MAX 64
 #define NOTIFICATION_MASK(NOT) (1ull << ((NOT) - 1))
-
-struct notification_info {
-
-};
-
-struct comm_bridge {
-	int not;
-	int cid;
-	int weight;
-	const char *namespace;
-	const char *destination;
-};
-
-struct notification_action {
-	void (*handler)(struct NotificationInfo*, void *, int);
-} __attribute__((packed));
 
 struct notification_queue;
 
@@ -50,5 +37,8 @@ struct notification_queue {
 
 	struct spinlock lock;
 };
+
+int notification_send(struct context*, struct context*, int);
+int notification_dispatch(struct context*);
 
 #endif

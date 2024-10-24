@@ -73,6 +73,8 @@ struct sched_descriptor {
 	int load;
 };
 
+extern struct server *master_scheduler;
+
 int launch_servers(void);
 int create_server(const char*, const char*, struct server*);
 int create_namespace(const char*);

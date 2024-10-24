@@ -7,11 +7,13 @@
 #include <core/scheduler.h>
 #include <core/elf.h>
 #include <core/debug.h>
+#include <core/notification.h>
 
 #include <fayt/slab.h>
 #include <fayt/hash.h>
 #include <fayt/bitmap.h>
 #include <fayt/string.h>
+#include <fayt/notification.h>
 
 static struct hash_table namespace_table;
 static struct bitmap nid_bitmap;
@@ -25,6 +27,9 @@ static volatile struct limine_module_request limine_module_request = {
 };
 
 static int launch_schedulers(struct limine_file*);
+static int launch_server(struct server*, void*, int);
+
+struct server *master_scheduler;
 
 int create_server(const char *namespace_name, const char *name, struct server *server) {
 	struct namespace *namespace;
@@ -92,10 +97,35 @@ int launch_servers(void) {
 
 	print("dufay: booting servers {%x}\n", module_count);
 
-	for(uint64_t i = 0; i < module_count; i++) {
-		if(strcmp(modules[i]->cmdline, "scheduler") == 0) {
+	for(uint64_t i = 0; i < module_count; i++)
+		if(strcmp(modules[i]->cmdline, "scheduler") == 0)
 			launch_schedulers(modules[i]);
-		}
+
+	int ret = create_namespace("IO");
+	if(ret == -1) return -1;
+
+	for(uint64_t i = 0; i < module_count; i++) {
+		if(strcmp(modules[i]->cmdline, "vfs") != 0 &&
+			strcmp(modules[i]->cmdline, "device") != 0 &&
+			strcmp(modules[i]->cmdline, "ahci") != 0 && 
+			strcmp(modules[i]->cmdline, "nvme") != 0 &&
+			strcmp(modules[i]->cmdline, "block") != 0 && 
+			strcmp(modules[i]->cmdline, "ext") != 0) continue;
+
+		struct server *server = alloc(sizeof(struct server));
+		server->file = modules[i];
+
+		char *server_name = alloc(SERVER_MAX_NAME_LENGTH);
+		sprint(server_name, "%s", modules[i]->cmdline);
+
+		ret = create_server("IO", server_name, server);
+		if(ret == -1) return -1;
+	
+		ret = launch_server(server, NULL, 0);
+		if(ret == -1) return -1;
+
+		ret = notification_send(master_scheduler->context, server->context, SCHED_NOTIFY_ENQUEUE);
+		if(ret == -1) return -1;
 	}
 
 	return 0;
@@ -167,6 +197,7 @@ static int launch_schedulers(struct limine_file *file) {
 
 	for(int i = 0; i < bootable_processor_cnt; i++) {
 		servers[i] = alloc(sizeof(struct server));
+		master_scheduler = servers[i];
 
 		char *server_name = alloc(SERVER_MAX_NAME_LENGTH);
 		sprint(server_name, "SCHEDULER CORE%d", i);
