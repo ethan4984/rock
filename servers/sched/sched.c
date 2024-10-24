@@ -5,6 +5,7 @@
 #include <fayt/circular_queue.h>
 #include <fayt/compiler.h>
 #include <fayt/address_space.h>
+#include <fayt/slab.h>
 #include <fayt/hash.h>
 
 #include <sched.h>
@@ -14,6 +15,9 @@ static struct hash_table thread_table;
 
 static struct sched_descriptor *sched_desc;
 static struct portal_link *sched_meta;
+
+constexpr int DEFAULT_TIME_SLICE = 10;
+constexpr int NICE_VALUE_MAX = 19;
 
 static void notify_enqueue_thread(struct notification_info*, void *data, int) {
 	struct sched_queue_config *config = data;
@@ -34,9 +38,46 @@ static void notify_enqueue_thread(struct notification_info*, void *data, int) {
 			})
 		);
 
-		if(ret == -1) { print("DUFAY: SCHEDULER: Critical failure to enqueue thread\n"); goto finish; }
-		// invoke a notification to the scheduling servers optimal_sched (set offload=0)
-		goto finish;
+		if(ret == -1) {
+			print("DUFAY: SCHEDULER: Critical failure to enqueue thread\n");
+			goto finish;
+		}
+
+		if(optimal_sched == sched_desc) goto exit;
+
+		config->offload = 0;
+		struct comm_bridge bridge = {
+			.not = SCHED_NOTIFY_ENQUEUE,
+			.cid = optimal_sched->cid,
+			.data = {
+				.ptr = &config, 
+				.length = sizeof(struct sched_queue_config)
+			},
+			.weight = NOTIFY_INSTANTANEOUS,
+			.namespace = NULL,
+			.destination = NULL
+		};
+
+		struct syscall_response response = SYSCALL1(SYSCALL_NOTIFY, &bridge); 
+		if(response.ret == -1) {
+			print("DUFAY: SCHEDULER: unable to offload thread to other core\n");
+			goto finish;
+		} else goto finish;
+	}
+exit:
+	struct thread *thread = alloc(sizeof(struct thread));
+	if(thread == NULL) { }
+
+	thread->cid = config->cid;
+	thread->cgroup = config->cgroup;
+	thread->weight = 1024 * (1 << (19 - config->nice));
+	thread->vruntime = 0;
+	thread->runtime = 0;
+
+	int ret = RB_GENERIC_INSERT(thread_tree, vruntime, thread);
+	if(ret == -1) {
+		print("DUFAY: SCHEDULER: Unable to insert on thread tree\n");
+		goto finish; 
 	}
 finish:
 	SYSCALL0(SYSCALL_NOTIFICATION_RETURN);
@@ -83,10 +124,11 @@ int sched(struct portal_link *link, struct sched_descriptor *desc) {
 	struct notification_action dequeue_action =
 		{ .handler = notify_dequeue_thread };
 
-	struct syscall_response response = SYSCALL3(SYSCALL_NOTIFICATION_ACTION, 1, &enqueue_action, NULL);
+	struct syscall_response response = SYSCALL3(SYSCALL_NOTIFICATION_ACTION,
+		SCHED_NOTIFY_ENQUEUE, &enqueue_action, NULL);
 	if(response.ret == -1) { print("DUFAY: SCHEDULER: Failure to set notification\n"); return -1; }
 
-	response = SYSCALL3(SYSCALL_NOTIFICATION_ACTION, 1, &dequeue_action, NULL);
+	response = SYSCALL3(SYSCALL_NOTIFICATION_ACTION, SCHED_NOTIFY_DEQUEUE, &dequeue_action, NULL);
 	if(response.ret == -1) { print("DUFAY: SCHEDULER: Failure to set notification\n"); return -1; }
 
 	print("DUFAY: SCHEDULER: Initialised enqueue and dequeue notifications\n");
