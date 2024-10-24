@@ -68,6 +68,8 @@ struct context {
 	void *fpu_context;
 };
 
+#define yield() __asm__("int $32");
+
 void reschedule(struct registers*, void*);
 
 int create_blank_context(struct context*);

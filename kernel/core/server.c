@@ -124,7 +124,8 @@ int launch_servers(void) {
 		ret = launch_server(server, NULL, 0);
 		if(ret == -1) return -1;
 
-		ret = notification_send(master_scheduler->context, server->context, SCHED_NOTIFY_ENQUEUE);
+		ret = notification_send(master_scheduler->context, server->context,
+			SCHED_NOTIFY_ENQUEUE, NOTIFY_WEIGHT_TICK);
 		if(ret == -1) return -1;
 	}
 
